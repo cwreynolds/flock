@@ -27,13 +27,12 @@ target_include_directories(flock PUBLIC
 # target_link_libraries(texsyn ${OpenCV_LIBS})
 # target_include_directories(texsyn PUBLIC "${OpenCV_INCLUDE_DIRS}" )
 
-# # find_package(GLEW REQUIRED )
-# find_package(glew REQUIRED )
+find_package(glew REQUIRED )
 # target_link_libraries(flock ${GLEW_LIBS})
+target_link_libraries(flock PRIVATE GLEW::glew)
 # target_include_directories(flock PUBLIC "${GLEW_INCLUDE_DIRS}" )
 
-# # find_package(GLFW REQUIRED )
-# find_package(glfw REQUIRED )
+find_package(glfw3 REQUIRED )
 # target_link_libraries(flock ${GLFW_LIBS})
+target_link_libraries(flock PRIVATE GLFW::glfw)
 # target_include_directories(flock PUBLIC "${GLFW_INCLUDE_DIRS}" )
-
