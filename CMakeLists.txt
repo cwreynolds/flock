@@ -27,12 +27,51 @@ target_include_directories(flock PUBLIC
 # target_link_libraries(texsyn ${OpenCV_LIBS})
 # target_include_directories(texsyn PUBLIC "${OpenCV_INCLUDE_DIRS}" )
 
-find_package(glew REQUIRED )
-# target_link_libraries(flock ${GLEW_LIBS})
-target_link_libraries(flock PRIVATE GLEW::glew)
-# target_include_directories(flock PUBLIC "${GLEW_INCLUDE_DIRS}" )
+#    find_package(glew REQUIRED )
+#    # target_link_libraries(flock ${GLEW_LIBS})
+#    target_link_libraries(flock PRIVATE GLEW::glew)
+#    # target_include_directories(flock PUBLIC "${GLEW_INCLUDE_DIRS}" )
+#
+#    find_package(glfw3 REQUIRED )
+#    # target_link_libraries(flock ${GLFW_LIBS})
+#    target_link_libraries(flock PRIVATE GLFW::glfw)
+#    # target_include_directories(flock PUBLIC "${GLFW_INCLUDE_DIRS}" )
+
+
+# find_package(glew REQUIRED )
+# # target_link_libraries(flock PRIVATE GLEW::glew)
+# target_link_libraries(flock PRIVATE libglew_static)
+
+
+
+# add_subdirectory( /opt/homebrew/Cellar/glew/2.2.0_1/lib/cmake )
+
+# add_subdirectory( ${PROJECT_SOURCE_DIR}/GLFW )
+
+
+
+# include_directories( /usr/local/include )
+include_directories( /opt/homebrew/Cellar/glew/2.2.0_1/include )
+include_directories( /opt/homebrew/Cellar/glfw/3.3.8/include )
+
+link_directories(/opt/homebrew/Cellar/glfw/3.3.8/lib)
+
+
+# find_package(GLEW 2.0 REQUIRED)
+# target_link_libraries(flock GLEW::GLEW)
+
+# find_package(glew REQUIRED)
+# target_link_libraries(flock PRIVATE libglew_static)
+
+find_package(glew 2.0 REQUIRED)
+target_link_libraries(flock GLEW::glew)
+
 
 find_package(glfw3 REQUIRED )
-# target_link_libraries(flock ${GLFW_LIBS})
-target_link_libraries(flock PRIVATE GLFW::glfw)
-# target_include_directories(flock PUBLIC "${GLFW_INCLUDE_DIRS}" )
+# target_link_libraries(flock PRIVATE GLFW::glfw)
+# target_link_libraries(flock PRIVATE libglfw_static)
+# target_link_libraries(flock GLFW::glfw)
+# target_link_libraries(flock GLFW3::glfw3)
+target_link_libraries(flock GLFW::glfw)
+
+
