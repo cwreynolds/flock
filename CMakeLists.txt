@@ -12,9 +12,9 @@ add_executable(flock
                main.cpp)
 
 # Find the external GLEW and GLFW packages.
-find_package(glfw3 3.3 REQUIRED)
+find_package(GLFW3 REQUIRED)
 find_package(GLEW REQUIRED)
 
 # In target_link_libraries(): important to use "glfw" instead of "GLFW::glfw"
 # as suggested by https://stackoverflow.com/q/68871506/1991373
-target_link_libraries(flock glfw GLEW::GLEW)
+target_link_libraries(flock glfw GLEW::glew)
