@@ -18,65 +18,82 @@ using namespace std::chrono_literals;
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // TODO 20230212 comment these out to debug cmake build
 
-int sample_code();
+int sample_opengl_code();
 
 int main (int argc, char** argv)
 {
+    std::cout << "-- in main()" << std::endl;
+    
+    
     // start GL context and O/S window using the GLFW helper library
     if (!glfwInit ())
     {
         std::cerr<<"ERROR: could not start GLFW3"<<std::endl;
         return 1;
     }
-
-    //Setting window properties
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    //Actually create the window
-    GLFWwindow* window = glfwCreateWindow (640, 480, "OpenGL Initialization Example", NULL, NULL);
-    if (!window)
-    {
-        std::cerr<<"ERROR: could not open window with GLFW3"<<std::endl;
-        glfwTerminate();
-        return 1;
-    }
-    glfwMakeContextCurrent (window);
-
-    // start GLEW extension handler
-    glewExperimental = GL_TRUE;
-    glewInit ();
-
-    ////////////////////////////////////////////////////////////////////////////
-    // TODO 20230206 draw something
-
-//    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClearColor(1, 1, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    
 
 
-    // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-    // -------------------------------------------------------------------------------
-    glfwSwapBuffers(window);
-    glfwPollEvents();
+//    //Setting window properties
+//    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+//    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
+//    glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+//    glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    
+    // glfw: initialize and configure
+    // ------------------------------
+//    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+
+
+//    //Actually create the window
+//    GLFWwindow* window = glfwCreateWindow (640, 480, "OpenGL Initialization Example", NULL, NULL);
+//    if (!window)
+//    {
+//        std::cerr<<"ERROR: could not open window with GLFW3"<<std::endl;
+//        glfwTerminate();
+//        return 1;
+//    }
+//    glfwMakeContextCurrent (window);
+//
+//    // start GLEW extension handler
+//    glewExperimental = GL_TRUE;
+//    glewInit ();
+//
+//    ////////////////////////////////////////////////////////////////////////////
+//    // TODO 20230206 draw something
+//
+////    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+//    glClearColor(1, 1, 1, 1);
+//    glClear(GL_COLOR_BUFFER_BIT);
+//
+//
+//    // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+//    // -------------------------------------------------------------------------------
+//    glfwSwapBuffers(window);
+//    glfwPollEvents();
 
 //    std::this_thread::sleep_for(2000ms);
     
     
-    sample_code();
+    sample_opengl_code();
 
     ////////////////////////////////////////////////////////////////////////////
 
-    // get version info
-    const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
-    const GLubyte* version = glGetString (GL_VERSION); // version as a string
-    std::cout<<"Renderer: "<<renderer<<std::endl;
-    std::cout<<"OpenGL version supported "<<version<<std::endl;
+//    // get version info
+//    const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
+//    const GLubyte* version = glGetString (GL_VERSION); // version as a string
+//    std::cout<<"Renderer: "<<renderer<<std::endl;
+//    std::cout<<"OpenGL version supported "<<version<<std::endl;
 
     // close GL context and any other GLFW resources
-    glfwTerminate();
+//    glfwTerminate();
     return 0;
 }
 
@@ -117,18 +134,24 @@ const char *fragmentShaderSource = "#version 330 core\n"
 "}\n\0";
 
 //int main()
-int sample_code()
+int sample_opengl_code()
 {
-    // glfw: initialize and configure
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    std::cout << "---- in sample_opengl_code()" << std::endl;
+
+//    // glfw: initialize and configure
+//    // ------------------------------
+//    glfwInit();
+//    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+//    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+//
+//#ifdef __APPLE__
+//    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+//#endif
     
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+    
+    
+    std::cout << "---- about to make window" << std::endl;
     
     // glfw window creation
     // --------------------
@@ -142,20 +165,35 @@ int sample_code()
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+    // get version info
+    const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
+    const GLubyte* version = glGetString (GL_VERSION); // version as a string
+    std::cout<<"Renderer: "<<renderer<<std::endl;
+    std::cout<<"OpenGL version supported "<<version<<std::endl;
+
     
+    // start GLEW extension handler
+    glewExperimental = GL_TRUE;
+    glewInit ();
+
     
+//    // glad: load all OpenGL function pointers
+//    // ---------------------------------------
+//    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+//    {
+//        std::cout << "Failed to initialize GLAD" << std::endl;
+//        return -1;
+//    }
+    
+    std::cout << "---- vertex shader create" << std::endl;
+
     // build and compile our shader program
     // ------------------------------------
     // vertex shader
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    std::cout << "---- vertex shader source" << std::endl;
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    std::cout << "---- vertex shader compile" << std::endl;
     glCompileShader(vertexShader);
     // check for shader compile errors
     int success;
@@ -166,6 +204,9 @@ int sample_code()
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
+    
+    std::cout << "---- in about to do fragment shader" << std::endl;
+
     // fragment shader
     unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
@@ -177,6 +218,9 @@ int sample_code()
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
+    
+    std::cout << "---- in about to do link shaders" << std::endl;
+
     // link shaders
     unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
@@ -247,15 +291,22 @@ int sample_code()
         glfwPollEvents();
     }
     
+    std::cout << "---- about to deallocate resources" << std::endl;
+
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
     
+    std::cout << "---- about to glfwTerminate()" << std::endl;
+
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
+    
+    std::cout << "---- after glfwTerminate()" << std::endl;
+
     return 0;
 }
 
