@@ -6,31 +6,37 @@
 //  Copyright © 2019 Craig Reynolds. All rights reserved.
 //
 
-#pragma once
-//#include "Utilities.h"
+//------------------------------------------------------------------------------
+//
+// Vec3.h -- new flock experiments
+//
+// Cartesian 3d vector space utility.
+//
+// MIT License -- Copyright (c) 2023 Craig Reynolds
+//
+//------------------------------------------------------------------------------
 
-class Vec2
+
+#pragma once
+#include <cmath>
+
+class Vec3
 {
 public:
     // Constructors
-    Vec2() {}
-    Vec2(float x, float y, float z) : x_(x), y_(y), z_(z), {}
+    Vec3() {}
+    Vec3(float x, float y, float z) : x_(x), y_(y), z_(z) {}
     
     // Accessors
     float x() const { return x_; }
     float y() const { return y_; }
     float z() const { return z_; }
 
-
-
-
-//    inline Vec2 rotateXyAboutZ(float sin, float cos) const
-//    {
-//        return Vec2(x() * cos + y() * sin, y() * cos - x() * sin);
-//    }
-    Vec2 rotateXyAboutZ(float angle) const
+    Vec3 rotateXyAboutZ(float angle) const
     {
-        return Vec2(x() * cos + y() * sin, y() * cos - x() * sin, z());
+        float s = std::sin(angle);
+        float c = std::cos(angle);
+        return Vec3(x() * c + y() * s, y() * c - x() * s, z());
     }
 private:
     float x_ = 0;
@@ -39,6 +45,12 @@ private:
 };
 
 
+// Serialize Vec2 object to stream.
+inline std::ostream& operator<<(std::ostream& os, const Vec3& v)
+{
+    os << "(" << v.x() << ", " << v.y() <<", " << v.z() << ")";
+    return os;
+}
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
