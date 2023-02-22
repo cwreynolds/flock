@@ -1,0 +1,47 @@
+//------------------------------------------------------------------------------
+//
+// LocalSpace.h -- new flock experiments
+//
+// Local space (transformation) for a boid/agent.
+//
+// MIT License -- Copyright © 2023 Craig Reynolds
+//
+//------------------------------------------------------------------------------
+
+#pragma once
+//#include <cmath>
+#include "Vec3.h"
+
+class LocalSpace
+{
+public:
+    // Constructors
+    LocalSpace() {}
+    LocalSpace(const Vec3& i, const Vec3& j, const Vec3& k, const Vec3& p);
+      : i_(i), j_(j), k_(k), p_(p) {}
+    
+    // Accessors
+    Vec3 i() const { return i_; }
+    Vec3 j() const { return j_; }
+    Vec3 k() const { return k_; }
+    Vec3 p() const { return p_; }
+    
+private:
+    // Basis vectors of local coordinate axes, ijk → xyz:
+    Vec3 i_ = Vec3(1, 0, 0);
+    Vec3 j_ = Vec3(0, 1, 0);
+    Vec3 k_ = Vec3(0, 0, 1);
+    // Position of local center:
+    Vec3 p_ = Vec3(0, 0, 0);
+};
+
+// Serialize LocalSpace object to stream.
+inline std::ostream& operator<<(std::ostream& os, const LocalSpace& ls)
+{
+    os << "[i=" << ls.i();
+    os << ", j=" << ls.j();
+    os << ", k=" << ls.k();
+    os << ", p=" << ls.p();
+    os << "]";
+    return os;
+}

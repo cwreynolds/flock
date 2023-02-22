@@ -1,18 +1,10 @@
-//
-//  Vec2.h
-//  texsyn
-//
-//  Created by Craig Reynolds on 12/19/19.
-//  Copyright © 2019 Craig Reynolds. All rights reserved.
-//
-
 //------------------------------------------------------------------------------
 //
 // Vec3.h -- new flock experiments
 //
 // Cartesian 3d vector space utility.
 //
-// MIT License -- Copyright (c) 2023 Craig Reynolds
+// MIT License -- Copyright © 2023 Craig Reynolds
 //
 //------------------------------------------------------------------------------
 
@@ -45,7 +37,7 @@ private:
 };
 
 
-// Serialize Vec2 object to stream.
+// Serialize Vec3 object to stream.
 inline std::ostream& operator<<(std::ostream& os, const Vec3& v)
 {
     os << "(" << v.x() << ", " << v.y() <<", " << v.z() << ")";

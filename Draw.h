@@ -4,7 +4,7 @@
 //
 // Graphics utilities based on OpenGL
 //
-// MIT License -- Copyright (c) 2023 Craig Reynolds
+// MIT License -- Copyright © 2023 Craig Reynolds
 //
 //------------------------------------------------------------------------------
 
@@ -13,6 +13,7 @@
 #include <GLFW/glfw3.h> // Cross platform library for window management
 #include <iostream>     // c++ stream I/O
 #include "Vec3.h"       // Cartesian 3d vector space utility.
+#include "LocalSpace.h" // Local space (transformation) for a boid/agent.
 
 class Draw
 {
@@ -25,6 +26,10 @@ public:
     void init()
     {
         sample_opengl_code();
+        
+        
+        LocalSpace ls;
+        std::cout << ls << std::endl;
     }
 
     // code from https://learnopengl.com/Getting-started/Hello-Triangle

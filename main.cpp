@@ -2,7 +2,7 @@
 //
 // main.cpp -- new flock experiments
 //
-// MIT License -- Copyright (c) 2023 Craig Reynolds
+// MIT License -- Copyright © 2023 Craig Reynolds
 //
 //------------------------------------------------------------------------------
 

@@ -1,10 +1,10 @@
 # flock
 
-## new flock experiments
+**new flock experiments**
 
 ### Build instructions:
 - Clone repository, cd to flock directory.
-    - `mk build`
+    - `mkdir build`
     - `cd build`
 - Generally only once:
     - `cmake ..`
