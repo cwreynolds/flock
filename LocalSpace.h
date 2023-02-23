@@ -2,7 +2,8 @@
 //
 // LocalSpace.h -- new flock experiments
 //
-// Local space (transformation) for a boid/agent.
+// Local space () for a boid/agent.
+// Essentially a 4x4 homogeneous transformation with [0 0 0 1] as last column.
 //
 // MIT License -- Copyright © 2023 Craig Reynolds
 //
@@ -17,9 +18,8 @@ class LocalSpace
 public:
     // Constructors
     LocalSpace() {}
-    LocalSpace(const Vec3& i, const Vec3& j, const Vec3& k, const Vec3& p);
-      : i_(i), j_(j), k_(k), p_(p) {}
-    
+    LocalSpace(Vec3 i, Vec3 j, Vec3 k, Vec3 p) : i_(i), j_(j), k_(k), p_(p) {}
+
     // Accessors
     Vec3 i() const { return i_; }
     Vec3 j() const { return j_; }

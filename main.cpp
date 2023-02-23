@@ -10,6 +10,7 @@
 
 int main (int argc, char** argv)
 {
+    assert(Vec3::unitTest());
     Draw draw;
     return EXIT_SUCCESS;
 }

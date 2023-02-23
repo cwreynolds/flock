@@ -9,11 +9,13 @@
 //------------------------------------------------------------------------------
 
 #pragma once
+
 #include <GL/glew.h>    // Cross platform "OpenGL Extention Wrangle"
 #include <GLFW/glfw3.h> // Cross platform library for window management
 #include <iostream>     // c++ stream I/O
+
 #include "Vec3.h"       // Cartesian 3d vector space utility.
-#include "LocalSpace.h" // Local space (transformation) for a boid/agent.
+#include "Boid.h"       // Boid class, specialization of Agent.
 
 class Draw
 {
