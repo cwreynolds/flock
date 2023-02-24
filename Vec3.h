@@ -46,6 +46,13 @@ public:
     Vec3 operator-=(V rhs) { return *this = *this - rhs; }
     Vec3 operator*=(float s) { return *this = *this * s; }
     Vec3 operator/=(float s) { return *this = *this / s; }
+    
+    // Returns vector parallel to "this" but no longer than "max_length"
+    Vec3 truncate(float max_length) const
+    {
+        float m = length();
+        return ((m > max_length) ? (*this * (max_length / m)) : *this);
+    }
 
     // TODO 20230221 reconsider name, etc.
     Vec3 rotateXyAboutZ(float angle) const
@@ -63,7 +70,7 @@ public:
                 (Vec3(0, 0, 0) != Vec3(0, 0, 1)) &&
                 (Vec3(1, 2, 3).dot(Vec3(4, 5, 6)) == 32) &&
                 (Vec3(2, 3, 6).length() == 7) &&
-                (Vec3(2, 3, 6).normalize() == Vec3(2/7.0, 3/7.0, 6/7.0)) &&
+                (Vec3(2, 3, 6).normalize() == Vec3(2, 3, 6) / 7) &&
                 (Vec3(1, 2, 3) + Vec3(4, 5, 6) == Vec3(5, 7, 9)) &&
                 (Vec3(5, 7, 9) - Vec3(4, 5, 6) == Vec3(1, 2, 3)) &&
                 (-Vec3(1, 2, 3) == Vec3(-1, -2, -3)) &&
@@ -73,7 +80,8 @@ public:
                 ((Vec3(4, 5, 6) += Vec3(1, 2, 3)) == Vec3(5, 7, 9)) &&
                 ((Vec3(5, 7, 9) -= Vec3(4, 5, 6)) == Vec3(1, 2, 3)) &&
                 ((Vec3(1, 2, 3) *= 2) == Vec3(2, 4, 6)) &&
-                ((Vec3(2, 4, 6) /= 2) == Vec3(1, 2, 3)));
+                ((Vec3(2, 4, 6) /= 2) == Vec3(1, 2, 3)) &&
+                (Vec3(3, 0, 0).truncate(2) == Vec3(2, 0, 0)));
     }
 private:
     float x_ = 0;

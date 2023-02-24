@@ -17,5 +17,5 @@
     - `./flock`
 
 ### macOS hints:
-    - Install “Command Line Tools” if needed: `xcode-select –install`
-    - Use Homebrew to install CMake, GLEW, and GLFW.
+- Install “Command Line Tools” if needed: `xcode-select –install`
+- Use Homebrew to install CMake, GLEW, and GLFW.
