@@ -26,6 +26,13 @@ public:
     Vec3 k() const { return k_; }
     Vec3 p() const { return p_; }
     
+    // Setters
+    void setI(Vec3 i) { i_ = i; }
+    void setJ(Vec3 j) { j_ = j; }
+    void setK(Vec3 k) { k_ = k; }
+    void setP(Vec3 p) { p_ = p; }
+    void setIJKP(Vec3 i, Vec3 j, Vec3 k, Vec3 p) { i_=i; j_=j; k_=k; p_=p; }
+
 private:
     // Basis vectors of local coordinate axes, ijk → xyz:
     Vec3 i_ = Vec3(1, 0, 0);

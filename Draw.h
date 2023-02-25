@@ -139,6 +139,11 @@ public:
         // TODO 20230219 starting to prototype animation
         float vertices[9];
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // TODO 20230224 testing Agent
+        Agent agent;
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         unsigned int VBO, VAO;
         glGenVertexArrays(1, &VAO);
@@ -151,9 +156,6 @@ public:
         // -----------
         while (!glfwWindowShouldClose(window))
         {
-            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            // TODO 20230219 starting to prototype animation
-            
             sampleVertexArray(frame_count_, vertices);
             
             // bind the Vertex Array Object first, then bind and set vertex buffer(s),
@@ -178,9 +180,6 @@ public:
             // generally don't unbind VAOs (nor VBOs) when it's not directly
             // necessary.
             glBindVertexArray(0);
-
-            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
             
             // input
             // -----
@@ -203,17 +202,24 @@ public:
             // moved etc.)
             glfwSwapBuffers(window);
             glfwPollEvents();
+            
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // TODO 20230224 testing Agent
+//            agent.steer(Vec3(0, 0, 1), 1.0 / 60);
+            // TODO 20230225 need to measure elapsed real time?
+            agent.steer(Vec3(0, 0, 5), 1.0 / 60);
 
+            std::cout << frame_count_ << " s="
+                      << agent.getSpeed()
+                      << agent.ls() << std::endl;
+            
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            // TODO 20230219 starting to prototype animation
+
+
             frame_count_++;
-            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         }
         
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        // TODO 20230219 starting to prototype animation
         std::cout << "frame_count = " << frame_count_ << std::endl;
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
         // optional: de-allocate all resources once they've outlived their purpose:
         glDeleteVertexArrays(1, &VAO);
@@ -275,10 +281,5 @@ public:
 private:
     int window_width_ = 1000;
     int window_height_ = 1000;
-
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // TODO 20230219 starting to prototype animation
     int frame_count_ = 0;
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 };

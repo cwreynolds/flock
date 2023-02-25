@@ -47,6 +47,19 @@ public:
     Vec3 operator*=(float s) { return *this = *this * s; }
     Vec3 operator/=(float s) { return *this = *this / s; }
     
+    // Cross product
+    Vec3 cross(const Vec3& b) const
+    {
+        float a1 = x();
+        float a2 = y();
+        float a3 = z();
+        float b1 = b.x();
+        float b2 = b.y();
+        float b3 = b.z();
+        // (From https://en.wikipedia.org/wiki/Cross_product#Matrix_notation)
+        return Vec3(a2 * b3 - a3 * b2, a3 * b1 - a1 * b3, a1 * b2 - a2 * b1);
+    }
+        
     // Returns vector parallel to "this" but no longer than "max_length"
     Vec3 truncate(float max_length) const
     {
