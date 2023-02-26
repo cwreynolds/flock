@@ -156,8 +156,9 @@ public:
         // -----------
         while (!glfwWindowShouldClose(window))
         {
-            sampleVertexArray(frame_count_, vertices);
-            
+//            sampleVertexArray(frame_count_, vertices);
+            sampleVertexArray(agent, frame_count_, vertices);
+
             // bind the Vertex Array Object first, then bind and set vertex buffer(s),
             // and then configure vertex attributes(s).
             glBindVertexArray(VAO);
@@ -207,7 +208,9 @@ public:
             // TODO 20230224 testing Agent
 //            agent.steer(Vec3(0, 0, 1), 1.0 / 60);
             // TODO 20230225 need to measure elapsed real time?
-            agent.steer(Vec3(0, 0, 5), 1.0 / 60);
+//            agent.steer(Vec3(0, 0, 5), 1.0 / 60);
+//            agent.steer(Vec3(1, 0, 5), 1.0 / 60);
+            agent.steer(agent.side() * 20 + agent.forward() * 0.5, 1.0 / 60);
 
             std::cout << frame_count_ << " s="
                       << agent.getSpeed()
@@ -234,16 +237,60 @@ public:
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // TODO 20230219 starting to prototype animation
     
-    void sampleVertexArray(int frames, float* xyz3)
+//    void sampleVertexArray(int frames, float* xyz3)
+//    {
+//        // TODO 20230220 clean up. in c++20 it is std::numbers::pi
+//        float pi = M_PI;
+//        float pi2 = pi * 2;
+//
+//        Vec3 a = Vec3(0, 0.8, 0).rotateXyAboutZ(frames * 0.01);
+//        Vec3 b = a.rotateXyAboutZ(pi2 / 3);
+//        Vec3 c = b.rotateXyAboutZ(pi2 / 3);
+//
+//        int i = 0;
+//        xyz3[i++] = a.x();
+//        xyz3[i++] = a.y();
+//        xyz3[i++] = a.z();
+//        xyz3[i++] = b.x();
+//        xyz3[i++] = b.y();
+//        xyz3[i++] = b.z();
+//        xyz3[i++] = c.x();
+//        xyz3[i++] = c.y();
+//        xyz3[i++] = c.z();
+//    }
+
+    void sampleVertexArray(const Agent& agent, int frames, float* xyz3)
     {
         // TODO 20230220 clean up. in c++20 it is std::numbers::pi
         float pi = M_PI;
         float pi2 = pi * 2;
         
-        Vec3 a = Vec3(0, 0.8, 0).rotateXyAboutZ(frames * 0.01);
+//        Vec3 a = Vec3(0, 0.8, 0).rotateXyAboutZ(frames * 0.01);
+//        Vec3 b = a.rotateXyAboutZ(pi2 / 3);
+//        Vec3 c = b.rotateXyAboutZ(pi2 / 3);
+        
+//        float scale = 0.08;
+//        float scale = 0.008;
+        float scale = 0.004;
+        float angle = frames * 0.01;
+//        Vec3 position(-0.5, 0, 0);
+//        Vec3 position = agent.position();
+//        Vec3 pan(0, -0.9, 0);
+        Vec3 pan(0, 0, 0);
+//        Vec3 pan(0, 0.9, 0);
+//        Vec3 position = pan + (agent.position() * scale);
+//        Vec3 position = pan + (Vec3(0, agent.position().z(), 0) * scale);
+        Vec3 fudge_orientation(agent.position().x(), agent.position().z(), 0);
+        Vec3 position = pan + (fudge_orientation * scale);
+
+        Vec3 a = Vec3(0, scale, 0).rotateXyAboutZ(angle);
         Vec3 b = a.rotateXyAboutZ(pi2 / 3);
         Vec3 c = b.rotateXyAboutZ(pi2 / 3);
         
+        a += position;
+        b += position;
+        c += position;
+
         int i = 0;
         xyz3[i++] = a.x();
         xyz3[i++] = a.y();

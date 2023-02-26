@@ -57,15 +57,16 @@ public:
         
         if (getSpeed() > 0)
         {
-            // TODO 20230223 -- DO MAGIC
-            Vec3 new_side = new_forward.cross(up());
-            Vec3 new_up = new_side.cross(new_forward);
+//            Vec3 new_side = new_forward.cross(up());
+//            Vec3 new_up = new_side.cross(new_forward);
+            Vec3 new_side = new_forward.cross(up()).normalize();
+            Vec3 new_up = new_side.cross(new_forward).normalize();
 
             Vec3 new_position = position() + (new_forward * getSpeed());
 
-            assert(new_side.length() == 1);
-            assert(new_up.length() == 1);
-            assert(new_forward.length() == 1);
+//            assert(new_side.length() == 1);
+//            assert(new_up.length() == 1);
+//            assert(new_forward.length() == 1);
             
             // TODO assert perpendicular...
             // ...
