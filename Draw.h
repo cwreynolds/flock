@@ -28,29 +28,9 @@ public:
     void init()
     {
         sample_opengl_code();
-        
-        
-        LocalSpace ls;
-        std::cout << ls << std::endl;
     }
 
-    // code from https://learnopengl.com/Getting-started/Hello-Triangle
-    const char *vertexShaderSource =
-        "#version 330 core                                    \
-         layout (location = 0) in vec3 aPos;                  \
-         void main()                                          \
-         {                                                    \
-             gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0); \
-         }";
-
-    const char *fragmentShaderSource =
-        "#version 330 core                             \
-         out vec4 FragColor;                           \
-         void main()                                   \
-         {                                             \
-             FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); \
-         }";
-
+    // TODO 20230219 just scaffolding to prototype OpenGL drawing code.
     int sample_opengl_code()
     {
         // start GL context and O/S window using the GLFW helper library
@@ -69,16 +49,16 @@ public:
 #endif
         
         // glfw window creation
-        GLFWwindow* window = glfwCreateWindow(window_width_, window_height_,
-                                              "flock", NULL, NULL);
-        if (window == NULL)
+        window_ = glfwCreateWindow(window_width_, window_height_,
+                                   "flock", NULL, NULL);
+        if (window_ == NULL)
         {
             std::cout << "Failed to create GLFW window" << std::endl;
             glfwTerminate();
             return -1;
         }
-        glfwMakeContextCurrent(window);
-        glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+        glfwMakeContextCurrent(window_);
+        glfwSetFramebufferSizeCallback(window_, framebuffer_size_callback);
         
         // get version info
         const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
@@ -121,117 +101,101 @@ public:
         }
         
         // link shaders
-        unsigned int shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
+        shaderProgram_ = glCreateProgram();
+        glAttachShader(shaderProgram_, vertexShader);
+        glAttachShader(shaderProgram_, fragmentShader);
+        glLinkProgram(shaderProgram_);
         // check for linking errors
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        glGetProgramiv(shaderProgram_, GL_LINK_STATUS, &success);
+        if (!success)
+        {
+            glGetProgramInfoLog(shaderProgram_, 512, NULL, infoLog);
             std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
                       << infoLog << std::endl;
         }
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
         
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        // TODO 20230219 starting to prototype animation
-        float vertices[9];
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        // TODO 20230224 testing Agent
-        Agent agent;
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        unsigned int VBO, VAO;
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
+        glGenVertexArrays(1, &VAO_);
+        glGenBuffers(1, &VBO_);
         
         // uncomment this call to draw in wireframe polygons.
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         
         // render loop
-        // -----------
-        while (!glfwWindowShouldClose(window))
-        {
-//            sampleVertexArray(frame_count_, vertices);
-            sampleVertexArray(agent, frame_count_, vertices);
+        while (!glfwWindowShouldClose(window_)) { drawFrame(); }
 
-            // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-            // and then configure vertex attributes(s).
-            glBindVertexArray(VAO);
-            
-            glBindBuffer(GL_ARRAY_BUFFER, VBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
-                         GL_STREAM_DRAW);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-                                  3 * sizeof(float), (void*)0);
-            glEnableVertexAttribArray(0);
-            
-            // note that this is allowed, the call to glVertexAttribPointer
-            // registered VBO as the vertex attribute's bound vertex buffer object
-            // so afterwards we can safely unbind
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            
-            // You can unbind the VAO afterwards so other VAO calls won't
-            // accidentally modify this VAO, but this rarely happens. Modifying
-            // other VAOs requires a call to glBindVertexArray anyways so we
-            // generally don't unbind VAOs (nor VBOs) when it's not directly
-            // necessary.
-            glBindVertexArray(0);
-            
-            // input
-            // -----
-            processInput(window);
-            
-            // render
-            // ------
-            glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-            
-            // draw our first triangle
-            glUseProgram(shaderProgram);
-            glBindVertexArray(VAO); // seeing as we only have a single VAO there's
-            // no need to bind it every time, but we'll do
-            // so to keep things a bit more organized
-            glDrawArrays(GL_TRIANGLES, 0, 3);
-            // glBindVertexArray(0); // no need to unbind it every time
-            
-            // glfw: swap buffers and poll IO events (keys pressed/released, mouse
-            // moved etc.)
-            glfwSwapBuffers(window);
-            glfwPollEvents();
-            
-            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            // TODO 20230224 testing Agent
-//            agent.steer(Vec3(0, 0, 1), 1.0 / 60);
-            // TODO 20230225 need to measure elapsed real time?
-//            agent.steer(Vec3(0, 0, 5), 1.0 / 60);
-//            agent.steer(Vec3(1, 0, 5), 1.0 / 60);
-            agent.steer(agent.side() * 20 + agent.forward() * 0.5, 1.0 / 60);
-
-            std::cout << frame_count_ << " s="
-                      << agent.getSpeed()
-                      << agent.ls() << std::endl;
-            
-            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-            frame_count_++;
-        }
-        
         std::cout << "frame_count = " << frame_count_ << std::endl;
         
+        // TODO 20230227 these should all be in the ~Draw() destructor.
         // optional: de-allocate all resources once they've outlived their purpose:
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
-        glDeleteProgram(shaderProgram);
-        
+        glDeleteVertexArrays(1, &VAO_);
+        glDeleteBuffers(1, &VBO_);
+        glDeleteProgram(shaderProgram_);
         // glfw: terminate, clearing all previously allocated GLFW resources.
         glfwTerminate();
+        
         return 0;
+    }
+    
+    void drawFrame()
+    {
+        sampleVertexArray(test_agent_, frame_count_, vertices_);
+
+        // bind the Vertex Array Object first, then bind and set vertex buffer(s),
+        // and then configure vertex attributes(s).
+        glBindVertexArray(VAO_);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, VBO_);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_,
+                     GL_STREAM_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                              3 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+        
+        // note that this is allowed, the call to glVertexAttribPointer
+        // registered VBO as the vertex attribute's bound vertex buffer object
+        // so afterwards we can safely unbind
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        // You can unbind the VAO afterwards so other VAO calls won't
+        // accidentally modify this VAO, but this rarely happens. Modifying
+        // other VAOs requires a call to glBindVertexArray anyways so we
+        // generally don't unbind VAOs (nor VBOs) when it's not directly
+        // necessary.
+        glBindVertexArray(0);
+        
+        // input
+        processInput(window_);
+
+        // render
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        
+        // draw our first triangle
+        glUseProgram(shaderProgram_);
+        glBindVertexArray(VAO_); // seeing as we only have a single VAO there's
+                                 // no need to bind it every time, but we'll do
+                                 // so to keep things a bit more organized
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        // glBindVertexArray(0); // no need to unbind it every time
+        
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse
+        // moved etc.)
+        glfwSwapBuffers(window_);
+        glfwPollEvents();
+        
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // TODO 20230224 testing Agent
+        // TODO 20230225 need to measure elapsed real time?
+        test_agent_.steer(test_agent_.side() * 20 +
+                          test_agent_.forward() * 0.5,
+                          1.0 / 60);
+        std::cout << frame_count_ << " s="
+                  << test_agent_.getSpeed()
+                  << test_agent_.ls() << std::endl;
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        frame_count_++;
     }
     
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -270,7 +234,6 @@ public:
         xyz3[i++] = c.y();
         xyz3[i++] = c.z();
     }
-
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     
@@ -297,4 +260,42 @@ private:
     int window_width_ = 1000;
     int window_height_ = 1000;
     int frame_count_ = 0;
+
+    unsigned int VAO_;
+    unsigned int VBO_;
+
+    // glfw window creation
+    GLFWwindow* window_ = nullptr;
+
+    unsigned int shaderProgram_;
+    
+    // code from https://learnopengl.com/Getting-started/Hello-Triangle
+    const char *vertexShaderSource =
+         "#version 330 core                                   \
+         layout (location = 0) in vec3 aPos;                  \
+         void main()                                          \
+         {                                                    \
+             gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0); \
+         }";
+    
+    const char *fragmentShaderSource =
+         "#version 330 core                            \
+         out vec4 FragColor;                           \
+         void main()                                   \
+         {                                             \
+             FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); \
+         }";
+    
+
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // TODO 20230219 starting to prototype animation
+    float vertices_[9];
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // TODO 20230224 testing Agent
+    Agent test_agent_;
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 };
