@@ -10,9 +10,11 @@
 
 #pragma once
 
-#include <GL/glew.h>    // Cross platform "OpenGL Extention Wrangle"
-#include <GLFW/glfw3.h> // Cross platform library for window management
-#include <iostream>     // c++ stream I/O
+#include <iostream>     // c++ stream I/O.
+#include <vector>       // STL adjustable array.
+
+#include <GL/glew.h>    // Cross platform "OpenGL Extention Wrangler".
+#include <GLFW/glfw3.h> // Cross platform library for window management.
 
 #include "Vec3.h"       // Cartesian 3d vector space utility.
 #include "Boid.h"       // Boid class, specialization of Agent.
@@ -140,14 +142,17 @@ public:
     
     void drawFrame()
     {
-        sampleVertexArray(test_agent_, frame_count_, vertices_);
+        vboDataClear();
+        sampleVertexArray(test_agent_, frame_count_);
 
         // bind the Vertex Array Object first, then bind and set vertex buffer(s),
         // and then configure vertex attributes(s).
         glBindVertexArray(VAO_);
         
         glBindBuffer(GL_ARRAY_BUFFER, VBO_);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_,
+        glBufferData(GL_ARRAY_BUFFER,
+                     vboDataBytes(),
+                     vboData().data(),
                      GL_STREAM_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
                               3 * sizeof(float), (void*)0);
@@ -198,10 +203,8 @@ public:
         frame_count_++;
     }
     
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // TODO 20230219 starting to prototype animation
-    
-    void sampleVertexArray(const Agent& agent, int frames, float* xyz3)
+    void sampleVertexArray(const Agent& agent, int frames)
     {
         // TODO 20230220 clean up. in c++20 it is std::numbers::pi
         float pi = M_PI;
@@ -222,20 +225,23 @@ public:
         a += position;
         b += position;
         c += position;
-
-        int i = 0;
-        xyz3[i++] = a.x();
-        xyz3[i++] = a.y();
-        xyz3[i++] = a.z();
-        xyz3[i++] = b.x();
-        xyz3[i++] = b.y();
-        xyz3[i++] = b.z();
-        xyz3[i++] = c.x();
-        xyz3[i++] = c.y();
-        xyz3[i++] = c.z();
+        addTriangle(a, b, c);
     }
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    // TODO should this be addTriangleToVBO() ?
+    void addTriangle(const Vec3& a, const Vec3& b, const Vec3& c)
+    {
+        addVertex(a);
+        addVertex(b);
+        addVertex(c);
+    }
+    
+    void addVertex(const Vec3& v)
+    {
+        vboData().push_back(v.x());
+        vboData().push_back(v.y());
+        vboData().push_back(v.z());
+    }
     
     // process all input: query GLFW whether relevant keys are pressed/released this
     // frame and react accordingly
@@ -255,6 +261,11 @@ public:
         glViewport(0, 0, width, height);
     }
 
+    // Wrappers for OpenGL VBO.
+    const std::vector<float>& vboData() const { return vbo_data_; }
+    std::vector<float>& vboData() { return vbo_data_; }
+    void vboDataClear() { vboData().clear(); }
+    unsigned int vboDataBytes() { return vboData().size() * sizeof(float); }
     
 private:
     int window_width_ = 1000;
@@ -286,16 +297,11 @@ private:
              FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); \
          }";
     
-
-
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // TODO 20230219 starting to prototype animation
-    float vertices_[9];
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Holds float data for VBO. Refilled each draw step.
+    std::vector<float> vbo_data_;
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // TODO 20230224 testing Agent
     Agent test_agent_;
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 };
