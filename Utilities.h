@@ -12,6 +12,11 @@
 #pragma once
 //#include <cmath>
 
+//    // TODO 20230220 clean up. in c++20 it is std::numbers::pi
+//    float pi = M_PI;
+//    float pi2 = pi * 2;
+
+
 // Square a float
 inline float sq(float f) { return f * f; }
 

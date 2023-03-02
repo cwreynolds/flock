@@ -75,12 +75,11 @@ public:
             ls().setIJKP(new_side, new_up, new_forward, new_position);
         }
     }
-
     
 private:
-    LocalSpace ls_;          // Agent's Local cordinate space (rotate translate).
-    float mass_ = 1;
-    float speed_ = 0;
-    float max_speed_ = 10;   // in, say, meters per second?
-    float max_force_ = 3;  // in, say, meters per second per second?
+    LocalSpace ls_;               // Local coordinate space (pos, orient).
+    float mass_ = 1;              // Mass, normally ignored as 1.
+    float speed_ = 0;             // Current forward speed (m/s).
+    float max_speed_ = 10;        // Speed upper limit (m/s)
+    float max_force_ = 3;         // Acceleration upper limit (m/s²)
 };

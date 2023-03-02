@@ -29,6 +29,11 @@ public:
       
     void init()
     {
+        // TODO 20230301 temp
+        test_agent_.ls().setIJKP(Vec3(1, 0, 0),
+                                 Vec3(0, 0, -1),
+                                 Vec3(0, 1, 0),
+                                 Vec3());
         sample_opengl_code();
     }
 
@@ -143,7 +148,7 @@ public:
     void drawFrame()
     {
         vboDataClear();
-        sampleVertexArray(test_agent_, frame_count_);
+        sampleVertexArray(test_agent_);
 
         // bind the Vertex Array Object first, then bind and set vertex buffer(s),
         // and then configure vertex attributes(s).
@@ -204,28 +209,27 @@ public:
     }
     
     // TODO 20230219 starting to prototype animation
-    void sampleVertexArray(const Agent& agent, int frames)
+    void sampleVertexArray(const Agent& agent)
     {
-        // TODO 20230220 clean up. in c++20 it is std::numbers::pi
-        float pi = M_PI;
-        float pi2 = pi * 2;
-        
-//        float scale = 0.004;
-        float scale = 0.04;
-        float angle = frames * 0.01;
-        Vec3 pan(0, 0, 0);
-        auto fudge_orientation = [&](Vec3 v) { return Vec3(v.x(), v.z(), 0); };
-        
-        Vec3 ap = fudge_orientation(agent.position());
-        Vec3 position = pan + (ap * scale);
+        addBoidToScene(agent);
+    }
 
-        Vec3 a = fudge_orientation(agent.forward()) * scale;
-        Vec3 b = a.rotateXyAboutZ(pi2 / 3);
-        Vec3 c = b.rotateXyAboutZ(pi2 / 3);
-        a += position;
-        b += position;
-        c += position;
-        addTriangle(a, b, c);
+    void addBoidToScene(const Agent& agent)
+    {
+        float boid_size = 0.5;
+        float draw_scale = 0.08;  // TODO this should be a class property
+        Vec3 side = agent.side();
+        Vec3 forward = agent.forward();
+        Vec3 position = agent.position();
+        
+        Vec3 front = forward * boid_size;
+        Vec3 right = side * boid_size;
+        
+        Vec3 nose  = (position + front)         * draw_scale;
+        Vec3 wing1 = (position - front + right) * draw_scale;
+        Vec3 wing2 = (position - front - right) * draw_scale;
+        
+        addTriangle(nose, wing1, wing2);
     }
 
     // TODO should this be addTriangleToVBO() ?
