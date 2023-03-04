@@ -47,7 +47,20 @@ public:
         }
 
 //        int flock_size = 5;
-        int flock_size = 1;
+//        int flock_size = 1;
+//        int flock_size = 2;
+        int flock_size = 9;
+
+//        float draw_scale_ = 0.08;
+
+//        std::vector<Vec3> centers = {{0.02, 0.02, 0}, {-0.02, -0.02, 0}};
+//        std::vector<Vec3> centers = {{2, 2, 0}, {-2, -2, 0}};
+//        std::vector<Vec3> centers = {{1, 1, 0}, {-1, 1, 0}};
+        std::vector<Vec3> centers = {{4, 4, 0}, {-4, -4, 0}};
+        
+        
+        // TODO probably unneeded, just grasping at straws:
+        boids_.clear();
 
 //        for (int i = 0; i < 5; i++)
         for (int i = 0; i < flock_size; i++)
@@ -58,10 +71,12 @@ public:
             boids_[i].ls().setIJKP(Vec3(1, 0, 0),
                                    Vec3(0, 0, -1),
                                    Vec3(0, 1, 0),
-                                   Vec3(rs.frandom2(-s, s),
-                                        rs.frandom2(-s, s),
-                                        // rs.frandom2(-s, s)));
-                                        0));
+//                                   Vec3(rs.frandom2(-s, s),
+//                                        rs.frandom2(-s, s),
+//                                        // rs.frandom2(-s, s)));
+//                                        0));
+//                                   centers[i]);
+                                   Vec3(-4, -4, 0) + Vec3(1, 1, 0) * i);
         }
         
         for (auto& boid : boids_) { debugPrint(boid.ls()); }
@@ -244,7 +259,9 @@ public:
         {
             // TODO 20230224 testing Agent
             // TODO 20230225 need to measure elapsed real time?
-            boid.steer(boid.side() * 20 + boid.forward() * 0.5, 1.0 / 60);
+            
+//            boid.steer(boid.side() * 20 + boid.forward() * 0.5, 1.0 / 60);
+            
             std::cout << frame_count_ << " s="
                       << boid.getSpeed()
                       << boid.ls() << std::endl;
@@ -255,11 +272,6 @@ public:
         frame_count_++;
     }
     
-//    // TODO 20230219 starting to prototype animation
-//    void sampleVertexArray(const Agent& agent)
-//    {
-//        addBoidToScene(agent);
-//    }
     // TODO 20230219 starting to prototype animation
     void sampleVertexArray()
     {
@@ -269,68 +281,6 @@ public:
         }
         debugPrint(vboDataBytes());
     }
-
-//        void addBoidToScene(const Agent& agent)
-//        {
-//            float boid_size = 0.5;
-//    //        float draw_scale = 0.08;  // TODO this should be a class property
-//            Vec3 side = agent.side();
-//            Vec3 forward = agent.forward();
-//            Vec3 position = agent.position();
-//
-//            Vec3 front = forward * boid_size;
-//            Vec3 right = side * boid_size;
-//
-//    //        Vec3 nose  = (position + front)         * draw_scale;
-//    //        Vec3 wing1 = (position - front + right) * draw_scale;
-//    //        Vec3 wing2 = (position - front - right) * draw_scale;
-//            Vec3 nose  = (position + front)         * drawScale();
-//            Vec3 wing1 = (position - front + right) * drawScale();
-//            Vec3 wing2 = (position - front - right) * drawScale();
-//
-//            addTriangle(nose, wing1, wing2);
-//        }
-
-//        void addBoidToScene(const Agent& agent)
-//        {
-//            float boid_size = 0.5;
-//            Vec3 side = agent.side();
-//            Vec3 forward = agent.forward();
-//            Vec3 position = agent.position();
-//
-//    //        Vec3 front = forward * boid_size;
-//    //        Vec3 right = side * boid_size;
-//            Vec3 nose_offset = forward * boid_size;
-//            Vec3 wing_offset = side * boid_size;
-//
-//    //        Vec3 nose  = (position + front)         * drawScale();
-//    //        Vec3 wing1 = (position - front + right) * drawScale();
-//    //        Vec3 wing2 = (position - front - right) * drawScale();
-//            Vec3 nose  = (position + nose_offset              ) * drawScale();
-//            Vec3 wing1 = (position - nose_offset + wing_offset) * drawScale();
-//            Vec3 wing2 = (position - nose_offset - wing_offset) * drawScale();
-//
-//            addTriangle(nose, wing1, wing2);
-//        }
-
-//        void addBoidToScene(const Agent& agent)
-//        {
-//            float boid_size = 0.5;
-//    //        Vec3 side = agent.side();
-//    //        Vec3 forward = agent.forward();
-//    //        Vec3 position = agent.position();
-//    //        Vec3 nose_offset = forward * boid_size;
-//    //        Vec3 wing_offset = side * boid_size;
-//            Vec3 position = agent.position();
-//            Vec3 nose_offset = agent.forward() * boid_size;
-//            Vec3 wing_offset = agent.side() * boid_size;
-//
-//            Vec3 nose  = (position + nose_offset              ) * drawScale();
-//            Vec3 wing1 = (position - nose_offset + wing_offset) * drawScale();
-//            Vec3 wing2 = (position - nose_offset - wing_offset) * drawScale();
-//
-//            addTriangle(nose, wing1, wing2);
-//        }
 
     void addBoidToScene(const Agent& agent)
     {
@@ -354,6 +304,11 @@ public:
     
     void addVertex(const Vec3& v)
     {
+        // 20230303 TODO TEMP
+        assert(between(v.x(), -1, 1));
+        assert(between(v.y(), -1, 1));
+        assert(between(v.z(), -1, 1));
+        
         vboData().push_back(v.x());
         vboData().push_back(v.y());
         vboData().push_back(v.z());

@@ -73,6 +73,12 @@ inline float clip01 (const float x)
     return clip(x, 0, 1);
 }
 
+// True when x is between given bounds (low ≤ x ≤ high)
+inline bool between(float x, float low, float high)
+{
+    return (low <= x) && (x <= high);
+}
+
 // Takes a 32 bit value and shuffles it around to produce a new 32 bit value.
 // "Robert Jenkins' 32 bit integer hash function" from "Integer Hash Function"
 // (1997) by Thomas Wang (https://gist.github.com/badboy/6267743)
