@@ -29,11 +29,43 @@ public:
       
     void init()
     {
-        // TODO 20230301 temp
-        test_agent_.ls().setIJKP(Vec3(1, 0, 0),
-                                 Vec3(0, 0, -1),
-                                 Vec3(0, 1, 0),
-                                 Vec3());
+//        // TODO 20230301 temp
+//        test_agent_.ls().setIJKP(Vec3(1, 0, 0),
+//                                 Vec3(0, 0, -1),
+//                                 Vec3(0, 1, 0),
+//                                 Vec3());
+        
+        
+        
+
+        RandomSequence rs;
+                
+        for (int i = 0; i < 30; i++)
+        {
+            debugPrint(rs.frandom01());
+            debugPrint(rs.frandom2(1, 10));
+        }
+
+//        int flock_size = 5;
+        int flock_size = 1;
+
+//        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < flock_size; i++)
+        {
+//            float s = drawScale() * 0.1;
+            float s = drawScale() * 0.5;
+            boids_.push_back(Boid());
+            boids_[i].ls().setIJKP(Vec3(1, 0, 0),
+                                   Vec3(0, 0, -1),
+                                   Vec3(0, 1, 0),
+                                   Vec3(rs.frandom2(-s, s),
+                                        rs.frandom2(-s, s),
+                                        // rs.frandom2(-s, s)));
+                                        0));
+        }
+        
+        for (auto& boid : boids_) { debugPrint(boid.ls()); }
+
         sample_opengl_code();
     }
 
@@ -145,10 +177,12 @@ public:
         return 0;
     }
     
+    // TODO maybe call this drawScene() ?
     void drawFrame()
     {
         vboDataClear();
-        sampleVertexArray(test_agent_);
+//        sampleVertexArray(test_agent_);
+        sampleVertexArray();
 
         // bind the Vertex Array Object first, then bind and set vertex buffer(s),
         // and then configure vertex attributes(s).
@@ -196,39 +230,117 @@ public:
         glfwPollEvents();
         
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        // TODO 20230224 testing Agent
-        // TODO 20230225 need to measure elapsed real time?
-        test_agent_.steer(test_agent_.side() * 20 +
-                          test_agent_.forward() * 0.5,
-                          1.0 / 60);
-        std::cout << frame_count_ << " s="
-                  << test_agent_.getSpeed()
-                  << test_agent_.ls() << std::endl;
+//        // TODO 20230224 testing Agent
+//        // TODO 20230225 need to measure elapsed real time?
+//        test_agent_.steer(test_agent_.side() * 20 +
+//                          test_agent_.forward() * 0.5,
+//                          1.0 / 60);
+//        std::cout << frame_count_ << " s="
+//                  << test_agent_.getSpeed()
+//                  << test_agent_.ls() << std::endl;
+        
+        
+        for (auto& boid : boids_)
+        {
+            // TODO 20230224 testing Agent
+            // TODO 20230225 need to measure elapsed real time?
+            boid.steer(boid.side() * 20 + boid.forward() * 0.5, 1.0 / 60);
+            std::cout << frame_count_ << " s="
+                      << boid.getSpeed()
+                      << boid.ls() << std::endl;
+            
+        }
+        
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         frame_count_++;
     }
     
+//    // TODO 20230219 starting to prototype animation
+//    void sampleVertexArray(const Agent& agent)
+//    {
+//        addBoidToScene(agent);
+//    }
     // TODO 20230219 starting to prototype animation
-    void sampleVertexArray(const Agent& agent)
+    void sampleVertexArray()
     {
-        addBoidToScene(agent);
+        for (auto& boid : boids_)
+        {
+            addBoidToScene(boid);
+        }
+        debugPrint(vboDataBytes());
     }
+
+//        void addBoidToScene(const Agent& agent)
+//        {
+//            float boid_size = 0.5;
+//    //        float draw_scale = 0.08;  // TODO this should be a class property
+//            Vec3 side = agent.side();
+//            Vec3 forward = agent.forward();
+//            Vec3 position = agent.position();
+//
+//            Vec3 front = forward * boid_size;
+//            Vec3 right = side * boid_size;
+//
+//    //        Vec3 nose  = (position + front)         * draw_scale;
+//    //        Vec3 wing1 = (position - front + right) * draw_scale;
+//    //        Vec3 wing2 = (position - front - right) * draw_scale;
+//            Vec3 nose  = (position + front)         * drawScale();
+//            Vec3 wing1 = (position - front + right) * drawScale();
+//            Vec3 wing2 = (position - front - right) * drawScale();
+//
+//            addTriangle(nose, wing1, wing2);
+//        }
+
+//        void addBoidToScene(const Agent& agent)
+//        {
+//            float boid_size = 0.5;
+//            Vec3 side = agent.side();
+//            Vec3 forward = agent.forward();
+//            Vec3 position = agent.position();
+//
+//    //        Vec3 front = forward * boid_size;
+//    //        Vec3 right = side * boid_size;
+//            Vec3 nose_offset = forward * boid_size;
+//            Vec3 wing_offset = side * boid_size;
+//
+//    //        Vec3 nose  = (position + front)         * drawScale();
+//    //        Vec3 wing1 = (position - front + right) * drawScale();
+//    //        Vec3 wing2 = (position - front - right) * drawScale();
+//            Vec3 nose  = (position + nose_offset              ) * drawScale();
+//            Vec3 wing1 = (position - nose_offset + wing_offset) * drawScale();
+//            Vec3 wing2 = (position - nose_offset - wing_offset) * drawScale();
+//
+//            addTriangle(nose, wing1, wing2);
+//        }
+
+//        void addBoidToScene(const Agent& agent)
+//        {
+//            float boid_size = 0.5;
+//    //        Vec3 side = agent.side();
+//    //        Vec3 forward = agent.forward();
+//    //        Vec3 position = agent.position();
+//    //        Vec3 nose_offset = forward * boid_size;
+//    //        Vec3 wing_offset = side * boid_size;
+//            Vec3 position = agent.position();
+//            Vec3 nose_offset = agent.forward() * boid_size;
+//            Vec3 wing_offset = agent.side() * boid_size;
+//
+//            Vec3 nose  = (position + nose_offset              ) * drawScale();
+//            Vec3 wing1 = (position - nose_offset + wing_offset) * drawScale();
+//            Vec3 wing2 = (position - nose_offset - wing_offset) * drawScale();
+//
+//            addTriangle(nose, wing1, wing2);
+//        }
 
     void addBoidToScene(const Agent& agent)
     {
         float boid_size = 0.5;
-        float draw_scale = 0.08;  // TODO this should be a class property
-        Vec3 side = agent.side();
-        Vec3 forward = agent.forward();
         Vec3 position = agent.position();
-        
-        Vec3 front = forward * boid_size;
-        Vec3 right = side * boid_size;
-        
-        Vec3 nose  = (position + front)         * draw_scale;
-        Vec3 wing1 = (position - front + right) * draw_scale;
-        Vec3 wing2 = (position - front - right) * draw_scale;
-        
+        Vec3 nose_offset = agent.forward() * boid_size;
+        Vec3 wing_offset = agent.side() * boid_size;
+        Vec3 nose  = (position + nose_offset              ) * drawScale();
+        Vec3 wing1 = (position - nose_offset + wing_offset) * drawScale();
+        Vec3 wing2 = (position - nose_offset - wing_offset) * drawScale();
         addTriangle(nose, wing1, wing2);
     }
 
@@ -271,10 +383,15 @@ public:
     void vboDataClear() { vboData().clear(); }
     unsigned int vboDataBytes() { return vboData().size() * sizeof(float); }
     
+    float drawScale() const { return draw_scale_; }
+
 private:
     int window_width_ = 1000;
     int window_height_ = 1000;
     int frame_count_ = 0;
+    
+    float draw_scale_ = 0.08;
+
 
     unsigned int VAO_;
     unsigned int VBO_;
@@ -304,8 +421,10 @@ private:
     // Holds float data for VBO. Refilled each draw step.
     std::vector<float> vbo_data_;
 
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // TODO 20230224 testing Agent
-    Agent test_agent_;
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//    // TODO 20230224 testing Agent
+//    Agent test_agent_;
+    
+    // Flock of boids.
+    std::vector<Boid> boids_;
+
 };
