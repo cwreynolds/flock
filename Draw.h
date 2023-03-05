@@ -29,44 +29,21 @@ public:
       
     void init()
     {
-//        // TODO 20230301 temp
-//        test_agent_.ls().setIJKP(Vec3(1, 0, 0),
-//                                 Vec3(0, 0, -1),
-//                                 Vec3(0, 1, 0),
-//                                 Vec3());
-        
-        
-        
-
         RandomSequence rs;
-                
-        for (int i = 0; i < 30; i++)
-        {
-            debugPrint(rs.frandom01());
-            debugPrint(rs.frandom2(1, 10));
-        }
-
 //        int flock_size = 5;
 //        int flock_size = 1;
 //        int flock_size = 2;
-        int flock_size = 9;
+//        int flock_size = 9;
+        int flock_size = 13;
+//        int flock_size = 2;
 
-//        float draw_scale_ = 0.08;
-
-//        std::vector<Vec3> centers = {{0.02, 0.02, 0}, {-0.02, -0.02, 0}};
-//        std::vector<Vec3> centers = {{2, 2, 0}, {-2, -2, 0}};
-//        std::vector<Vec3> centers = {{1, 1, 0}, {-1, 1, 0}};
-        std::vector<Vec3> centers = {{4, 4, 0}, {-4, -4, 0}};
-        
-        
         // TODO probably unneeded, just grasping at straws:
         boids_.clear();
 
-//        for (int i = 0; i < 5; i++)
         for (int i = 0; i < flock_size; i++)
         {
 //            float s = drawScale() * 0.1;
-            float s = drawScale() * 0.5;
+//            float s = drawScale() * 0.5;
             boids_.push_back(Boid());
             boids_[i].ls().setIJKP(Vec3(1, 0, 0),
                                    Vec3(0, 0, -1),
@@ -75,8 +52,21 @@ public:
 //                                        rs.frandom2(-s, s),
 //                                        // rs.frandom2(-s, s)));
 //                                        0));
+                                   
 //                                   centers[i]);
-                                   Vec3(-4, -4, 0) + Vec3(1, 1, 0) * i);
+                                   
+//                                   Vec3(-4, -4, 0) + Vec3(1, 1, 0) * i);
+
+//                                   Vec3(-4, -4, -4) + (Vec3(.1, .1, .1) * i));
+
+//                                   Vec3(-6, -6, 0) + Vec3(1, 1, 0) * i);
+//                                   Vec3(6, 6, 0) + Vec3(-1, -1, 0) * i);
+
+//                                   Vec3(-6, -6, -1) + Vec3(1, 1, 0) * i);
+                                   Vec3(-6, -6, 0) + Vec3(1, 1, 0) * i);
+
+//                                   Vec3(-6, -6, 0) + Vec3(0.5, 0.5, 0) * i);
+
         }
         
         for (auto& boid : boids_) { debugPrint(boid.ls()); }
@@ -196,12 +186,13 @@ public:
     void drawFrame()
     {
         vboDataClear();
-//        sampleVertexArray(test_agent_);
         sampleVertexArray();
 
         // bind the Vertex Array Object first, then bind and set vertex buffer(s),
         // and then configure vertex attributes(s).
         glBindVertexArray(VAO_);
+        
+//        debugPrint(sizeof(vbo_data_.data()));
         
         glBindBuffer(GL_ARRAY_BUFFER, VBO_);
         glBufferData(GL_ARRAY_BUFFER,
@@ -236,7 +227,15 @@ public:
         glBindVertexArray(VAO_); // seeing as we only have a single VAO there's
                                  // no need to bind it every time, but we'll do
                                  // so to keep things a bit more organized
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        // 20230304 TODO AHA!! need to specify the number of triangles!!
+//        glDrawArrays(GL_TRIANGLES, 0, 3);
+//        glDrawArrays(GL_TRIANGLES, 0, vboDataBytes() / (9 * sizeof(float)));
+//        glDrawArrays(GL_TRIANGLES, 0, triangle_count_);
+        glDrawArrays(GL_TRIANGLES, 0, triangle_count_ * 3);
+
+        
+        
         // glBindVertexArray(0); // no need to unbind it every time
         
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse
@@ -244,23 +243,12 @@ public:
         glfwSwapBuffers(window_);
         glfwPollEvents();
         
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//        // TODO 20230224 testing Agent
-//        // TODO 20230225 need to measure elapsed real time?
-//        test_agent_.steer(test_agent_.side() * 20 +
-//                          test_agent_.forward() * 0.5,
-//                          1.0 / 60);
-//        std::cout << frame_count_ << " s="
-//                  << test_agent_.getSpeed()
-//                  << test_agent_.ls() << std::endl;
-        
-        
         for (auto& boid : boids_)
         {
-            // TODO 20230224 testing Agent
             // TODO 20230225 need to measure elapsed real time?
+            float dt = 1.0 / 60.0;
             
-//            boid.steer(boid.side() * 20 + boid.forward() * 0.5, 1.0 / 60);
+            boid.steer(boid.side() * 20 + (boid.forward() * 0.5), dt);
             
             std::cout << frame_count_ << " s="
                       << boid.getSpeed()
@@ -268,18 +256,15 @@ public:
             
         }
         
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         frame_count_++;
     }
     
     // TODO 20230219 starting to prototype animation
     void sampleVertexArray()
     {
-        for (auto& boid : boids_)
-        {
-            addBoidToScene(boid);
-        }
+        for (auto& boid : boids_) { addBoidToScene(boid); }
         debugPrint(vboDataBytes());
+        debugPrint(triangle_count_);
     }
 
     void addBoidToScene(const Agent& agent)
@@ -300,14 +285,15 @@ public:
         addVertex(a);
         addVertex(b);
         addVertex(c);
+        triangle_count_++;
     }
     
     void addVertex(const Vec3& v)
     {
-        // 20230303 TODO TEMP
-        assert(between(v.x(), -1, 1));
-        assert(between(v.y(), -1, 1));
-        assert(between(v.z(), -1, 1));
+//        // 20230303 TODO TEMP
+//        assert(between(v.x(), -1, 1));
+//        assert(between(v.y(), -1, 1));
+//        assert(between(v.z(), -1, 1));
         
         vboData().push_back(v.x());
         vboData().push_back(v.y());
@@ -335,7 +321,8 @@ public:
     // Wrappers for OpenGL VBO.
     const std::vector<float>& vboData() const { return vbo_data_; }
     std::vector<float>& vboData() { return vbo_data_; }
-    void vboDataClear() { vboData().clear(); }
+//    void vboDataClear() { vboData().clear(); }
+    void vboDataClear() { vboData().clear(); triangle_count_ = 0; }
     unsigned int vboDataBytes() { return vboData().size() * sizeof(float); }
     
     float drawScale() const { return draw_scale_; }
@@ -345,7 +332,8 @@ private:
     int window_height_ = 1000;
     int frame_count_ = 0;
     
-    float draw_scale_ = 0.08;
+//    float draw_scale_ = 0.08;
+    float draw_scale_ = 0.04;
 
 
     unsigned int VAO_;
@@ -375,6 +363,9 @@ private:
     
     // Holds float data for VBO. Refilled each draw step.
     std::vector<float> vbo_data_;
+    
+    int triangle_count_ = 0;
+
 
 //    // TODO 20230224 testing Agent
 //    Agent test_agent_;
