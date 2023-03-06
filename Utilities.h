@@ -12,6 +12,7 @@
 #pragma once
 //#include <cmath>
 #include <cstdlib>
+class Vec3;
 
 //    // TODO 20230220 clean up. in c++20 it is std::numbers::pi
 //    float pi = M_PI;
@@ -132,6 +133,7 @@ public:
     // Return random element of given std::vector.
     template<typename T> T randomSelectElement(const std::vector<T>& collection)
     { return collection.at(randomN(collection.size())); }
+    
 //    // TODO these duplicate the function of the same name in global namespace.
 //    //  Maybe those should be replaced by defining a global RandomSequence which
 //    // must be specifically written in source code. This may help avoid the
@@ -143,6 +145,11 @@ public:
 //    Vec2 randomPointInAxisAlignedRectangle(Vec2 a, Vec2 b);
 //    // TODO moved from Color class to here on June 30, 2020:
 //    Color randomUnitRGB();
+    
+    Vec3 randomUnitVector();
+    Vec3 randomPointInUnitRadiusSphere();
+    Vec3 randomPointInAxisAlignedBox(Vec3 a, Vec3 b);
+    
     // Set seed (RS state) to given value, or defaultSeed() if none given.
     void setSeed() { state_ = defaultSeed(); }
     void setSeed(uint32_t seed) { state_ = seed; }

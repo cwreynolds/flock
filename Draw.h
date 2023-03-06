@@ -26,51 +26,28 @@ public:
     Draw() { init(); }
     Draw(int window_width, int window_height)
       : window_width_(window_width), window_height_(window_height) { init(); }
-      
+
     void init()
     {
-        RandomSequence rs;
-//        int flock_size = 5;
-//        int flock_size = 1;
-//        int flock_size = 2;
-//        int flock_size = 9;
-        int flock_size = 13;
-//        int flock_size = 2;
-
-        // TODO probably unneeded, just grasping at straws:
-        boids_.clear();
-
+//        RandomSequence rs;
+//        float s = 300 * drawScale();
+        float s = 400 * drawScale();
+        debugPrint(s);
+//        int flock_size = 13;
+//        int flock_size = 40;
+        int flock_size = 60;
         for (int i = 0; i < flock_size; i++)
         {
-//            float s = drawScale() * 0.1;
-//            float s = drawScale() * 0.5;
+//            Vec3 p(rs().frandom2(-s, s), rs().frandom2(-s, s), 0);
+            Vec3 p(rs().frandom2(-s, s), rs().frandom2(-s, s), s);
             boids_.push_back(Boid());
             boids_[i].ls().setIJKP(Vec3(1, 0, 0),
                                    Vec3(0, 0, -1),
                                    Vec3(0, 1, 0),
-//                                   Vec3(rs.frandom2(-s, s),
-//                                        rs.frandom2(-s, s),
-//                                        // rs.frandom2(-s, s)));
-//                                        0));
-                                   
-//                                   centers[i]);
-                                   
-//                                   Vec3(-4, -4, 0) + Vec3(1, 1, 0) * i);
-
-//                                   Vec3(-4, -4, -4) + (Vec3(.1, .1, .1) * i));
-
-//                                   Vec3(-6, -6, 0) + Vec3(1, 1, 0) * i);
-//                                   Vec3(6, 6, 0) + Vec3(-1, -1, 0) * i);
-
-//                                   Vec3(-6, -6, -1) + Vec3(1, 1, 0) * i);
-                                   Vec3(-6, -6, 0) + Vec3(1, 1, 0) * i);
-
-//                                   Vec3(-6, -6, 0) + Vec3(0.5, 0.5, 0) * i);
-
+                                   p);
+            boids_[i].ls().setIJKP(Vec3(1,0,0), Vec3(0,0,-1), Vec3(0,1,0), p);
         }
-        
-        for (auto& boid : boids_) { debugPrint(boid.ls()); }
-
+//        for (auto& boid : boids_) { debugPrint(boid.ls()); }
         sample_opengl_code();
     }
 
@@ -191,9 +168,7 @@ public:
         // bind the Vertex Array Object first, then bind and set vertex buffer(s),
         // and then configure vertex attributes(s).
         glBindVertexArray(VAO_);
-        
-//        debugPrint(sizeof(vbo_data_.data()));
-        
+                
         glBindBuffer(GL_ARRAY_BUFFER, VBO_);
         glBufferData(GL_ARRAY_BUFFER,
                      vboDataBytes(),
@@ -228,14 +203,9 @@ public:
                                  // no need to bind it every time, but we'll do
                                  // so to keep things a bit more organized
 
-        // 20230304 TODO AHA!! need to specify the number of triangles!!
-//        glDrawArrays(GL_TRIANGLES, 0, 3);
-//        glDrawArrays(GL_TRIANGLES, 0, vboDataBytes() / (9 * sizeof(float)));
-//        glDrawArrays(GL_TRIANGLES, 0, triangle_count_);
+        // Draw triangles (as 3*t vertices).
         glDrawArrays(GL_TRIANGLES, 0, triangle_count_ * 3);
 
-        
-        
         // glBindVertexArray(0); // no need to unbind it every time
         
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse
@@ -243,19 +213,15 @@ public:
         glfwSwapBuffers(window_);
         glfwPollEvents();
         
+        // Advance each boid by onem simulation step.
         for (auto& boid : boids_)
         {
             // TODO 20230225 need to measure elapsed real time?
             float dt = 1.0 / 60.0;
-            
-            boid.steer(boid.side() * 20 + (boid.forward() * 0.5), dt);
-            
-            std::cout << frame_count_ << " s="
-                      << boid.getSpeed()
-                      << boid.ls() << std::endl;
-            
+//            boid.steer(boid.side() * 20 + (boid.forward() * 0.5), dt);
+//            boid.steer(boid.wanderSteer(rs(), dt) * 0.01, dt);
+            boid.steer(boid.wanderSteer(rs()) * 0.01, dt);
         }
-        
         frame_count_++;
     }
     
@@ -263,8 +229,6 @@ public:
     void sampleVertexArray()
     {
         for (auto& boid : boids_) { addBoidToScene(boid); }
-        debugPrint(vboDataBytes());
-        debugPrint(triangle_count_);
     }
 
     void addBoidToScene(const Agent& agent)
@@ -290,11 +254,6 @@ public:
     
     void addVertex(const Vec3& v)
     {
-//        // 20230303 TODO TEMP
-//        assert(between(v.x(), -1, 1));
-//        assert(between(v.y(), -1, 1));
-//        assert(between(v.z(), -1, 1));
-        
         vboData().push_back(v.x());
         vboData().push_back(v.y());
         vboData().push_back(v.z());
@@ -321,27 +280,33 @@ public:
     // Wrappers for OpenGL VBO.
     const std::vector<float>& vboData() const { return vbo_data_; }
     std::vector<float>& vboData() { return vbo_data_; }
-//    void vboDataClear() { vboData().clear(); }
-    void vboDataClear() { vboData().clear(); triangle_count_ = 0; }
     unsigned int vboDataBytes() { return vboData().size() * sizeof(float); }
-    
+    void vboDataClear()
+    {
+        vboData().clear();
+        triangle_count_ = 0;
+    }
+
     float drawScale() const { return draw_scale_; }
+    
+    RandomSequence& rs() { return rs_; }
+
 
 private:
     int window_width_ = 1000;
     int window_height_ = 1000;
     int frame_count_ = 0;
     
-//    float draw_scale_ = 0.08;
+    // Overall draw scale, to be replaced by 3d camera model.
     float draw_scale_ = 0.04;
-
 
     unsigned int VAO_;
     unsigned int VBO_;
 
-    // glfw window creation
+    // Pointer to window created by GLFW
     GLFWwindow* window_ = nullptr;
 
+    // ID for triangle shader program.
     unsigned int shaderProgram_;
     
     // code from https://learnopengl.com/Getting-started/Hello-Triangle
@@ -364,13 +329,11 @@ private:
     // Holds float data for VBO. Refilled each draw step.
     std::vector<float> vbo_data_;
     
+    // Per frame count of triangles added to scene.
     int triangle_count_ = 0;
 
+    RandomSequence rs_;
 
-//    // TODO 20230224 testing Agent
-//    Agent test_agent_;
-    
     // Flock of boids.
     std::vector<Boid> boids_;
-
 };

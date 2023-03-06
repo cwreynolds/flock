@@ -109,3 +109,48 @@ inline std::ostream& operator<<(std::ostream& os, const Vec3& v)
     os << "(" << v.x() << ", " << v.y() <<", " << v.z() << ")";
     return os;
 }
+
+
+inline Vec3 RandomSequence::randomPointInAxisAlignedBox(Vec3 a, Vec3 b)
+{
+    return Vec3(random2(std::min(a.x(), b.x()), std::max(a.x(), b.x())),
+                random2(std::min(a.y(), b.y()), std::max(a.y(), b.y())),
+                random2(std::min(a.z(), b.z()), std::max(a.z(), b.z())));
+}
+
+//inline Vec2 RandomSequence::randomPointInAxisAlignedRectangle(Vec2 a, Vec2 b)
+//{
+//    return Vec2(random2(std::min(a.x(), b.x()), std::max(a.x(), b.x())),
+//                random2(std::min(a.y(), b.y()), std::max(a.y(), b.y())));
+//}
+
+
+// Generate a random point inside a unit diameter disk centered on origin.
+inline Vec3 RandomSequence::randomPointInUnitRadiusSphere()
+{
+    Vec3 v;
+//    float h = 0.5;
+//    do { v = {frandom01() - h, frandom01() - h}; } while (v.length() > h);
+    do
+    {
+//        v = {frandom2(-1, 1), frandom2(-1, 1), frandom2(-1, 1)};
+        v = randomPointInAxisAlignedBox(Vec3(-1, -1, -1), Vec3(1, 1, 1));
+    }
+    while (v.length() > 1);
+    return v;
+}
+
+// Generate a random unit vector.
+inline Vec3 RandomSequence::randomUnitVector()
+{
+    Vec3 v;
+    float m = v.length();
+    do
+    {
+        v = randomPointInUnitRadiusSphere();
+        m = v.length();
+    }
+    while (m == 0);
+    return v / m;
+}
+
