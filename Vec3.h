@@ -144,7 +144,8 @@ inline Vec3 RandomSequence::randomPointInUnitRadiusSphere()
 inline Vec3 RandomSequence::randomUnitVector()
 {
     Vec3 v;
-    float m = v.length();
+//    float m = v.length();
+    float m = 0;
     do
     {
         v = randomPointInUnitRadiusSphere();

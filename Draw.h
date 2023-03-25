@@ -29,6 +29,14 @@ public:
 
     void init()
     {
+//        // 20230307 very temp
+//        for (int t = 5; t > 0; t--)
+//        {
+//            using namespace std::chrono_literals;
+//            std::this_thread::sleep_for(1000ms);
+//            std::cout << t << std::endl;
+//        }
+        
 //        RandomSequence rs;
 //        float s = 300 * drawScale();
         float s = 400 * drawScale();
@@ -293,8 +301,10 @@ public:
 
 
 private:
-    int window_width_ = 1000;
-    int window_height_ = 1000;
+//    int window_width_ = 1000;
+//    int window_height_ = 1000;
+    int window_width_ = 500;
+    int window_height_ = 500;
     int frame_count_ = 0;
     
     // Overall draw scale, to be replaced by 3d camera model.

@@ -12,6 +12,8 @@
 #pragma once
 //#include <cmath>
 #include <cstdlib>
+#include <chrono>
+#include <thread>
 class Vec3;
 
 //    // TODO 20230220 clean up. in c++20 it is std::numbers::pi
