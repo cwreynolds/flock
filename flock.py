@@ -1,5 +1,6 @@
 import open3d as o3d
 import numpy as np
+import math
 
 
 #    # Create a triangle with vertices at (0, 0, 0), (1, 0, 0), and (0, 1, 0)
@@ -33,23 +34,81 @@ def add_random_triangle():
 #                           mesh_vertex_count + 3])
 #    mesh_vertex_count += 3
 
+#    def add_triangle(position, orientation):
+#    #    xyz = np.array([0, 0, 0])
+#        xyz = np.array([position[0], position[1], position[2]])
+#
+#        rp = xyz + [frandom01(), frandom01(), 0]
+#        mesh_vertices.append(rp)
+#        rp = xyz + [frandom01(), frandom01(), 0]
+#        mesh_vertices.append(rp)
+#        rp = xyz + [frandom01(), frandom01(), 0]
+#        mesh_vertices.append(rp)
+#
+#        global mesh_vertex_count
+#        mesh_triangles.append([mesh_vertex_count,
+#                               mesh_vertex_count + 1,
+#                               mesh_vertex_count + 3])
+#        mesh_vertex_count += 3
+
+#    def add_triangle(position, orientation):
+#        xyz = np.array([position[0], position[1], position[2]])
+#
+#        print()
+#        print('xyz =', xyz)
+#
+#        for i in range(3):
+#            ro = np.array([frandom01(), frandom01(), 0])
+#            print('ro = ', ro)
+#            rp = xyz + np.array([frandom01(), frandom01(), 0])
+#            print('rp = ', rp)
+#            mesh_vertices.append(rp)
+#
+#        global mesh_vertex_count
+#        mesh_triangles.append([mesh_vertex_count,
+#                               mesh_vertex_count + 1,
+#                               mesh_vertex_count + 3])
+#        mesh_vertex_count += 3
+
 def add_triangle(position, orientation):
-#    xyz = np.array([0, 0, 0])
     xyz = np.array([position[0], position[1], position[2]])
     
-    rp = xyz + [frandom01(), frandom01(), 0]
-    mesh_vertices.append(rp)
-    rp = xyz + [frandom01(), frandom01(), 0]
-    mesh_vertices.append(rp)
-    rp = xyz + [frandom01(), frandom01(), 0]
-    mesh_vertices.append(rp)
+    v = np.array([1, 0, 0])
+    a = frandom01() * math.pi * 2
+    
+    print()
+    print(xyz)
+    
+    for i in range(3):
+#        ro = np.array([frandom01(), frandom01(), 0])
+        a += math.pi * 2 / 3
+        v = np.array(rotate_xy_about_z(v, a))
+        print('v = ', v)
+        rp = xyz + np.array(v)
+        print('rp = ', rp)
+        mesh_vertices.append(rp)
     
     global mesh_vertex_count
     mesh_triangles.append([mesh_vertex_count,
                            mesh_vertex_count + 1,
-                           mesh_vertex_count + 3])
+                           mesh_vertex_count + 2])
     mesh_vertex_count += 3
 
+#    // TODO 20230221 reconsider name, etc.
+#    Vec3 rotateXyAboutZ(float angle) const
+#    {
+#        float s = std::sin(angle);
+#        float c = std::cos(angle);
+#        return Vec3(x() * c + y() * s, y() * c - x() * s, z());
+#    }
+
+def rotate_xy_about_z(vec3, angle):
+    s = math.sin(angle)
+    c = math.cos(angle)
+    x = vec3[0]
+    y = vec3[1]
+    z = vec3[2]
+    return [(x * c + y * s), y * c - x * s, z]
 
 def test():
 
@@ -67,6 +126,18 @@ def test():
 #    triangle_mesh.triangles = o3d.utility.Vector3iVector(triangle_indices)
     triangle_mesh.vertices = mesh_vertices
     triangle_mesh.triangles = mesh_triangles
+    
+    print('len(mesh_vertices) =', len(mesh_vertices))
+    print('len(mesh_triangles) =', len(mesh_triangles))
+
+#    print('mesh_vertices.asarray() =', mesh_vertices.asarray())
+#    print('mesh_triangles.asarray() =', mesh_triangles.asarray())
+
+    print('Vertices:')
+    print(np.asarray(triangle_mesh.vertices))
+    print('Triangles:')
+    print(np.asarray(triangle_mesh.triangles))
+
 
     vis = o3d.visualization.Visualizer()
     vis.create_window()
@@ -74,7 +145,8 @@ def test():
     
     rot_z_angle = 0
 
-    for i in range(200):
+#    for i in range(200):
+    for i in range(400):
 #        triangle_mesh.vertices = o3d.utility.Vector3dVector(triangle_vertices)
 #        triangle_mesh.triangles = o3d.utility.Vector3iVector(triangle_indices)
         triangle_mesh.vertices = mesh_vertices
@@ -94,158 +166,12 @@ def test():
 if __name__ == "__main__":
 #    for i in range(50):
 #        print(frandom01())
+
+#    print('[1, 2, 3] + [10, 20, 30]', [1, 2, 3] + [10, 20, 30])
+    
+#        rp = xyz + np.array([frandom01(), frandom01(), 0])
+
+#    print('np.array([1, 2, 3]) + np.array([10, 20, 30])',
+#          np.array([1, 2, 3]) + np.array([10, 20, 30]))
+    
     test()
-
-
-
-################################################################################
-
-
-
-
-#    # derived from http://www.open3d.org/docs/release/tutorial/visualization/non_blocking_visualization.html
-#
-#    def test():
-#
-#        # Create a triangle with vertices at (0, 0, 0), (1, 0, 0), and (0, 1, 0)
-#        triangle_vertices = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-#        triangle_indices = np.array([[0, 1, 2]])
-#
-#        # Create a mesh from the triangle vertices and indices
-#        triangle_mesh = o3d.geometry.TriangleMesh()
-#        triangle_mesh.vertices = o3d.utility.Vector3dVector(triangle_vertices)
-#        triangle_mesh.triangles = o3d.utility.Vector3iVector(triangle_indices)
-#
-#        vis = o3d.visualization.Visualizer()
-#        vis.create_window()
-#        #    vis.add_geometry(source)
-#        #    vis.add_geometry(target)
-#        vis.add_geometry(triangle_mesh)
-#
-#        #    threshold = 0.05
-#        #    icp_iteration = 100
-#        #    save_image = False
-#
-#        #for i in range(icp_iteration):
-#        #        reg_p2l = o3d.pipelines.registration.registration_icp(
-#        #            source, target, threshold, np.identity(4),
-#        #            o3d.pipelines.registration.TransformationEstimationPointToPlane(),
-#        #            o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=1))
-#        #        source.transform(reg_p2l.transformation)
-#        for i in range(200):
-#
-#        #    triangle_mesh.rotate(1,2,3)
-#
-#        #    R = mesh.get_rotation_matrix_from_xyz((np.pi / 2, 0, np.pi / 4))
-#        #    mesh_r.rotate(R, center=(0, 0, 0))
-#        #    R = triangle_mesh.get_rotation_matrix_from_xyz((1,2,3))
-#            R = triangle_mesh.get_rotation_matrix_from_xyz((0,0,0.01))
-#            triangle_mesh.rotate(R, center=(0, 0, 0))
-#
-#
-#
-#        #    vis.update_geometry(source)
-#            vis.update_geometry(triangle_mesh)
-#            vis.poll_events()
-#            vis.update_renderer()
-#        #        if save_image:
-#        #            vis.capture_screen_image("temp_%04d.jpg" % i)
-#        vis.destroy_window()
-#
-#
-#    if __name__ == "__main__":
-#        test()
-
-
-
-#    # suggested by ChatGPT:
-#
-#    import open3d as o3d
-#    import numpy as np
-#
-#    # Create a triangle with vertices at (0, 0, 0), (1, 0, 0), and (0, 1, 0)
-#    triangle_vertices = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-#    triangle_indices = np.array([[0, 1, 2]])
-#
-#    # Create a mesh from the triangle vertices and indices
-#    triangle_mesh = o3d.geometry.TriangleMesh()
-#    triangle_mesh.vertices = o3d.utility.Vector3dVector(triangle_vertices)
-#    triangle_mesh.triangles = o3d.utility.Vector3iVector(triangle_indices)
-#
-#    # Create a visualization window and add the triangle mesh to it
-#    vis = o3d.visualization.Visualizer()
-#    vis.create_window()
-#    #vis.add_geometry(triangle_mesh)
-#
-#    # Create a view control to rotate the camera
-#    view_control = vis.get_view_control()
-#    view_control.rotate(10.0, 0.0)
-#
-#    # Keep rotating the camera until the window is closed
-#    i = 0
-#    while True:
-#    #    view_control.rotate(10.0, 0.0)
-#        view_control.rotate(1, 2, 3)
-#    #    vis.update_geometry()
-#        vis.update_geometry(triangle_mesh)
-#        vis.poll_events()
-#        vis.update_renderer()
-#        print(i)
-#        i += 1
-
-#vis.destroy_window()
-
-
-#    import open3d as o3d
-#    import numpy as np
-#
-#    # Create a triangle with vertices at (0, 0, 0), (1, 0, 0), and (0, 1, 0)
-#    triangle_vertices = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-#    triangle_indices = np.array([[0, 1, 2]])
-#
-#    # Create a mesh from the triangle vertices and indices
-#    triangle_mesh = o3d.geometry.TriangleMesh()
-#    triangle_mesh.vertices = o3d.utility.Vector3dVector(triangle_vertices)
-#    triangle_mesh.triangles = o3d.utility.Vector3iVector(triangle_indices)
-#
-#    # Create a visualization window and add the triangle mesh to it
-#    vis = o3d.visualization.Visualizer()
-#    vis.create_window()
-#    vis.add_geometry(triangle_mesh)
-#
-#    #    # Create a view control to rotate the camera
-#    #    view_control = vis.get_view_control()
-#    #    view_control.rotate(10.0, 0.0)
-#
-#
-#    # Keep rotating the camera until the window is closed
-#    #while not vis.poll_events():
-#    #while True:
-#    while vis.poll_events():
-#    #    view_control.rotate(10.0, 0.0)
-#        triangle_mesh.rotate(10, 0)
-#        vis.update_renderer()
-#
-#    vis.destroy_window()
-
-
-#    import open3d as o3d
-#    import numpy as np
-#
-#    # Create a triangle with vertices at (0, 0, 0), (1, 0, 0), and (0, 1, 0)
-#    triangle_vertices = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-#    triangle_indices = np.array([[0, 1, 2]])
-#
-#    # Create a mesh from the triangle vertices and indices
-#    triangle_mesh = o3d.geometry.TriangleMesh()
-#    triangle_mesh.vertices = o3d.utility.Vector3dVector(triangle_vertices)
-#    triangle_mesh.triangles = o3d.utility.Vector3iVector(triangle_indices)
-#
-#    # Create a visualization window and add the triangle mesh to it
-#    vis = o3d.visualization.Visualizer()
-#    vis.create_window()
-#    vis.add_geometry(triangle_mesh)
-#
-#    # Render the visualization
-#    vis.run()
-#    vis.destroy_window()
