@@ -22,10 +22,27 @@ def add_random_triangle():
                   0)
 
 
+#def add_triangle(position, orientation):
+##    xyz = np.array([0, 0, 0])
+#    xyz = np.array([position[0], position[1], position[2]])
+#    mesh_vertices.append(xyz)
+#
+#    global mesh_vertex_count
+#    mesh_triangles.append([mesh_vertex_count,
+#                           mesh_vertex_count + 1,
+#                           mesh_vertex_count + 3])
+#    mesh_vertex_count += 3
+
 def add_triangle(position, orientation):
 #    xyz = np.array([0, 0, 0])
     xyz = np.array([position[0], position[1], position[2]])
-    mesh_vertices.append(xyz)
+    
+    rp = xyz + [frandom01(), frandom01(), 0]
+    mesh_vertices.append(rp)
+    rp = xyz + [frandom01(), frandom01(), 0]
+    mesh_vertices.append(rp)
+    rp = xyz + [frandom01(), frandom01(), 0]
+    mesh_vertices.append(rp)
     
     global mesh_vertex_count
     mesh_triangles.append([mesh_vertex_count,
