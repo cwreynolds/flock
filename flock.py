@@ -2,6 +2,9 @@ import open3d as o3d
 import numpy as np
 import math
 
+from Vec3 import Vec3
+
+
 mesh_vertices = o3d.utility.Vector3dVector()
 mesh_triangles = o3d.utility.Vector3iVector()
 mesh_vertex_count = 0
@@ -107,4 +110,7 @@ if __name__ == "__main__":
     
 #    test()
 
-    face_color_test()
+#    face_color_test()
+
+    print('Vec3.unit_test() =', Vec3.unit_test())
+
