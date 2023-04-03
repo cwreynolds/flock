@@ -13,6 +13,7 @@
 #
 #-------------------------------------------------------------------------------
 
+import math
 
 class Vec3:
     """Utility class for 3d vectors and operations on them."""
@@ -31,52 +32,90 @@ class Vec3:
         return Vec3(list[0], list[1], list[2])
         
     def __str__(self):
-        return (str(self.__class__) + "(" +
-                str(self.x) + ", " +
-                str(self.y) + ", " +
-                str(self.z) + ")")
+        return (self.__class__.__name__ + "(" +
+                str(self.x) + ", " + str(self.y) + ", " + str(self.z) + ")")
 
     def __eq__(self, v):
         # print('in __eq__() self =', self, 'v =', v)
-        return (isinstance(v, Vec3) and
+        return (isinstance(v, self.__class__) and
                 v.x == self.x and
                 v.y == self.y and
                 v.z == self.z)
                 
     def __ne__(self, v):
         return not (self == v)
+        
+    def __lt__(self, v):
+        return self.length() < v.length()
+        
+    def __add__(self, v):
+        return Vec3(self.x + v.x, self.y + v.y, self.z + v.z)
+
+    def __sub__(self, v):
+        return Vec3(self.x - v.x, self.y - v.y, self.z - v.z)
+
+    def __mul__(self, scale):
+        return Vec3(self.x * scale, self.y * scale, self.z * scale)
+
+    def __truediv__(self, scale):
+        return Vec3(self.x / scale, self.y / scale, self.z / scale)
+
+    def __neg__(self):
+        return Vec3(-self.x, -self.y, -self.z)
 
     # Vector operations dot product, length (norm), normalize.
     def dot(self, v):
         return (self.x * v.x) + (self.y * v.y) + (self.z * v.z)
-    
-#    float length() const { return std::sqrt(lengthSquared()); }
-#    float lengthSquared() const { return sq(x()) + sq(y()) + sq(z()); }
-#    Vec3 normalize() const { return *this / length(); }
+    def length(self):
+        return math.sqrt(self.length_squared())
+    def length_squared(self):
+        return (self.x * self.x) + (self.y * self.y) + (self.z * self.z)
+    def normalize(self):
+        return self / self.length()
+        
+    # Returns vector parallel to "this" but no longer than "max_length"
+    def truncate(self, max_length):
+        truncated = self
+        magnitude = self.length()
+        if magnitude > max_length:
+            truncated = self * (max_length / magnitude)
+        return truncated
 
-    @classmethod
-    def unit_test(cls):
-        return ((Vec3(1, 2, 3) == Vec3(1, 2, 3)) and
-                (Vec3(0, 0, 0) != Vec3(1, 0, 0)) and
-                (Vec3(0, 0, 0) != Vec3(0, 1, 0)) and
-                (Vec3(0, 0, 0) != Vec3(0, 0, 1)) and
-                (Vec3(1, 2, 3).dot(Vec3(4, 5, 6)) == 32) and
-                
-#                (Vec3(2, 3, 6).length() == 7) &&
-#                (Vec3(2, 3, 6).normalize() == Vec3(2, 3, 6) / 7) &&
-#                (Vec3(1, 2, 3) + Vec3(4, 5, 6) == Vec3(5, 7, 9)) &&
-#                (Vec3(5, 7, 9) - Vec3(4, 5, 6) == Vec3(1, 2, 3)) &&
-#                (-Vec3(1, 2, 3) == Vec3(-1, -2, -3)) &&
-#                (Vec3(1, 2, 3) * 2 == Vec3(2, 4, 6)) &&
-#                (Vec3(2, 4, 6) / 2 == Vec3(1, 2, 3)) &&
-#                (Vec3(1, 2, 3) < Vec3(-1, -2, -4)) &&
-#                ((Vec3(4, 5, 6) += Vec3(1, 2, 3)) == Vec3(5, 7, 9)) &&
-#                ((Vec3(5, 7, 9) -= Vec3(4, 5, 6)) == Vec3(1, 2, 3)) &&
-#                ((Vec3(1, 2, 3) *= 2) == Vec3(2, 4, 6)) &&
-#                ((Vec3(2, 4, 6) /= 2) == Vec3(1, 2, 3)) &&
-#                (Vec3(3, 0, 0).truncate(2) == Vec3(2, 0, 0))
-                 True
-                )
+    @staticmethod  # This decoration seems to be completely optional,
+                   # but for the avoidance of doubt
+    def unit_test():
+        ok = True
+        ok &= (str(Vec3(1, 2, 3)) == 'Vec3(1, 2, 3)')
+        ok &= (Vec3(1, 2, 3) == Vec3(1, 2, 3))
+        ok &= (Vec3(0, 0, 0) != Vec3(1, 0, 0))
+        ok &= (Vec3(0, 0, 0) != Vec3(0, 1, 0))
+        ok &= (Vec3(0, 0, 0) != Vec3(0, 0, 1))
+        ok &= (Vec3(1, 2, 3).dot(Vec3(4, 5, 6)) == 32)
+        ok &= (Vec3(2, 3, 6).length() == 7)
+        ok &= (Vec3(2, 3, 6).normalize() == Vec3(2, 3, 6) / 7)
+        ok &= (Vec3(1, 2, 3) + Vec3(4, 5, 6) == Vec3(5, 7, 9))
+        ok &= (Vec3(5, 7, 9) - Vec3(4, 5, 6) == Vec3(1, 2, 3))
+        ok &= (-Vec3(1, 2, 3) == Vec3(-1, -2, -3))
+        ok &= (Vec3(1, 2, 3) * 2 == Vec3(2, 4, 6))
+        ok &= (Vec3(2, 4, 6) / 2 == Vec3(1, 2, 3))
+        ok &= (Vec3(1, 2, 3) < Vec3(-1, -2, -4))
+        v = Vec3(4, 5, 6)
+        v += Vec3(1, 2, 3)
+        ok &= (v == Vec3(5, 7, 9))
+        v = Vec3(5, 7, 9)
+        v -= Vec3(4, 5, 6)
+        ok &= (v == Vec3(1, 2, 3))
+        v = Vec3(1, 2, 3)
+        v *= 2
+        ok &= (v == Vec3(2, 4, 6))
+        v = Vec3(2, 4, 6)
+        v /= 2
+        ok &= (v == Vec3(1, 2, 3))
+        ok &= (Vec3(3, 0, 0).truncate(2) == Vec3(2, 0, 0))
+        ok &= (Vec3(1, 0, 0).truncate(2) == Vec3(1, 0, 0))
+
+        # TODO ALSO test for cross()
+        return ok
 
 
 
