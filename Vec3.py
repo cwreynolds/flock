@@ -56,6 +56,9 @@ class Vec3:
 
     def __mul__(self, scale):
         return Vec3(self.x * scale, self.y * scale, self.z * scale)
+    
+    def __rmul__(self, scale):
+        return Vec3(self.x * scale, self.y * scale, self.z * scale)
 
     def __truediv__(self, scale):
         return Vec3(self.x / scale, self.y / scale, self.z / scale)
@@ -80,6 +83,13 @@ class Vec3:
         if magnitude > max_length:
             truncated = self * (max_length / magnitude)
         return truncated
+        
+    # Cross product
+    def cross(a, b):
+        # (From https://en.wikipedia.org/wiki/Cross_product#Matrix_notation)
+        return Vec3(a.y * b.z - a.z * b.y,
+                    a.z * b.x - a.x * b.z,
+                    a.x * b.y - a.y * b.x)
 
     @staticmethod  # This decoration seems to be completely optional,
                    # but for the avoidance of doubt
@@ -93,28 +103,42 @@ class Vec3:
         ok &= (Vec3(1, 2, 3).dot(Vec3(4, 5, 6)) == 32)
         ok &= (Vec3(2, 3, 6).length() == 7)
         ok &= (Vec3(2, 3, 6).normalize() == Vec3(2, 3, 6) / 7)
+        ok &= (Vec3(3, 0, 0).truncate(2) == Vec3(2, 0, 0))
+        ok &= (Vec3(1, 0, 0).truncate(2) == Vec3(1, 0, 0))
         ok &= (Vec3(1, 2, 3) + Vec3(4, 5, 6) == Vec3(5, 7, 9))
         ok &= (Vec3(5, 7, 9) - Vec3(4, 5, 6) == Vec3(1, 2, 3))
         ok &= (-Vec3(1, 2, 3) == Vec3(-1, -2, -3))
         ok &= (Vec3(1, 2, 3) * 2 == Vec3(2, 4, 6))
+        ok &= (2 * Vec3(1, 2, 3) == Vec3(2, 4, 6))
         ok &= (Vec3(2, 4, 6) / 2 == Vec3(1, 2, 3))
         ok &= (Vec3(1, 2, 3) < Vec3(-1, -2, -4))
+        
+        i = Vec3(1, 0, 0)
+        j = Vec3(0, 1, 0)
+        k = Vec3(0, 0, 1)
+        ok &= (i.cross(j) == k)
+        ok &= (j.cross(k) == i)
+        ok &= (k.cross(i) == j)
+        ok &= (i.cross(k) == -j)
+        ok &= (j.cross(i) == -k)
+        ok &= (k.cross(j) == -i)
+
         v = Vec3(4, 5, 6)
         v += Vec3(1, 2, 3)
         ok &= (v == Vec3(5, 7, 9))
+        
         v = Vec3(5, 7, 9)
         v -= Vec3(4, 5, 6)
         ok &= (v == Vec3(1, 2, 3))
+        
         v = Vec3(1, 2, 3)
         v *= 2
         ok &= (v == Vec3(2, 4, 6))
+        
         v = Vec3(2, 4, 6)
         v /= 2
         ok &= (v == Vec3(1, 2, 3))
-        ok &= (Vec3(3, 0, 0).truncate(2) == Vec3(2, 0, 0))
-        ok &= (Vec3(1, 0, 0).truncate(2) == Vec3(1, 0, 0))
 
-        # TODO ALSO test for cross()
         return ok
 
 
