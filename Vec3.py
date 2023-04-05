@@ -36,7 +36,6 @@ class Vec3:
                 str(self.x) + ", " + str(self.y) + ", " + str(self.z) + ")")
 
     def __eq__(self, v):
-        # print('in __eq__() self =', self, 'v =', v)
         return (isinstance(v, self.__class__) and
                 v.x == self.x and
                 v.y == self.y and

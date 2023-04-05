@@ -1,9 +1,8 @@
-import open3d as o3d
-import numpy as np
 import math
-
+import numpy as np
+import open3d as o3d
 from Vec3 import Vec3
-
+from LocalSpace import LocalSpace
 
 mesh_vertices = o3d.utility.Vector3dVector()
 mesh_triangles = o3d.utility.Vector3iVector()
@@ -84,11 +83,9 @@ def test():
 def face_color_test():
     mesh = o3d.geometry.TriangleMesh.create_octahedron()
     rgb = [[0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1]]
+    # face_colors = o3d.utility.Vector3dVector(np.array(rgb, np.float32))
     face_colors = o3d.utility.Vector3iVector(np.array(rgb, np.int32))
     mesh.triangles["colors"] = face_colors
-    mesh.compute_vertex_normals()
-
-    # Create a visualization window, add mesh, render.
     vis = o3d.visualization.Visualizer()
     vis.create_window()
     vis.add_geometry(mesh)
@@ -97,7 +94,12 @@ def face_color_test():
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+import sys
+
 if __name__ == "__main__":
+    print('Python version =', sys.version)
+    print('o3d.__version__ =', o3d.__version__)
+
 #    for i in range(50):
 #        print(frandom01())
 
@@ -113,4 +115,8 @@ if __name__ == "__main__":
 #    face_color_test()
 
     print('Vec3.unit_test() =', Vec3.unit_test())
+    
+    print('LocalSpace() =', LocalSpace())
+    
+    
 
