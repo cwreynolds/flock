@@ -97,8 +97,8 @@ def face_color_test():
 import sys
 
 if __name__ == "__main__":
-    print('Python version =', sys.version)
-    print('o3d.__version__ =', o3d.__version__)
+#    print('Python version =', sys.version)
+#    print('o3d.__version__ =', o3d.__version__)
 
 #    for i in range(50):
 #        print(frandom01())
@@ -116,7 +116,8 @@ if __name__ == "__main__":
 
     print('Vec3.unit_test() =', Vec3.unit_test())
     
-    print('LocalSpace() =', LocalSpace())
-    
+#    print('LocalSpace() =', LocalSpace())
+    print('LocalSpace.unit_test() =', LocalSpace.unit_test())
+
     
 

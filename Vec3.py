@@ -14,6 +14,7 @@
 #-------------------------------------------------------------------------------
 
 import math
+import numpy as np
 
 class Vec3:
     """Utility class for 3d vectors and operations on them."""
@@ -25,11 +26,22 @@ class Vec3:
         self.y = y
         self.z = z
     
-    # TODO 20230402 should constructor take (x, y, z) or ([x, y, z])
-    # does this work?
-    @classmethod
-    def from_list(cls, list):
-        return Vec3(list[0], list[1], list[2])
+#    # TODO 20230402 should constructor take (x, y, z) or ([x, y, z])
+#    # does this work?
+#    @classmethod
+#    def from_list(cls, list):
+#        return Vec3(list[0], list[1], list[2])
+
+    # Alternate constructor, aka factory, to construct Vec3 from any array-like.
+    @staticmethod  # This decoration seems to be completely optional,
+                   # but for the avoidance of doubt
+    def from_array(array_like):
+        a = np.asarray(array_like)
+        return Vec3(a[0], a[1], a[2])
+        
+    # Return contents of this Vec3 as an np.array.
+    def asarray(self):
+        return np.array([self.x, self.y, self.z])
         
     def __str__(self):
         return (self.__class__.__name__ + "(" +
@@ -85,6 +97,8 @@ class Vec3:
         
     # Cross product
     def cross(a, b):
+        def isVec3(x): return isinstance(x, Vec3)
+        assert (isVec3(a) and isVec3(b)), "Vec3.cross(a, b) args must be Vec3."
         # (From https://en.wikipedia.org/wiki/Cross_product#Matrix_notation)
         return Vec3(a.y * b.z - a.z * b.y,
                     a.z * b.x - a.x * b.z,
@@ -99,6 +113,8 @@ class Vec3:
         ok &= (Vec3(0, 0, 0) != Vec3(1, 0, 0))
         ok &= (Vec3(0, 0, 0) != Vec3(0, 1, 0))
         ok &= (Vec3(0, 0, 0) != Vec3(0, 0, 1))
+        ok &= (Vec3(1, 2, 3) == Vec3.from_array([1, 2, 3]))
+        ok &= np.array_equal(Vec3(1, 2, 3).asarray(), [1, 2, 3])
         ok &= (Vec3(1, 2, 3).dot(Vec3(4, 5, 6)) == 32)
         ok &= (Vec3(2, 3, 6).length() == 7)
         ok &= (Vec3(2, 3, 6).normalize() == Vec3(2, 3, 6) / 7)
@@ -121,7 +137,7 @@ class Vec3:
         ok &= (i.cross(k) == -j)
         ok &= (j.cross(i) == -k)
         ok &= (k.cross(j) == -i)
-
+        
         v = Vec3(4, 5, 6)
         v += Vec3(1, 2, 3)
         ok &= (v == Vec3(5, 7, 9))

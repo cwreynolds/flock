@@ -15,6 +15,7 @@
 # MIT License -- Copyright © 2023 Craig Reynolds#
 #-------------------------------------------------------------------------------
 
+import numpy as np
 from Vec3 import Vec3
 
 class LocalSpace:
@@ -29,9 +30,29 @@ class LocalSpace:
         # Position of local center:
         self.p = Vec3(0, 0, 0)
 
+    # TODO 20230405 speculative API, maybe for PinholeCameraParameters?
+    def asarray(self):
+        return np.array([[self.i.x, self.i.y, self.i.z, 0],
+                         [self.j.x, self.j.y, self.j.z, 0],
+                         [self.k.x, self.k.y, self.k.z, 0],
+                         [self.p.x, self.p.y, self.p.z, 1]])
+    
     # Describe LocalSpace as string.
     def __str__(self):
         return ("[i="  + str(self.i) +
                 ", j=" + str(self.j) +
                 ", k=" + str(self.k) +
                 ", p=" + str(self.p) + "]")
+
+    @staticmethod  # This decoration seems to be completely optional,
+                   # but for the avoidance of doubt
+    def unit_test():
+        ok = True
+        identity_asarray = np.array([[1, 0, 0, 0],
+                                     [0, 1, 0, 0],
+                                     [0, 0, 1, 0],
+                                     [0, 0, 0, 1]])
+#        print('identity_asarray =', identity_asarray)
+#        print('LocalSpace().asarray() =', LocalSpace().asarray())
+        ok &= np.array_equal(LocalSpace().asarray(), identity_asarray)
+        return ok
