@@ -2,6 +2,7 @@ import math
 import numpy as np
 import open3d as o3d
 from Vec3 import Vec3
+from Agent import Agent
 from LocalSpace import LocalSpace
 
 mesh_vertices = o3d.utility.Vector3dVector()
@@ -119,5 +120,4 @@ if __name__ == "__main__":
 #    print('LocalSpace() =', LocalSpace())
     print('LocalSpace.unit_test() =', LocalSpace.unit_test())
 
-    
-
+    print('Agent.unit_test() =', Agent.unit_test())
