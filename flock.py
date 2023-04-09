@@ -2,8 +2,11 @@ import math
 import numpy as np
 import open3d as o3d
 from Vec3 import Vec3
-from Agent import Agent
+from Boid import Boid
+#from Agent import Agent
 from LocalSpace import LocalSpace
+import Utilities as util
+
 
 mesh_vertices = o3d.utility.Vector3dVector()
 mesh_triangles = o3d.utility.Vector3iVector()
@@ -11,25 +14,29 @@ mesh_vertex_count = 0
 
 mesh_vertex_colors = o3d.utility.Vector3dVector()
 
-def interpolate(alpha, p, q):
-    return (p * (1 - alpha)) + (q * alpha)
-
-def frandom01():
-    return np.random.uniform(0, 1)
-
-def frandom2(a, b):
-    return interpolate(frandom01(), a, b)
+#def interpolate(alpha, p, q):
+#    return (p * (1 - alpha)) + (q * alpha)
+#
+#    def frandom01():
+#        return np.random.uniform(0, 1)
+#
+#    def frandom2(a, b):
+#        return interpolate(frandom01(), a, b)
 
 def add_random_triangle():
     pos_scale = 50
-    add_triangle([pos_scale * frandom01(), pos_scale * frandom01(), 0], None)
+    add_triangle([pos_scale * util.frandom01(),
+                  pos_scale * util.frandom01(),
+                  0], None)
 
 def add_triangle(position, orientation):
     xyz = np.array([position[0], position[1], position[2]])
     
     v = np.array([1, 0, 0])
-    a = frandom01() * math.pi * 2
-    color = [frandom2(0.4, 0.6), frandom2(0.4, 0.6), frandom2(0.4, 0.6)]
+    a = util.frandom01() * math.pi * 2
+    color = [util.frandom2(0.4, 0.6),
+             util.frandom2(0.4, 0.6),
+             util.frandom2(0.4, 0.6)]
     
     for i in range(3):
         a += math.pi * 2 / 3
@@ -95,6 +102,27 @@ def face_color_test():
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+# TODO 20230408 prototype flock top level
+
+def run_flock(size, initial_diameter):
+    
+    flock = []
+    r = initial_diameter / 2  # radius of random position spread
+    for i in range(size):
+        boid = Boid()
+#        boid.ls.p = Vec3(spread * frandom01(), 0, spread * frandom01())
+        boid.ls.p = Vec3(util.frandom2(-r, r), 0, util.frandom2(-r, r))
+        
+        boid.wander_steer(None)
+        
+        flock.append(boid)
+        
+#    draw = Draw()
+
+    # boid.wander_steer(None)
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 import sys
 
 if __name__ == "__main__":
@@ -120,4 +148,13 @@ if __name__ == "__main__":
 #    print('LocalSpace() =', LocalSpace())
     print('LocalSpace.unit_test() =', LocalSpace.unit_test())
 
-    print('Agent.unit_test() =', Agent.unit_test())
+#    print('Agent.unit_test() =', Agent.unit_test())
+    print('Boid.unit_test() =', Boid.unit_test())
+
+    print('util.unit_test() =', util.unit_test())
+
+    run_flock(10, 10) # 10 boids in a 10x10 area
+    
+#    seed = 0
+#    for i in range(50):
+#        print('util.rehash32bits(seed)', seed := util.rehash32bits(seed))

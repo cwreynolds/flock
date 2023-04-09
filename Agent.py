@@ -11,26 +11,9 @@
 #-------------------------------------------------------------------------------
 
 import math
+import Utilities as util
 from Vec3 import Vec3
 from LocalSpace import LocalSpace
-
-################################################################################
-# TODO move to a new Utilities.py
-
-# Constrain a given value "x" to be between two bounds: "bound0" and "bound1"
-# (without regard to order). Returns x if it is between the bounds, otherwise
-# returns the nearer bound.
-def clip(x, bound0, bound1):
-    clipped = x
-    minimum = min(bound0, bound1)
-    maximum = max(bound0, bound1)
-    if clipped < minimum:
-        clipped = minimum
-    if clipped > maximum:
-        clipped = maximum
-    return clipped
-################################################################################
-
 
 class Agent:
     """A steerable agent base class."""
@@ -68,7 +51,7 @@ class Agent:
         
         # TODO 20230407 what if new_speed is zero?
         #               maybe this should be inside speed>0 block?
-        self.speed = clip(new_speed, 0, self.max_speed)
+        self.speed = util.clip(new_speed, 0, self.max_speed)
         new_forward = new_velocity / new_speed;
 
         if (self.speed > 0):
