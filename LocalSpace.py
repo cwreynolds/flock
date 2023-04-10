@@ -30,6 +30,20 @@ class LocalSpace:
         # Position of local center:
         self.p = Vec3(0, 0, 0)
 
+    # 20230409 TODO this assumes unit length, orthonormal bases.
+    #               Should either generalize (why?) or put in an assert.
+    def localize(self, global_vector):
+        v = global_vector - self.p
+        return Vec3(v.dot(self.i),  v.dot(self.j), v.dot(self.k))
+
+    def globalize(self, local_vector):
+#        return (local_vector.x * self.i +
+#                local_vector.y * self.j +
+#                local_vector.z * self.k +
+#                self.p)
+        v = local_vector
+        return ((v.x * self.i) + (v.y * self.j) + (v.z * self.k) + self.p)
+
     # TODO 20230405 speculative API, maybe for PinholeCameraParameters?
     def asarray(self):
         return np.array([[self.i.x, self.i.y, self.i.z, 0],
