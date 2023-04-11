@@ -37,10 +37,6 @@ class LocalSpace:
         return Vec3(v.dot(self.i),  v.dot(self.j), v.dot(self.k))
 
     def globalize(self, local_vector):
-#        return (local_vector.x * self.i +
-#                local_vector.y * self.j +
-#                local_vector.z * self.k +
-#                self.p)
         v = local_vector
         return ((v.x * self.i) + (v.y * self.j) + (v.z * self.k) + self.p)
 
