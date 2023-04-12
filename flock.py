@@ -20,6 +20,9 @@ def prolog():
 
 # TODO 20230408 prototype flock top level
 def run_flock(size, initial_diameter):
+#    Draw.test_callback()
+#    Draw.custom_draw_geometry_with_rotation(o3d.geometry.TriangleMesh.create_octahedron())
+
     prolog()
     draw = Draw() ## ?? currently unused but should contain draw state
     Boid.add_boid_to_flock(size, initial_diameter)
@@ -33,6 +36,9 @@ def run_flock(size, initial_diameter):
         Draw.clear_scene()
         Boid.draw_flock()
         Draw.update_scene()
+        some_boid = Boid.flock[0]
+#        print('boid.speed =', some_boid.speed)
+        Draw.update_camera(some_boid.position().asarray())
     Draw.close_visualizer()
 
 if __name__ == "__main__":

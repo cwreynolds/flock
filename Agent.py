@@ -23,8 +23,12 @@ class Agent:
         self.ls = LocalSpace()    # Local coordinate space (pos, orient).
         self.mass = 1             # Mass, normally ignored as 1.
         self.speed = 0            # Current forward speed (m/s).
-        self.max_speed = 10       # Speed upper limit (m/s)
-        self.max_force = 3        # Acceleration upper limit (m/s²)
+#        self.max_speed = 10       # Speed upper limit (m/s)
+#        self.max_force = 3        # Acceleration upper limit (m/s²)
+        # TODO 20230411 no idea if these values are plausible for these units
+        #                I mean they are meter-long birds?!
+        self.max_speed = 1.0      # Speed upper limit (m/s)
+        self.max_force = 0.3      # Acceleration upper limit (m/s²)
 
     # Agent-specific names for components of local space
     def side(self):     return self.ls.i
@@ -75,11 +79,23 @@ class Agent:
         a = Agent()
         force = Vec3(0.1, 0.1, 1)
         time_step = 1 / 60
-        a.steer(force, time_step)
-        a.steer(force, time_step)
-        a.steer(force, time_step)
-        ref_position = Vec3(0.005, 0.005, 0.10041450153584738)
-    
+        
+        
+#        print(a.position)
+#        a.steer(force, time_step)
+#        a.steer(force, time_step)
+#        a.steer(force, time_step)
+#        ref_position = Vec3(0.005, 0.005, 0.10041450153584738)
+
+        for i in range(5):
+            a.steer(force, time_step)
+            # print(a.position())
+
+        ref_position = Vec3(0.0024753688574416857,
+                            0.0024753688574416857,
+                            0.07457705747313612)
+
+
         ok = True
         ref_ls = LocalSpace()
         ok &= (Agent().side()     == ref_ls.i)

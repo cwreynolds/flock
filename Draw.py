@@ -87,6 +87,10 @@ class Draw:
         Draw.frame_duration = frame_end_time - Draw.frame_start_time
         Draw.frame_start_time = frame_end_time
 
+    @staticmethod
+    def update_camera(lookat):
+        camera = Draw.vis.get_view_control()
+        camera.set_lookat(lookat)
 
 
     # TODO 20230401
@@ -106,3 +110,20 @@ class Draw:
         vis.add_geometry(mesh)
         vis.run()
         vis.destroy_window()
+
+    # TODO 20230412, cannot set any view parameters because “get_view_control()
+    # gives a copy” (https://github.com/isl-org/Open3D/issues/6009). So this
+    # example (from https://github.com/isl-org/Open3D/blob/master/examples/python/visualization/customized_visualization.py#L39):
+    def custom_draw_geometry_with_rotation(pcd):
+
+        def rotate_view(vis):
+            ctr = vis.get_view_control()
+            ctr.rotate(10.0, 0.0)
+            return False
+
+        o3d.visualization.draw_geometries_with_animation_callback([pcd],
+                                                                  rotate_view)
+    # does not work:
+    def test_callback():
+        mesh = o3d.geometry.TriangleMesh.create_octahedron()
+        Draw.custom_draw_geometry_with_rotation(mesh)
