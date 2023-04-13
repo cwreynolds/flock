@@ -94,7 +94,43 @@ class Vec3:
         if magnitude > max_length:
             truncated = self * (max_length / magnitude)
         return truncated
-        
+
+
+
+
+    # TODO 20230412 still WIP
+
+    def parallel_component(self, unit_basis):
+#        return self * self.dot(basis)
+#        return self.normalize() * self.dot(basis.normalize())
+        projection = self.dot(unit_basis)
+        return unit_basis * projection
+
+    def perpendicular_component(self, unit_basis):
+        return self - self.parallel_component(unit_basis)
+
+#    // -------------------- from OpenSteer
+#
+#    // return component of vector parallel to a unit basis vector
+#    // (IMPORTANT NOTE: assumes "basis" has unit magnitude (length==1))
+#
+#    Eigen::Vector3f parallelComponent (Eigen::Vector3f v, Eigen::Vector3f unitBasis)
+#    {
+#        const float projection = v.dot(unitBasis);
+#        return unitBasis * projection;
+#    }
+#
+#    // return component of vector perpendicular to a unit basis vector
+#    // (IMPORTANT NOTE: assumes "basis" has unit magnitude (length==1))
+#
+#    Eigen::Vector3f perpendicularComponent (Eigen::Vector3f v, Eigen::Vector3f unitBasis)
+#    {
+#        return v - parallelComponent(v, unitBasis);
+#    }
+#    // -------------------- from OpenSteer
+
+
+
     # Cross product
     def cross(a, b):
         def isVec3(x): return isinstance(x, Vec3)
@@ -127,6 +163,55 @@ class Vec3:
         ok &= (2 * Vec3(1, 2, 3) == Vec3(2, 4, 6))
         ok &= (Vec3(2, 4, 6) / 2 == Vec3(1, 2, 3))
         ok &= (Vec3(1, 2, 3) < Vec3(-1, -2, -4))
+        
+#        ok &= ( == )
+
+#        print('Vec3(1, 0, 0).parallel_component(Vec3(1, 0, 0)) =',
+#              Vec3(1, 0, 0).parallel_component(Vec3(1, 0, 0)))
+#        print('Vec3(1, 0, 0).parallel_component(Vec3(0, 1, 0)) =',
+#              Vec3(1, 0, 0).parallel_component(Vec3(0, 1, 0)))
+#        print('Vec3(1, 0, 0).parallel_component(Vec3(-1, 0, 0)) =',
+#              Vec3(1, 0, 0).parallel_component(Vec3(-1, 0, 0)))
+#              
+#        ok &= (Vec3(1, 0, 0).parallel_component(Vec3(1, 0, 0)) == Vec3(1, 0, 0))
+#        ok &= (Vec3(1, 0, 0).parallel_component(Vec3(0, 1, 0)) == Vec3(0, 0, 0))
+#        ok &= (Vec3(1, 0, 0).parallel_component(Vec3(-1, 0, 0)) == Vec3(1, 0, 0))
+        
+        
+#        print(Vec3(1, 0, 0).parallel_component(Vec3(1, 1, 1)))
+#        print(Vec3(1, 0, 0).perpendicular_component(Vec3(1, 1, 1)))
+
+        diag_norm = Vec3(1, 1, 1).normalize()
+        x_norm = Vec3(1, 0, 0)
+
+#        print()
+#        print(Vec3(1, 0, 0).parallel_component(diag_norm))
+#        print(Vec3(1, 0, 0).perpendicular_component(diag_norm))
+#        print()
+#        print(Vec3(1, 1, 1).parallel_component(Vec3(1, 0, 0)))
+#        print(Vec3(1, 1, 1).perpendicular_component(Vec3(1, 0, 0)))
+        
+        # gets:
+        #
+        # Vec3(0.3333333333333334, 0.3333333333333334, 0.3333333333333334)
+        # Vec3(0.6666666666666665, -0.3333333333333334, -0.3333333333333334)
+        #
+        # Vec3(1, 0, 0)
+        # Vec3(0, 1, 1)
+
+#        ok &= (x_norm.parallel_component(diag_norm) == (diag_norm / 3))
+#        ok &= (x_norm.parallel_component(diag_norm) == Vec3(1/3, 1/3, 1/3))
+
+#        ok &= (x_norm.parallel_component(diag_norm) ==
+#               Vec3(0.3333333333333334, 0.3333333333333334, 0.3333333333333334))
+#        ok &= (x_norm.perpendicular_component(diag_norm) ==
+#               Vec3(0.6666666666666665, -0.3333333333333334, -0.3333333333333334))
+
+        f33 = 0.3333333333333334
+        f66 = 0.6666666666666665
+        ok &= x_norm.parallel_component(diag_norm) == Vec3(f33, f33, f33)
+        ok &= x_norm.perpendicular_component(diag_norm) == Vec3(f66, -f33, -f33)
+        
         
         i = Vec3(1, 0, 0)
         j = Vec3(0, 1, 0)

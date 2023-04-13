@@ -27,13 +27,44 @@ class Boid(Agent):
 #    #        self.steer(self.wander_steer(None) * 0.1, time_step)
 #            self.steer(self.wander_steer(None) * 0.01, time_step)
 
+#        def steer_to_flock(self, time_step):
+#            neighbors = self.nearest_neighbors()
+#            # TODO 20230410 very temp
+#    #        self.steer(self.wander_steer(None) * 0.01, time_step)
+#    #        self.steer(self.wander_steer(None), time_step)
+#    #        self.steer(self.forward(), time_step)
+#            self.steer(self.forward(), time_step)
+
     def steer_to_flock(self, time_step):
         neighbors = self.nearest_neighbors()
-        # TODO 20230410 very temp
-#        self.steer(self.wander_steer(None) * 0.01, time_step)
-#        self.steer(self.wander_steer(None), time_step)
-#        self.steer(self.forward(), time_step)
-        self.steer(self.forward(), time_step)
+#        combined_steering = (self.forward() * 0.1 +
+#                             self.steer_to_separate(neighbors))
+        combined_steering = (self.forward() * 0.01 +
+                             self.steer_to_separate(neighbors).perpendicular_component(self.forward()))
+        # print('combined_steering =', combined_steering)
+        self.steer(combined_steering, time_step)
+
+
+
+
+
+    def steer_to_separate(self, neighbors):
+        direction = Vec3()
+        for neighbor in neighbors:
+            offset = self.position() - neighbor.position()
+            direction += offset.normalize()
+        direction = direction.normalize()
+        # print('direction =', direction)
+        return direction
+
+
+
+
+
+
+
+
+
 
     # TODO 20230408 implement RandomSequence equvilent
     def wander_steer(self, rs):
@@ -51,6 +82,19 @@ class Boid(Agent):
         return ((self.wander_state + (self.forward() * 2)) *
                 (1 / 3) *
                 (self.max_force * 0.5))
+
+    # Returns a list of the N(=7) Boids nearest this one.
+    def nearest_neighbors(self, n=7):
+        def distance_from_me(b):
+            return (b.position() - self.position()).length()
+        neighbors = Boid.flock.copy()
+        neighbors.sort(key=distance_from_me)
+        n_neighbors = neighbors[1:n+1]
+#        d = []
+#        for b in n_neighbors:
+#            d.append(distance_from_me(b))
+#        print(d)
+        return n_neighbors
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
@@ -105,18 +149,6 @@ class Boid(Agent):
     def draw_flock():
         for boid in Boid.flock:
             boid.draw()
-
-    def nearest_neighbors(self, n=7):
-        def distance_from_me(b):
-            return (b.position() - self.position()).length()
-        neighbors = Boid.flock.copy()
-        neighbors.sort(key=distance_from_me)
-        n_neighbors = neighbors[1:n+1]
-#        d = []
-#        for b in n_neighbors:
-#            d.append(distance_from_me(b))
-#        print(d)
-        return n_neighbors
 
     # List of Boids in a flock
     # TODO 20230409 assumes there is only one flock. If more are
