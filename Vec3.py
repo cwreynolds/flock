@@ -163,55 +163,15 @@ class Vec3:
         ok &= (2 * Vec3(1, 2, 3) == Vec3(2, 4, 6))
         ok &= (Vec3(2, 4, 6) / 2 == Vec3(1, 2, 3))
         ok &= (Vec3(1, 2, 3) < Vec3(-1, -2, -4))
-        
-#        ok &= ( == )
-
-#        print('Vec3(1, 0, 0).parallel_component(Vec3(1, 0, 0)) =',
-#              Vec3(1, 0, 0).parallel_component(Vec3(1, 0, 0)))
-#        print('Vec3(1, 0, 0).parallel_component(Vec3(0, 1, 0)) =',
-#              Vec3(1, 0, 0).parallel_component(Vec3(0, 1, 0)))
-#        print('Vec3(1, 0, 0).parallel_component(Vec3(-1, 0, 0)) =',
-#              Vec3(1, 0, 0).parallel_component(Vec3(-1, 0, 0)))
-#              
-#        ok &= (Vec3(1, 0, 0).parallel_component(Vec3(1, 0, 0)) == Vec3(1, 0, 0))
-#        ok &= (Vec3(1, 0, 0).parallel_component(Vec3(0, 1, 0)) == Vec3(0, 0, 0))
-#        ok &= (Vec3(1, 0, 0).parallel_component(Vec3(-1, 0, 0)) == Vec3(1, 0, 0))
-        
-        
-#        print(Vec3(1, 0, 0).parallel_component(Vec3(1, 1, 1)))
-#        print(Vec3(1, 0, 0).perpendicular_component(Vec3(1, 1, 1)))
-
-        diag_norm = Vec3(1, 1, 1).normalize()
-        x_norm = Vec3(1, 0, 0)
-
-#        print()
-#        print(Vec3(1, 0, 0).parallel_component(diag_norm))
-#        print(Vec3(1, 0, 0).perpendicular_component(diag_norm))
-#        print()
-#        print(Vec3(1, 1, 1).parallel_component(Vec3(1, 0, 0)))
-#        print(Vec3(1, 1, 1).perpendicular_component(Vec3(1, 0, 0)))
-        
-        # gets:
-        #
-        # Vec3(0.3333333333333334, 0.3333333333333334, 0.3333333333333334)
-        # Vec3(0.6666666666666665, -0.3333333333333334, -0.3333333333333334)
-        #
-        # Vec3(1, 0, 0)
-        # Vec3(0, 1, 1)
-
-#        ok &= (x_norm.parallel_component(diag_norm) == (diag_norm / 3))
-#        ok &= (x_norm.parallel_component(diag_norm) == Vec3(1/3, 1/3, 1/3))
-
-#        ok &= (x_norm.parallel_component(diag_norm) ==
-#               Vec3(0.3333333333333334, 0.3333333333333334, 0.3333333333333334))
-#        ok &= (x_norm.perpendicular_component(diag_norm) ==
-#               Vec3(0.6666666666666665, -0.3333333333333334, -0.3333333333333334))
 
         f33 = 0.3333333333333334
         f66 = 0.6666666666666665
+        x_norm = Vec3(1, 0, 0)
+        diag_norm = Vec3(1, 1, 1).normalize()
+        ok &= Vec3(2, 4, 8).parallel_component(x_norm) == Vec3(2, 0, 0)
+        ok &= Vec3(2, 4, 8).perpendicular_component(x_norm) == Vec3(0, 4, 8)
         ok &= x_norm.parallel_component(diag_norm) == Vec3(f33, f33, f33)
         ok &= x_norm.perpendicular_component(diag_norm) == Vec3(f66, -f33, -f33)
-        
         
         i = Vec3(1, 0, 0)
         j = Vec3(0, 1, 0)

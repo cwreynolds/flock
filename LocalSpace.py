@@ -23,12 +23,20 @@ class LocalSpace:
 
     # Initialize new instance.
     def __init__(self):
+        self.set_state_ijkp(Vec3(1, 0, 0),
+                            Vec3(0, 1, 0),
+                            Vec3(0, 0, 1),
+                            Vec3(0, 0, 0))
+        self.__foobar = 0
+
+    # Set non-homogeneous 3x4 portion of transform: 3 basis and one position vec.
+    def set_state_ijkp(self, i, j, k, p):
         # Basis vectors of local coordinate axes, ijk → xyz:
-        self.i = Vec3(1, 0, 0)
-        self.j = Vec3(0, 1, 0)
-        self.k = Vec3(0, 0, 1)
+        self.i = i
+        self.j = j
+        self.k = k
         # Position of local center:
-        self.p = Vec3(0, 0, 0)
+        self.p = p
 
     # 20230409 TODO this assumes unit length, orthonormal bases.
     #               Should either generalize (why?) or put in an assert.

@@ -8,13 +8,10 @@
 #
 #-------------------------------------------------------------------------------
 
-from Vec3 import Vec3
 from Agent import Agent
-import Utilities as util
-
-# experiment
 from Draw import Draw
-
+from Vec3 import Vec3
+import Utilities as util
 
 class Boid(Agent):
     def __init__(self):
@@ -35,15 +32,28 @@ class Boid(Agent):
 #    #        self.steer(self.forward(), time_step)
 #            self.steer(self.forward(), time_step)
 
+#        def steer_to_flock(self, time_step):
+#            neighbors = self.nearest_neighbors()
+#    #        combined_steering = (self.forward() * 0.1 +
+#    #                             self.steer_to_separate(neighbors))
+#            combined_steering = (self.forward() * 0.01 +
+#                                 self.steer_to_separate(neighbors).perpendicular_component(self.forward()))
+#    #        print('combined_steering =', combined_steering)
+#            self.steer(combined_steering, time_step)
+
     def steer_to_flock(self, time_step):
         neighbors = self.nearest_neighbors()
 #        combined_steering = (self.forward() * 0.1 +
 #                             self.steer_to_separate(neighbors))
-        combined_steering = (self.forward() * 0.01 +
-                             self.steer_to_separate(neighbors).perpendicular_component(self.forward()))
-        # print('combined_steering =', combined_steering)
-        self.steer(combined_steering, time_step)
 
+#        f = self.forward() * 0.01
+        f = self.forward * 0.01
+        s = self.steer_to_separate(neighbors)
+#        s = s.perpendicular_component(self.forward())
+        s = s.perpendicular_component(self.forward)
+        combined_steering = f + s
+#        print('combined_steering =', combined_steering)
+        self.steer(combined_steering, time_step)
 
 
 
@@ -51,7 +61,8 @@ class Boid(Agent):
     def steer_to_separate(self, neighbors):
         direction = Vec3()
         for neighbor in neighbors:
-            offset = self.position() - neighbor.position()
+#            offset = self.position() - neighbor.position()
+            offset = self.position - neighbor.position
             direction += offset.normalize()
         direction = direction.normalize()
         # print('direction =', direction)
@@ -79,14 +90,16 @@ class Boid(Agent):
 
         # wander_state moved 2 units forward, then normalized by 1/3, so forward
         # conponent is on [1/3, 1], then scaled by half max_force
-        return ((self.wander_state + (self.forward() * 2)) *
+#        return ((self.wander_state + (self.forward() * 2)) *
+        return ((self.wander_state + (self.forward * 2)) *
                 (1 / 3) *
                 (self.max_force * 0.5))
 
     # Returns a list of the N(=7) Boids nearest this one.
     def nearest_neighbors(self, n=7):
         def distance_from_me(b):
-            return (b.position() - self.position()).length()
+#            return (b.position() - self.position()).length()
+            return (b.position - self.position).length()
         neighbors = Boid.flock.copy()
         neighbors.sort(key=distance_from_me)
         n_neighbors = neighbors[1:n+1]
@@ -98,12 +111,18 @@ class Boid(Agent):
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
-        center = self.position()
-        nose = self.forward() * +0.5
-        tail = self.forward() * -0.5
-        top = self.up() * 0.25 + self.forward() * 0.1
-        wingtip0 = tail + (self.side() * +0.3)
-        wingtip1 = tail + (self.side() * -0.3)
+#        center = self.position()
+        center = self.position
+#        nose = self.forward() * +0.5
+#        tail = self.forward() * -0.5
+#        top = self.up() * 0.25 + self.forward() * 0.1
+        nose = self.forward * +0.5
+        tail = self.forward * -0.5
+        top = self.up * 0.25 + self.forward * 0.1
+#        wingtip0 = tail + (self.side() * +0.3)
+#        wingtip1 = tail + (self.side() * -0.3)
+        wingtip0 = tail + (self.side * +0.3)
+        wingtip1 = tail + (self.side * -0.3)
         color = Vec3(util.frandom2(0.6, 0.8),
                      util.frandom2(0.6, 0.8),
                      util.frandom2(0.6, 0.8))
@@ -149,6 +168,19 @@ class Boid(Agent):
     def draw_flock():
         for boid in Boid.flock:
             boid.draw()
+
+    @staticmethod
+    # When a Boid gets more than "radius" from the original, teleport it to the
+    # other side of the world, its antipodal point.
+    def sphere_wrap_around_flock(radius):
+        for boid in Boid.flock:
+#            bp = boid.position()
+            bp = boid.position
+            distance_from_origin = bp.length()
+            if distance_from_origin > radius:
+                new_position = (-bp).normalize() * radius * 0.95
+                boid.ls.p = new_position
+                
 
     # List of Boids in a flock
     # TODO 20230409 assumes there is only one flock. If more are
