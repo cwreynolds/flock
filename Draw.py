@@ -86,12 +86,15 @@ class Draw:
         frame_end_time = time.time()
         Draw.frame_duration = frame_end_time - Draw.frame_start_time
         Draw.frame_start_time = frame_end_time
+        Draw.frame_counter += 1
 
     @staticmethod
     def update_camera(lookat):
         camera = Draw.vis.get_view_control()
         camera.set_lookat(lookat)
 
+    # Frame counter
+    frame_counter = 0
 
     # TODO 20230401
     # Trying to test per-triangle colors as claimed to exist on:

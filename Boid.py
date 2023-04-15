@@ -12,6 +12,9 @@ from Agent import Agent
 from Draw import Draw
 from Vec3 import Vec3
 import Utilities as util
+from statistics import mean
+import math
+import itertools
 
 class Boid(Agent):
     def __init__(self):
@@ -118,6 +121,29 @@ class Boid(Agent):
             if distance_from_origin > radius:
                 new_position = (-bp).normalize() * radius * 0.95
                 boid.ls.p = new_position
+
+    # Calculate and log various statistics for flock.
+    @staticmethod
+    def log_stats_for_flock():
+        if Draw.frame_counter % 100 == 0:
+            average_speed = mean([b.speed for b in Boid.flock])
+            min_sep = math.inf
+            # Via https://stackoverflow.com/a/942551/1991373
+            for (p, q) in itertools.combinations(Boid.flock, 2):
+                dist = (p.position - q.position).length()
+                if min_sep > dist:
+                    min_sep = dist
+            max_nn_dist = 0
+            for b in Boid.flock:
+                n = b.nearest_neighbors(1)[0]
+                dist = (b.position - n.position).length()
+                if max_nn_dist < dist:
+                    max_nn_dist = dist
+            print(str(Draw.frame_counter) +
+                  ' fps=' + str(int(1 / Draw.frame_duration)) +
+                  ', ave_speed=' + str(average_speed)[0:5] +
+                  ', min_sep=' + str(min_sep)[0:5] +
+                  ', max_nn_dist=' + str(max_nn_dist)[0:5])
 
     # List of Boids in a flock
     # TODO 20230409 assumes there is only one flock. If more are

@@ -26,7 +26,6 @@ def run_flock(size, initial_diameter):
     Boid.add_boid_to_flock(size, initial_diameter)
     Boid.draw_flock()
     Draw.start_visualizer()
-    frame = 0
     while Draw.still_running():
         Boid.steer_flock(Draw.frame_duration)
         Boid.sphere_wrap_around_flock(30)  ## TODO temp
@@ -35,9 +34,7 @@ def run_flock(size, initial_diameter):
         Draw.update_scene()
         some_boid = Boid.flock[0]
         Draw.update_camera(some_boid.position.asarray())
-        frame += 1
-        if frame % 100 == 0:
-            print('fps =', int(1 / Draw.frame_duration))
+        Boid.log_stats_for_flock()
     Draw.close_visualizer()
 
 if __name__ == "__main__":
