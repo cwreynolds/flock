@@ -21,9 +21,6 @@ def prolog():
 
 # TODO 20230408 prototype flock top level
 def run_flock(size, initial_diameter):
-#    Draw.test_callback()
-#    Draw.custom_draw_geometry_with_rotation(o3d.geometry.TriangleMesh.create_octahedron())
-
     prolog()
     draw = Draw() ## ?? currently unused but should contain draw state
     Boid.add_boid_to_flock(size, initial_diameter)
@@ -31,19 +28,13 @@ def run_flock(size, initial_diameter):
     Draw.start_visualizer()
     frame = 0
     while Draw.still_running():
-#        if Draw.frame_duration > 0:
-#            print('fps =', int(1 / Draw.frame_duration))
-#        Boid.steer_flock(1 / 60) # should measure time
         Boid.steer_flock(Draw.frame_duration)
         Boid.sphere_wrap_around_flock(30)  ## TODO temp
         Draw.clear_scene()
         Boid.draw_flock()
         Draw.update_scene()
         some_boid = Boid.flock[0]
-#        print('boid.speed =', some_boid.speed)
-#        Draw.update_camera(some_boid.position().asarray())
         Draw.update_camera(some_boid.position.asarray())
-#        print(str(frame), some_boid)
         frame += 1
         if frame % 100 == 0:
             print('fps =', int(1 / Draw.frame_duration))
@@ -51,4 +42,3 @@ def run_flock(size, initial_diameter):
 
 if __name__ == "__main__":
     run_flock(100, 10) # 100 boids in a sphere of diameter 10
-#    run_flock(200, 10) # 100 boids in a sphere of diameter 10

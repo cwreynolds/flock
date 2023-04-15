@@ -45,6 +45,10 @@ def clip01 (x):
 def between(x, a, b):
     return (min(a, b) <= x) and (x <= max(a, b))
 
+# True when a and b differ by no more than epsilon.
+def within_epsilon(a, b, epsilon):
+    return abs(a - b) <= epsilon
+
 # Takes a 32 bit value and shuffles it around to produce a new 32 bit value.
 # "Robert Jenkins' 32 bit integer hash function" from "Integer Hash Function"
 # (1997) by Thomas Wang (https://gist.github.com/badboy/6267743)
@@ -107,78 +111,10 @@ def unit_test():
     ok &= (between(1.5, 2, 1) == True)
     ok &= (between(0, -1, 1) == True)
     ok &= (between(-2, 1, -1) == False)
+    ok &= (within_epsilon(1, 1, 0))
+    ok &= (within_epsilon(1.1, 1.2, 0.2))
+    ok &= (within_epsilon(-1.1, -1.2, 0.2))
+    ok &= (not within_epsilon(1.1, 1.2, 0.01))
     ok &= (rehash32bits(2653567485) == 1574776808)
-    
     # TODO 20230409 test random-number utilities, later RandomSequence.
-
     return ok
-
-################################################################################
-
-
-#    // Square a float
-#    inline float sq(float f) { return f * f; }
-#
-
-#
-#    // TODO 20230302 grabbed this from TexSyn, probably needs a lot of refitting.
-#    // Simple self-contained generator for a sequence of psuedo-random 32 bit values
-#    class RandomSequence
-#    {
-#    public:
-#        // Constructor with default seed.
-#        RandomSequence() : state_(defaultSeed()) {}
-#        // Constructor with given seed.
-#        RandomSequence(uint64_t seed) : state_(uint32_t(seed)) {}
-#        // Next random number in sequence as a 31 bit positive int.
-#        uint32_t nextInt() { return bitMask() & nextUint32(); }
-#        // Next random number in sequence as a 32 bit unsigned int.
-#        uint32_t nextUint32() { return state_ = rehash32bits(state_); }
-#        // A 32 bit word with zero sign bit and all other 31 bits on, max pos int.
-#        uint32_t bitMask() { return 0x7fffffff; } // 31 bits
-#        // The largest (31 bit) positive integer that can be returned.
-#        int maxIntValue() { return bitMask(); }
-#        // A "large" 32 bit "random" number.
-#        static uint32_t defaultSeed() { return 688395321; }
-#
-#        // TODO look at removing the old versions of these utilities.
-#        // Returns a float randomly distributed between 0 and 1
-#        float frandom01() { return float(nextInt()) / float(maxIntValue()); }
-#        // Returns a float randomly distributed between lowerBound and upperBound
-#        float frandom2(float a, float b) { return interpolate(frandom01(), a, b); }
-#        // Returns an int randomly distributed between 0 and n-1.
-#        int randomN(int n) { return nextInt() % n; }
-#        int randomN(size_t n) { return nextInt() % n; }
-#        // int/float overloads of random2(), returns value between INCLUSIVE bounds.
-#        int random2(int i, int j) { assert(i<=j); return i + randomN(j - i + 1); }
-#        float random2(float i, float j) { return frandom2(i, j); }
-#        // Returns true or false with equal likelihood.
-#        bool randomBool() { return random2(0, 1); }
-#        // Return random element of given std::vector.
-#        template<typename T> T randomSelectElement(const std::vector<T>& collection)
-#        { return collection.at(randomN(collection.size())); }
-#
-#    //    // TODO these duplicate the function of the same name in global namespace.
-#    //    //  Maybe those should be replaced by defining a global RandomSequence which
-#    //    // must be specifically written in source code. This may help avoid the
-#    //    // "attractive nuisance" of random utilities which are non-repeatable.
-#    //    Vec2 randomPointInUnitDiameterCircle();
-#    //    Vec2 randomUnitVector();
-#    //    // Random point (position vector) in an axis aligned rectangle defined by
-#    //    // two diagonally opposite vertices.
-#    //    Vec2 randomPointInAxisAlignedRectangle(Vec2 a, Vec2 b);
-#    //    // TODO moved from Color class to here on June 30, 2020:
-#    //    Color randomUnitRGB();
-#
-#        Vec3 randomUnitVector();
-#        Vec3 randomPointInUnitRadiusSphere();
-#        Vec3 randomPointInAxisAlignedBox(Vec3 a, Vec3 b);
-#
-#        // Set seed (RS state) to given value, or defaultSeed() if none given.
-#        void setSeed() { state_ = defaultSeed(); }
-#        void setSeed(uint32_t seed) { state_ = seed; }
-#        // Get state.
-#        uint32_t getSeed() { return state_; }
-#    private:
-#        uint32_t state_;
-#    };

@@ -17,6 +17,7 @@
 
 import numpy as np
 from Vec3 import Vec3
+import Utilities as util
 
 class LocalSpace:
     """Local space (transformation) for a boid/agent."""
@@ -27,7 +28,6 @@ class LocalSpace:
                             Vec3(0, 1, 0),
                             Vec3(0, 0, 1),
                             Vec3(0, 0, 0))
-        self.__foobar = 0
 
     # Set non-homogeneous 3x4 portion of transform: 3 basis and one position vec.
     def set_state_ijkp(self, i, j, k, p):
@@ -47,6 +47,15 @@ class LocalSpace:
     def globalize(self, local_vector):
         v = local_vector
         return ((v.x * self.i) + (v.y * self.j) + (v.z * self.k) + self.p)
+
+    def is_orthonormal(self):
+        epsilon = 0.00000000000001 # works on my laptop with Python 3.10
+        return (util.within_epsilon(self.i.length_squared(), 1, epsilon) and
+                util.within_epsilon(self.j.length_squared(), 1, epsilon) and
+                util.within_epsilon(self.k.length_squared(), 1, epsilon) and
+                util.within_epsilon(self.i.dot(self.j), 0, epsilon) and
+                util.within_epsilon(self.j.dot(self.k), 0, epsilon) and
+                util.within_epsilon(self.k.dot(self.i), 0, epsilon))
 
     # TODO 20230405 speculative API, maybe for PinholeCameraParameters?
     def asarray(self):
@@ -70,7 +79,12 @@ class LocalSpace:
                                      [0, 1, 0, 0],
                                      [0, 0, 1, 0],
                                      [0, 0, 0, 1]])
-#        print('identity_asarray =', identity_asarray)
-#        print('LocalSpace().asarray() =', LocalSpace().asarray())
+        test_ls = LocalSpace()
+        test_ls.set_state_ijkp(test_i := Vec3(1, 2, 3).normalize(),
+                               test_j := test_i.cross(Vec3(0, 0, 1)).normalize(),
+                               test_i.cross(test_j).normalize(),
+                               Vec3(5, 6, 7))
         ok &= np.array_equal(LocalSpace().asarray(), identity_asarray)
+        ok & LocalSpace().is_orthonormal()
+        ok & test_ls.is_orthonormal()
         return ok

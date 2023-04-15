@@ -23,8 +23,6 @@ class Agent:
         self.ls = LocalSpace()    # Local coordinate space (pos, orient).
         self.mass = 1             # Mass, normally ignored as 1.
         self.speed = 0            # Current forward speed (m/s).
-#        self.max_speed = 10       # Speed upper limit (m/s)
-#        self.max_force = 3        # Acceleration upper limit (m/s²)
         # TODO 20230411 no idea if these values are plausible for these units
         #                I mean they are meter-long birds?!
         #                Note that average bird flying sdpeed is ~10-16 m/s
@@ -38,35 +36,25 @@ class Agent:
     # Instance counter for default names.
     serial_number = 0
 
-    #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  # #  #  #
-
-    # Agent-specific names for components of local space
-#    def side(self):     return self.ls.i
-#    def up(self):       return self.ls.j
-#    def forward(self):  return self.ls.k
-#    def position(self): return self.ls.p
-
+    # Define setters/getters for side, up, forward, and position.
     @property
     def side(self):
         return self.ls.i
     @side.setter
     def side(self, new_forward):
         self.ls.i = new_forward
-    
     @property
     def up(self):
         return self.ls.j
     @up.setter
     def up(self, new_up):
         self.ls.j = new_up
-    
     @property
     def forward(self):
         return self.ls.k
     @forward.setter
     def forward(self, new_forward):
         self.ls.k = new_forward
-    
     @property
     def position(self):
         return self.ls.p
@@ -74,12 +62,7 @@ class Agent:
     def position(self, new_position):
         self.ls.p = new_position
 
-    #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  # #  #  #
-
-
-
-    # Current velocity vector
-#    def get_velocity(self): return self.forward() * self.speed
+    # Get current velocity vector.
     @property
     def velocity(self):
         return self.forward * self.speed
@@ -92,11 +75,9 @@ class Agent:
         # Adjust force by mass to get acceleration.
         acceleration = limit_steering_force / self.mass
         # Update dynamic and gerometric state...
-        self.updateSpeedAndLocalSpace(acceleration * time_step);
+        self.update_speed_and_local_space(acceleration * time_step);
 
-    def updateSpeedAndLocalSpace(self, acceleration):
-#        new_velocity = self.get_velocity() + acceleration
-#        new_velocity = self.velocity() + acceleration
+    def update_speed_and_local_space(self, acceleration):
         new_velocity = self.velocity + acceleration
         new_speed = new_velocity.length()
         
@@ -104,39 +85,17 @@ class Agent:
         #               maybe this should be inside speed>0 block?
         self.speed = util.clip(new_speed, 0, self.max_speed)
         new_forward = new_velocity / new_speed;
-
+        
+        # Update  geometric state when moving.
         if (self.speed > 0):
-#            new_side = new_forward.cross(self.up()).normalize()
-            new_side = new_forward.cross(self.up).normalize()
-            new_up = new_side.cross(new_forward).normalize()
-#            new_position = self.position() + (new_forward * self.speed)
+            # Reorthonormalize to corrospond to new_forward
+            new_side = self.up.cross(new_forward).normalize()
+            new_up = new_forward.cross(new_side).normalize()
             new_position = self.position + (new_forward * self.speed)
-
-            # TODO assert perpendicular...
-            # ...
-
             # Set new geometric state.
-            # TODO should these be setters or like in c++ ls().setIJKP()
-#            self.ls.x = new_side
-#            self.ls.y = new_up
-#            self.ls.z = new_forward
-#            self.ls.p = new_position
-
-#            self.ls.i = new_side
-#            self.ls.j = new_up
-#            self.ls.k = new_forward
-#            self.ls.p = new_position
-            
             self.ls.set_state_ijkp(new_side, new_up, new_forward, new_position)
-
-
-            
-            #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
-#            self.ls.__foobar = 0
-
-#            print('new_side =', new_side)
-#            print('self.ls.x =', self.ls.x)
-            #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
+            # Assert that the LocalSpace is rigid, unscaled, and orthogonal
+            assert self.ls.is_orthonormal()
 
     def __str__(self):
         return self.name + ': speed=' + str(self.speed) + str(self.ls)
@@ -149,25 +108,16 @@ class Agent:
         force = Vec3(0.1, 0.1, 1)
         time_step = 1 / 60
         ref_ls = LocalSpace()
-#        ref_position = Vec3(0.0024753688574416857,
-#                            0.0024753688574416857,
-#                            0.07457705747313612)
         ref_position = Vec3(0.007426106572325057,
                             0.007426106572325057,
                             0.07426106572325057)
-#        ok &= (a.side()     == ref_ls.i)
         ok &= (a.side     == ref_ls.i)
-#        ok &= (a.up()       == ref_ls.j)
         ok &= (a.up       == ref_ls.j)
-#        ok &= (a.forward()  == ref_ls.k)
         ok &= (a.forward  == ref_ls.k)
-#        ok &= (a.position() == ref_ls.p)
         ok &= (a.position   == ref_ls.p)
-#        ok &= (a.get_velocity() == Vec3())
         ok &= (a.velocity == Vec3())
         for i in range(5):
             a.steer(force, time_step)
             #print(a.position())
-#        ok &= (a.position() == ref_position)
         ok &= (a.position == ref_position)
         return ok
