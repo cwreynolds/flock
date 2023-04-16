@@ -21,23 +21,137 @@ class Boid(Agent):
         super().__init__()
         self.wander_state = Vec3()
 
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+#    # Basic flocking behavior.
+#    def steer_to_flock(self, time_step):
+#        neighbors = self.nearest_neighbors()
+#        f = self.forward * 0.01
+#        s = self.steer_to_separate(neighbors)
+#        s = s.perpendicular_component(self.forward)
+#        combined_steering = f + s
+#        self.steer(combined_steering, time_step)
+
     # Basic flocking behavior.
     def steer_to_flock(self, time_step):
         neighbors = self.nearest_neighbors()
-        f = self.forward * 0.01
+#        f = self.forward * 0.01
+#        f = self.forward * 0.1
+        f = self.forward * 0.05
         s = self.steer_to_separate(neighbors)
-        s = s.perpendicular_component(self.forward)
-        combined_steering = f + s
+#        s = s.perpendicular_component(self.forward)
+        a = self.steer_to_align(neighbors)
+        c = self.steer_to_cohere(neighbors)
+#        combined_steering = f + s
+#        combined_steering = f + s + a
+        combined_steering = f + s + a + c
         self.steer(combined_steering, time_step)
 
+#    # Steering force component to move away from neighbors.
+#    def steer_to_separate(self, neighbors):
+#        direction = Vec3()
+#        for neighbor in neighbors:
+#            offset = self.position - neighbor.position
+#            direction += offset.normalize()
+#        direction = direction.normalize()
+#        return direction
+
+#    # Steering force component to move away from neighbors.
+#    def steer_to_separate(self, neighbors):
+#        direction = Vec3()
+#        for neighbor in neighbors:
+#            offset = self.position - neighbor.position
+#            direction += offset.normalize()
+#        direction = direction.normalize()
+#        direction = direction.perpendicular_component(self.forward)
+#        return direction
+
+    # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
         direction = Vec3()
         for neighbor in neighbors:
-            offset = self.position - neighbor.position
-            direction += offset.normalize()
+#            offset = self.position - neighbor.position
+            offset = neighbor.position - self.position
+            
+            dist = offset.length()
+            weight = 1 / dist
+            direction += offset.normalize() * weight
+
+#            direction += offset.normalize()
         direction = direction.normalize()
-        # print('direction =', direction)
+        direction = direction.perpendicular_component(self.forward)
         return direction
+
+
+
+#        # Steering force component to align path with neighbors.
+#        def steer_to_align(self, neighbors):
+#            direction = Vec3()
+#
+#            for neighbor in neighbors:
+#    #            offset = self.position - neighbor.position
+#                heading_offset = self.forward - neighbor.forward
+#    #            direction += offset.normalize()
+#    #            direction += heading_offset
+#                direction += heading_offset.normalize()
+#
+#            # Return "pure" steering component: perpendicular to forward.
+#            return direction.perpendicular_component(self.forward)
+
+#    # Steering force component to align path with neighbors.
+#    def steer_to_align(self, neighbors):
+#        direction = Vec3()
+#        for neighbor in neighbors:
+#            heading_offset = neighbor.forward - self.forward
+#            if heading_offset.length_squared() > 0:
+#                direction += heading_offset.normalize()
+#        # Return "pure" steering component: perpendicular to forward.
+#        return direction.perpendicular_component(self.forward)
+
+    # Steering force component to align path with neighbors.
+    def steer_to_align(self, neighbors):
+        direction = Vec3()
+        for neighbor in neighbors:
+#            heading_offset = neighbor.forward - self.forward
+            heading_offset = self.forward - neighbor.forward
+            if heading_offset.length_squared() > 0:
+                dist = (neighbor.position - self.position).length()
+                weight = 1 / dist
+                direction += heading_offset.normalize() * weight
+        # Return "pure" steering component: perpendicular to forward.
+#        return direction.perpendicular_component(self.forward)
+#        direction = direction.normalize()
+        
+        if direction.length_squared() > 0:
+            direction = direction.normalize()
+            direction = direction.perpendicular_component(self.forward)
+        return direction
+
+    # Steering force component to cohere with neighbors: toward neighbor center.
+    def steer_to_cohere(self, neighbors):
+#        direction = Vec3()
+        
+#        neighbor_center  = Vec3()
+#        for neighbor in neighbors:
+#            if self.position != neighbor.position:
+#                neighbor_center += neighbor.position
+#        neighbor_center / len(neighbors)
+        
+#        neighbor_center = mean([b.position for b in Boid.flock])
+
+        neighbor_center  = Vec3()
+        for neighbor in neighbors:
+            if self.position != neighbor.position:
+                neighbor_center += neighbor.position
+        neighbor_center / len(neighbors)
+
+#        direction = neighbor_center - self.position
+        direction = self.position - neighbor_center
+
+        # Return "pure" steering component: perpendicular to forward.
+        return direction.perpendicular_component(self.forward)
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # TODO 20230408 implement RandomSequence equvilent
     def wander_steer(self, rs):
