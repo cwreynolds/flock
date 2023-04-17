@@ -99,22 +99,20 @@ def random_unit_vector():
 
 @staticmethod
 def unit_test():
-    ok = True
-    ok &= (clip01(1.5) == 1)
-    ok &= (clip01(0.5) == 0.5)
-    ok &= (clip01(-1) == 0)
-    ok &= (clip(0, 1, 5) == 1)
-    ok &= (clip(1.5, 1, 5) == 1.5)
-    ok &= (clip(0, -1, -5) == -1)
-    ok &= (between(0, 1, 2) == False)
-    ok &= (between(1.5, 1, 2) == True)
-    ok &= (between(1.5, 2, 1) == True)
-    ok &= (between(0, -1, 1) == True)
-    ok &= (between(-2, 1, -1) == False)
-    ok &= (within_epsilon(1, 1, 0))
-    ok &= (within_epsilon(1.1, 1.2, 0.2))
-    ok &= (within_epsilon(-1.1, -1.2, 0.2))
-    ok &= (not within_epsilon(1.1, 1.2, 0.01))
-    ok &= (rehash32bits(2653567485) == 1574776808)
+    assert clip01(1.5) == 1
+    assert clip01(0.5) == 0.5
+    assert clip01(-1) == 0
+    assert clip(0, 1, 5) == 1
+    assert clip(1.5, 1, 5) == 1.5
+    assert clip(0, -1, -5) == -1
+    assert between(0, 1, 2) == False
+    assert between(1.5, 1, 2) == True
+    assert between(1.5, 2, 1) == True
+    assert between(0, -1, 1) == True
+    assert between(-2, 1, -1) == False
+    assert within_epsilon(1, 1, 0)
+    assert within_epsilon(1.1, 1.2, 0.2)
+    assert within_epsilon(-1.1, -1.2, 0.2)
+    assert not within_epsilon(1.1, 1.2, 0.01)
+    assert rehash32bits(2653567485) == 1574776808
     # TODO 20230409 test random-number utilities, later RandomSequence.
-    return ok

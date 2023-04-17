@@ -71,10 +71,8 @@ class LocalSpace:
                 ", k=" + str(self.k) +
                 ", p=" + str(self.p) + "]")
 
-    @staticmethod  # This decoration seems to be completely optional,
-                   # but for the avoidance of doubt
+    @staticmethod
     def unit_test():
-        ok = True
         identity_asarray = np.array([[1, 0, 0, 0],
                                      [0, 1, 0, 0],
                                      [0, 0, 1, 0],
@@ -84,7 +82,6 @@ class LocalSpace:
                                test_j := test_i.cross(Vec3(0, 0, 1)).normalize(),
                                test_i.cross(test_j).normalize(),
                                Vec3(5, 6, 7))
-        ok &= np.array_equal(LocalSpace().asarray(), identity_asarray)
-        ok & LocalSpace().is_orthonormal()
-        ok & test_ls.is_orthonormal()
-        return ok
+        assert np.array_equal(LocalSpace().asarray(), identity_asarray)
+        assert LocalSpace().is_orthonormal(), 'initial value is orthonormal'
+        assert test_ls.is_orthonormal(), 'handmade value is orthonormal'

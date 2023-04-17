@@ -100,10 +100,8 @@ class Agent:
     def __str__(self):
         return self.name + ': speed=' + str(self.speed) + str(self.ls)
 
-    @staticmethod  # This decoration seems to be completely optional,
-                   # but for the avoidance of doubt
+    @staticmethod
     def unit_test():
-        ok = True
         a = Agent()
         force = Vec3(0.1, 0.1, 1)
         time_step = 1 / 60
@@ -111,13 +109,12 @@ class Agent:
         ref_position = Vec3(0.007426106572325057,
                             0.007426106572325057,
                             0.07426106572325057)
-        ok &= (a.side     == ref_ls.i)
-        ok &= (a.up       == ref_ls.j)
-        ok &= (a.forward  == ref_ls.k)
-        ok &= (a.position   == ref_ls.p)
-        ok &= (a.velocity == Vec3())
+        assert a.side     == ref_ls.i, 'check initial side basis'
+        assert a.up       == ref_ls.j, 'check initial up basis'
+        assert a.forward  == ref_ls.k, 'check initial forward basis'
+        assert a.position == ref_ls.p, 'check initial position'
+        assert a.velocity == Vec3(),   'check initial velocity'
         for i in range(5):
             a.steer(force, time_step)
             #print(a.position())
-        ok &= (a.position == ref_position)
-        return ok
+        assert a.position == ref_position, 'position after 5 steer() calls'

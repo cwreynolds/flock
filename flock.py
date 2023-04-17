@@ -10,14 +10,14 @@ import Utilities as util
 from LocalSpace import LocalSpace
 
 def prolog():
-    # versions
+    # Log versions.
     print('Python', sys.version)
     print('Open3D', o3d.__version__)
-    # Unit tests.
-    assert Vec3.unit_test(), "Vec3 failed unit test."
-    assert LocalSpace.unit_test(), "LocalSpace failed unit test."
-    assert Agent.unit_test(), "Agent failed unit test."
-    assert util.unit_test(), "util failed unit test."
+    # Run unit tests.
+    Vec3.unit_test()
+    LocalSpace.unit_test()
+    Agent.unit_test()
+    util.unit_test()
 
 # TODO 20230408 prototype flock top level
 def run_flock(size, initial_diameter):
