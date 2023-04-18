@@ -30,6 +30,7 @@ class LocalSpace:
                             Vec3(0, 0, 0))
 
     # Set non-homogeneous 3x4 portion of transform: 3 basis and one position vec.
+    # TODO 20230417 should this be replace with optional arguments on __init__()?
     def set_state_ijkp(self, i, j, k, p):
         # Basis vectors of local coordinate axes, ijk → xyz:
         self.i = i
@@ -63,13 +64,23 @@ class LocalSpace:
                          [self.j.x, self.j.y, self.j.z, 0],
                          [self.k.x, self.k.y, self.k.z, 0],
                          [self.p.x, self.p.y, self.p.z, 1]])
-    
+
     # Describe LocalSpace as string.
     def __str__(self):
         return ("[i="  + str(self.i) +
                 ", j=" + str(self.j) +
                 ", k=" + str(self.k) +
                 ", p=" + str(self.p) + "]")
+
+    # Almost certainly the wrong way to do this.
+    def random_orientation(self, position=Vec3()):
+        new_i = util.random_unit_vector()
+        new_j = util.random_unit_vector()
+        new_k = new_i.cross(new_j)
+        new_j = new_k.cross(new_i)
+        new_ls = LocalSpace()
+        new_ls.set_state_ijkp(new_i, new_j, new_k,position)
+        return new_ls
 
     @staticmethod
     def unit_test():

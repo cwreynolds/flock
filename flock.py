@@ -9,6 +9,9 @@ from Agent import Agent
 import Utilities as util
 from LocalSpace import LocalSpace
 
+# For initial placememnt and wrap-around.
+sphere_diameter = 60
+
 def prolog():
     # Log versions.
     print('Python', sys.version)
@@ -28,7 +31,7 @@ def run_flock(size, initial_diameter):
     Draw.start_visualizer()
     while Draw.still_running():
         Boid.steer_flock(Draw.frame_duration)
-        Boid.sphere_wrap_around_flock(30)  ## TODO temp
+        Boid.sphere_wrap_around_flock(sphere_diameter / 2) # this takes a radius
         Draw.clear_scene()
         Boid.draw_flock()
         Draw.update_scene()
@@ -38,4 +41,4 @@ def run_flock(size, initial_diameter):
     Draw.close_visualizer()
 
 if __name__ == "__main__":
-    run_flock(100, 10) # 100 boids in a sphere of diameter 10
+    run_flock(100, sphere_diameter)

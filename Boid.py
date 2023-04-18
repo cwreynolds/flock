@@ -20,17 +20,18 @@ class Boid(Agent):
     def __init__(self):
         super().__init__()
         self.wander_state = Vec3()
+        
+        self.max_speed = 0.3      # Speed upper limit (m/s)
+        self.max_force = 0.1      # Acceleration upper limit (m/s²)
+#        self.max_force = 0.3      # Acceleration upper limit (m/s²)
+#        self.max_force = 1.0      # Acceleration upper limit (m/s²)
+        self.max_force = 0.3      # Acceleration upper limit (m/s²)
+
+        
+        self.speed = self.max_speed * 0.25
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-#    # Basic flocking behavior.
-#    def steer_to_flock(self, time_step):
-#        neighbors = self.nearest_neighbors()
-#        f = self.forward * 0.01
-#        s = self.steer_to_separate(neighbors)
-#        s = s.perpendicular_component(self.forward)
-#        combined_steering = f + s
-#        self.steer(combined_steering, time_step)
 
     # Basic flocking behavior.
     def steer_to_flock(self, time_step):
@@ -39,117 +40,64 @@ class Boid(Agent):
 #        f = self.forward * 0.1
         f = self.forward * 0.05
         s = self.steer_to_separate(neighbors)
-#        s = s.perpendicular_component(self.forward)
         a = self.steer_to_align(neighbors)
         c = self.steer_to_cohere(neighbors)
+#        combined_steering = f + s + a + c
 #        combined_steering = f + s
-#        combined_steering = f + s + a
-        combined_steering = f + s + a + c
+#        combined_steering = f + a * 10
+#        combined_steering = f + a
+#        combined_steering = f + a + s
+#        combined_steering = f + c
+#        combined_steering = f + s + a + c
+#        combined_steering = f + s + (a * 10) + (c * 10)
+#        combined_steering = f + (s / 20) + a + c
+        combined_steering = f + (s / 20) + a + (c * 100)
         self.steer(combined_steering, time_step)
-
-#    # Steering force component to move away from neighbors.
-#    def steer_to_separate(self, neighbors):
-#        direction = Vec3()
-#        for neighbor in neighbors:
-#            offset = self.position - neighbor.position
-#            direction += offset.normalize()
-#        direction = direction.normalize()
-#        return direction
-
-#    # Steering force component to move away from neighbors.
-#    def steer_to_separate(self, neighbors):
-#        direction = Vec3()
-#        for neighbor in neighbors:
-#            offset = self.position - neighbor.position
-#            direction += offset.normalize()
-#        direction = direction.normalize()
-#        direction = direction.perpendicular_component(self.forward)
-#        return direction
 
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
         direction = Vec3()
         for neighbor in neighbors:
-#            offset = self.position - neighbor.position
-            offset = neighbor.position - self.position
-            
+            offset = self.position - neighbor.position
             dist = offset.length()
-            weight = 1 / dist
-            direction += offset.normalize() * weight
-
-#            direction += offset.normalize()
-        direction = direction.normalize()
-        direction = direction.perpendicular_component(self.forward)
-        return direction
-
-
-
-#        # Steering force component to align path with neighbors.
-#        def steer_to_align(self, neighbors):
-#            direction = Vec3()
-#
-#            for neighbor in neighbors:
-#    #            offset = self.position - neighbor.position
-#                heading_offset = self.forward - neighbor.forward
-#    #            direction += offset.normalize()
-#    #            direction += heading_offset
-#                direction += heading_offset.normalize()
-#
-#            # Return "pure" steering component: perpendicular to forward.
-#            return direction.perpendicular_component(self.forward)
-
-#    # Steering force component to align path with neighbors.
-#    def steer_to_align(self, neighbors):
-#        direction = Vec3()
-#        for neighbor in neighbors:
-#            heading_offset = neighbor.forward - self.forward
-#            if heading_offset.length_squared() > 0:
-#                direction += heading_offset.normalize()
-#        # Return "pure" steering component: perpendicular to forward.
-#        return direction.perpendicular_component(self.forward)
+            if dist > 0:
+                weight = 1 / (dist ** 2)
+                direction += (offset / (dist * weight))
+        perp = direction.perpendicular_component(self.forward)
+        steer = perp.normalize()
+        return steer
 
     # Steering force component to align path with neighbors.
     def steer_to_align(self, neighbors):
         direction = Vec3()
         for neighbor in neighbors:
-#            heading_offset = neighbor.forward - self.forward
-            heading_offset = self.forward - neighbor.forward
+            heading_offset = neighbor.forward - self.forward
             if heading_offset.length_squared() > 0:
                 dist = (neighbor.position - self.position).length()
-                weight = 1 / dist
+                weight = 1 / (dist ** 2) # TODO ?
                 direction += heading_offset.normalize() * weight
         # Return "pure" steering component: perpendicular to forward.
-#        return direction.perpendicular_component(self.forward)
-#        direction = direction.normalize()
-        
         if direction.length_squared() > 0:
-            direction = direction.normalize()
             direction = direction.perpendicular_component(self.forward)
+            direction = direction.normalize()
         return direction
 
     # Steering force component to cohere with neighbors: toward neighbor center.
     def steer_to_cohere(self, neighbors):
-#        direction = Vec3()
-        
-#        neighbor_center  = Vec3()
-#        for neighbor in neighbors:
-#            if self.position != neighbor.position:
-#                neighbor_center += neighbor.position
-#        neighbor_center / len(neighbors)
-        
-#        neighbor_center = mean([b.position for b in Boid.flock])
-
         neighbor_center  = Vec3()
+        total_weight = 0
         for neighbor in neighbors:
             if self.position != neighbor.position:
-                neighbor_center += neighbor.position
-        neighbor_center / len(neighbors)
-
-#        direction = neighbor_center - self.position
+                dist = (neighbor.position - self.position).length()
+                weight = 1 / (dist ** 2)
+                neighbor_center += neighbor.position * weight
+                total_weight += weight
+        neighbor_center /= total_weight
         direction = self.position - neighbor_center
-
-        # Return "pure" steering component: perpendicular to forward.
-        return direction.perpendicular_component(self.forward)
+        # "Pure" steering component: perpendicular to forward.
+        direction = direction.perpendicular_component(self.forward)
+        direction = direction.normalize()
+        return direction
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -174,6 +122,25 @@ class Boid(Agent):
         neighbors.sort(key=distance_from_me)
         n_neighbors = neighbors[1:n+1]
         return n_neighbors
+
+#    # TODO 20230417 a version that has a max distance
+#    # Returns a list of the N(=7) Boids nearest this one.
+#    def nearest_neighbors(self, n=7, max_distance=30):
+#        def distance_from_me(b):
+#            return (b.position - self.position).length()
+#
+#        neighbors = Boid.flock.copy()
+#        neighbors.sort(key=distance_from_me)
+#
+#        near_neighbors = []
+#        for i in range(n):
+#            b = neighbors[i]
+#            if (i < 2) or (distance_from_me(b) < max_distance):
+#                near_neighbors.append(b)
+#
+#        return near_neighbors
+
+
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
@@ -210,6 +177,10 @@ class Boid(Agent):
         for i in range(count):
             boid = Boid()
             random_point = util.random_point_in_unit_radius_sphere()
+            
+            # TODO 20230418 for testing, probably too much randomness for real.
+            boid.ls = boid.ls.random_orientation()
+            
             boid.ls.p = center + (radius * random_point)
             Boid.flock.append(boid)
 
@@ -241,12 +212,19 @@ class Boid(Agent):
     def log_stats_for_flock():
         if Draw.frame_counter % 100 == 0:
             average_speed = mean([b.speed for b in Boid.flock])
+            # Loop over all unique pairs of distinct boids: ab==ba, not aa
             min_sep = math.inf
+            ave_sep = 0
+            pair_count = 0
             # Via https://stackoverflow.com/a/942551/1991373
             for (p, q) in itertools.combinations(Boid.flock, 2):
                 dist = (p.position - q.position).length()
                 if min_sep > dist:
                     min_sep = dist
+                ave_sep += dist
+                pair_count += 1
+            ave_sep /= pair_count
+            #
             max_nn_dist = 0
             for b in Boid.flock:
                 n = b.nearest_neighbors(1)[0]
@@ -257,6 +235,7 @@ class Boid(Agent):
                   ' fps=' + str(int(1 / Draw.frame_duration)) +
                   ', ave_speed=' + str(average_speed)[0:5] +
                   ', min_sep=' + str(min_sep)[0:5] +
+                  ', ave_sep=' + str(ave_sep)[0:5] +
                   ', max_nn_dist=' + str(max_nn_dist)[0:5])
 
     # List of Boids in a flock
