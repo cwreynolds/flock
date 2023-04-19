@@ -52,11 +52,11 @@ class Draw:
         Draw.vis.create_window()
         Draw.vis.add_geometry(Draw.triangle_mesh)
         
-        # TODO 23230411 temp ball for camera aim reference
-        ball = o3d.geometry.TriangleMesh.create_sphere(0.5, 10)
-        ball.compute_vertex_normals()
-        ball.paint_uniform_color([0.8, 0.1, 0.1])
-        Draw.vis.add_geometry(ball)
+#        # TODO 23230411 temp ball for camera aim reference
+#        ball = o3d.geometry.TriangleMesh.create_sphere(0.5, 10)
+#        ball.compute_vertex_normals()
+#        ball.paint_uniform_color([0.8, 0.1, 0.1])
+#        Draw.vis.add_geometry(ball)
 
         Draw.frame_start_time = time.time()
 

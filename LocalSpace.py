@@ -72,15 +72,13 @@ class LocalSpace:
                 ", k=" + str(self.k) +
                 ", p=" + str(self.p) + "]")
 
-    # Almost certainly the wrong way to do this.
-    def random_orientation(self, position=Vec3()):
-        new_i = util.random_unit_vector()
-        new_j = util.random_unit_vector()
-        new_k = new_i.cross(new_j)
-        new_j = new_k.cross(new_i)
-        new_ls = LocalSpace()
-        new_ls.set_state_ijkp(new_i, new_j, new_k,position)
-        return new_ls
+    # Set to random orientation. Almost certainly the wrong way to do this.
+    def randomize_orientation(self):
+        self.i = util.random_unit_vector()
+        self.j = util.random_unit_vector()
+        self.k = self.i.cross(self.j).normalize()
+        self.j = self.k.cross(self.i).normalize()
+        # assert self.is_orthonormal()
 
     @staticmethod
     def unit_test():

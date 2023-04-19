@@ -142,33 +142,103 @@ class Boid(Agent):
 
 
 
+#    # Draw this Boid's “body” -- currently an irregular tetrahedron.
+#    def draw(self):
+#        center = self.position
+#        nose = self.forward * +0.5
+#        tail = self.forward * -0.5
+#        top = self.up * 0.25 + self.forward * 0.1
+#        wingtip0 = tail + (self.side * +0.3)
+#        wingtip1 = tail + (self.side * -0.3)
+#        color = Vec3(util.frandom2(0.6, 0.8),
+#                     util.frandom2(0.6, 0.8),
+#                     util.frandom2(0.6, 0.8))
+#        Draw.add_triangle_single_color(center + nose,       # bottom
+#                                       center + wingtip1,
+#                                       center + wingtip0,
+#                                       color * 0.7)
+#        Draw.add_triangle_single_color(center + nose,       # left
+#                                       center + wingtip0,
+#                                       center + tail + top,
+#                                       color * 0.95)
+#        Draw.add_triangle_single_color(center + nose,       # right
+#                                       center + tail + top,
+#                                       center + wingtip1,
+#                                       color)
+#        Draw.add_triangle_single_color(center + tail + top, # back
+#                                       center + wingtip0,
+#                                       center + wingtip1,
+#                                       color * 0.9)
+
+
+#        # Draw this Boid's “body” -- currently an irregular tetrahedron.
+#        def draw(self):
+#            center = self.position
+#            nose = self.forward * +0.5
+#            tail = self.forward * -0.5
+#            top = self.up * 0.25 + self.forward * 0.1
+#            wingtip0 = tail + (self.side * +0.3)
+#            wingtip1 = tail + (self.side * -0.3)
+#
+#            apex = tail + top
+#
+#    #        color = Vec3(util.frandom2(0.6, 0.8),
+#    #                     util.frandom2(0.6, 0.8),
+#    #                     util.frandom2(0.6, 0.8))
+#            def cc():
+#                return util.frandom2(0.6, 0.8)
+#            def tri(v1, v2, v3, color):
+#                Draw.add_triangle_single_color(v1, v2, v3, color)
+#
+#    #        color = Vec3(cc(), cc(), cc())
+#    #        tri(center + nose, center + wingtip1, center + wingtip0, color * 0.7)
+#    #        tri(center + nose, center + wingtip0, center + tail + top, color * 0.95)
+#    #        tri(center + nose, center + tail + top, center + wingtip1, color)
+#    #        tri(center + tail + top, center + wingtip0, center + wingtip1, color * 0.9)
+#
+#            color = Vec3(cc(), cc(), cc())
+#            tri(center + nose, center + wingtip1, center + wingtip0, color * 0.7)
+#            tri(center + nose, center + wingtip0, center + apex,     color * 0.95)
+#            tri(center + nose, center + apex,     center + wingtip1, color)
+#            tri(center + apex, center + wingtip0, center + wingtip1, color * 0.9)
+
+
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
-        center = self.position
+        center = self.position - Boid.camera_aim_boid_draw_offset_qqq()
+#        center = Boid.camera_aim_boid_draw_offset_qqq() - self.position
         nose = self.forward * +0.5
         tail = self.forward * -0.5
         top = self.up * 0.25 + self.forward * 0.1
         wingtip0 = tail + (self.side * +0.3)
         wingtip1 = tail + (self.side * -0.3)
-        color = Vec3(util.frandom2(0.6, 0.8),
-                     util.frandom2(0.6, 0.8),
-                     util.frandom2(0.6, 0.8))
-        Draw.add_triangle_single_color(center + nose,       # bottom
-                                       center + wingtip1,
-                                       center + wingtip0,
-                                       color * 0.7)
-        Draw.add_triangle_single_color(center + nose,       # left
-                                       center + wingtip0,
-                                       center + tail + top,
-                                       color * 0.95)
-        Draw.add_triangle_single_color(center + nose,       # right
-                                       center + tail + top,
-                                       center + wingtip1,
-                                       color)
-        Draw.add_triangle_single_color(center + tail + top, # back
-                                       center + wingtip0,
-                                       center + wingtip1,
-                                       color * 0.9)
+        apex = tail + top
+        color = Vec3.from_array([util.frandom2(0.6, 0.8) for i in range(10)])
+        def tri(v1, v2, v3, color):
+            Draw.add_triangle_single_color(v1, v2, v3, color)
+        tri(center + nose, center + wingtip1, center + wingtip0, color * 0.7)
+        tri(center + nose, center + wingtip0, center + apex,     color * 0.95)
+        tri(center + nose, center + apex,     center + wingtip1, color)
+        tri(center + apex, center + wingtip0, center + wingtip1, color * 0.9)
+
+
+
+
+
+
+
+    # TODO 20230418 since at the moment I cannot animate the camera, this is a
+    # stop gap where we offset all boid drawing by the position of "some boid"
+#    camera_offset_qqq = Vec3()
+    @staticmethod
+    def camera_aim_boid_draw_offset_qqq():
+#        return Boid.flock[0].position
+        return Vec3()
+
+
+
+
+
 
     # Make a new Boid, add it to flock. Defaults to one Boid at origin. Can add
     # "count" Boids, randomly placed within a sphere with "radius" and "center".
@@ -179,7 +249,7 @@ class Boid(Agent):
             random_point = util.random_point_in_unit_radius_sphere()
             
             # TODO 20230418 for testing, probably too much randomness for real.
-            boid.ls = boid.ls.random_orientation()
+            boid.ls.randomize_orientation()
             
             boid.ls.p = center + (radius * random_point)
             Boid.flock.append(boid)
