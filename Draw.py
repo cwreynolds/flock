@@ -11,6 +11,8 @@
 import open3d as o3d
 import numpy as np # temp?
 import time
+import Utilities as util  # temp?
+from Vec3 import Vec3     # temp?
 
 
 class Draw:
@@ -52,11 +54,11 @@ class Draw:
         Draw.vis.create_window()
         Draw.vis.add_geometry(Draw.triangle_mesh)
         
-#        # TODO 23230411 temp ball for camera aim reference
-#        ball = o3d.geometry.TriangleMesh.create_sphere(0.5, 10)
-#        ball.compute_vertex_normals()
-#        ball.paint_uniform_color([0.8, 0.1, 0.1])
-#        Draw.vis.add_geometry(ball)
+        # TODO 23230411 temp ball for camera aim reference
+        ball = o3d.geometry.TriangleMesh.create_sphere(0.1, 10)
+        ball.compute_vertex_normals()
+        ball.paint_uniform_color([0.8, 0.1, 0.1])
+        Draw.vis.add_geometry(ball)
 
         Draw.frame_start_time = time.time()
 
@@ -88,6 +90,8 @@ class Draw:
         Draw.frame_start_time = frame_end_time
         Draw.frame_counter += 1
 
+    # TODO 20230419 but does not work because "Visualizer.get_view_control()
+    #               gives a copy." https://github.com/isl-org/Open3D/issues/6009
     @staticmethod
     def update_camera(lookat):
         camera = Draw.vis.get_view_control()
@@ -95,6 +99,10 @@ class Draw:
 
     # Frame counter
     frame_counter = 0
+    
+    
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+    # TODO 20230419 random test code, to be removed eventually.
 
     # TODO 20230401
     # Trying to test per-triangle colors as claimed to exist on:
@@ -130,3 +138,84 @@ class Draw:
     def test_callback():
         mesh = o3d.geometry.TriangleMesh.create_octahedron()
         Draw.custom_draw_geometry_with_rotation(mesh)
+
+#    # Test animation callback.
+#    def test_animation_callback():
+#        def callback(vis):
+#            Draw.frame_counter += 1
+#            print('frame', Draw.frame_counter)
+#            return False
+#        o = o3d.geometry.TriangleMesh.create_octahedron()
+#        o3d.visualization.draw_geometries_with_animation_callback([o], callback)
+
+#    # Test animation callback.
+#    def test_animation_callback():
+#        def callback(vis):
+#            Draw.frame_counter += 1
+#            print('frame', Draw.frame_counter)
+##            return False
+#        o = o3d.geometry.TriangleMesh.create_octahedron()
+#        o3d.visualization.draw([o],
+#                               on_animation_frame=callback,
+#                               on_animation_tick=callback,
+#                               show_skybox=False,
+#
+#                               animation_time_step=1.0,
+#                               animation_duration=100
+#
+#                               )
+
+#        # Test animation callback.
+#        def test_animation_callback():
+#            def callback(vis):
+#                Draw.frame_counter += 1
+#                print('frame', Draw.frame_counter)
+#                return False
+#            o = o3d.geometry.TriangleMesh.create_octahedron()
+#
+#            def recolor(vis):
+#                a = Vec3()
+#                b = Vec3(1, 1, 1)
+#                color = util.random_point_in_axis_aligned_box(a, b).asarray()
+#                o.paint_uniform_color(color)
+#                return False
+#            recolor(False)
+#
+#            o3d.visualization.draw([o],
+#    #                               on_animation_frame=callback,
+#    #                               on_animation_tick=callback,
+#                                   on_animation_frame=recolor,
+#                                   on_animation_tick=recolor,
+#                                   show_skybox=False,
+#
+#                                   animation_time_step=1.0,
+#                                   animation_duration=100
+#
+#                                   )
+
+    # Test animation callback.
+    def test_animation_callback():
+        o = o3d.geometry.TriangleMesh.create_octahedron()
+        
+        def recolor(vis):
+            a = Vec3()
+            b = Vec3(1, 1, 1)
+            color = util.random_point_in_axis_aligned_box(a, b).asarray()
+            o.paint_uniform_color(color)
+            return False
+        recolor(False)
+        
+        o3d.visualization.draw([o],
+#                               on_animation_frame=callback,
+#                               on_animation_tick=callback,
+                               on_animation_frame=recolor,
+                               on_animation_tick=recolor,
+                               show_skybox=False,
+                               
+                               animation_time_step=1.0,
+                               animation_duration=100
+
+                               )
+
+
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##

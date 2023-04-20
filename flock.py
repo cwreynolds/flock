@@ -43,9 +43,4 @@ def run_flock(size, initial_diameter):
 if __name__ == "__main__":
     run_flock(100, sphere_diameter)
 
-#    L = [["x", "y"] for i in range(10)]
-#    print(L)
-#
-#    R = [util.frandom2(0.6, 0.8) for i in range(10)]
-#    print(R)
-
+#    Draw.test_animation_callback()

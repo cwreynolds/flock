@@ -206,7 +206,6 @@ class Boid(Agent):
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
         center = self.position - Boid.camera_aim_boid_draw_offset_qqq()
-#        center = Boid.camera_aim_boid_draw_offset_qqq() - self.position
         nose = self.forward * +0.5
         tail = self.forward * -0.5
         top = self.up * 0.25 + self.forward * 0.1
