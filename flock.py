@@ -32,6 +32,7 @@ def run_flock(size, initial_diameter):
     while Draw.still_running():
         Boid.steer_flock(Draw.frame_duration)
         Boid.sphere_wrap_around_flock(sphere_diameter / 2) # this takes a radius
+#        Boid.sphere_wrap_around_flock(sphere_diameter * 2) # this takes a radius
         Draw.clear_scene()
         Boid.draw_flock()
         Draw.update_scene()
@@ -41,6 +42,8 @@ def run_flock(size, initial_diameter):
     Draw.close_visualizer()
 
 if __name__ == "__main__":
-    run_flock(100, sphere_diameter)
-
 #    Draw.test_animation_callback()
+#     print([util.frandom2(0.6, 0.8) for i in range(3)])
+#    run_flock(100, sphere_diameter)
+#    run_flock(500, sphere_diameter)
+    run_flock(200, sphere_diameter)

@@ -15,6 +15,7 @@ import Utilities as util
 from statistics import mean
 import math
 import itertools
+import numpy as np  # temp?
 
 class Boid(Agent):
     def __init__(self):
@@ -35,68 +36,134 @@ class Boid(Agent):
 
     # Basic flocking behavior.
     def steer_to_flock(self, time_step):
+#        neighbors = self.nearest_neighbors()
+#        neighbors = self.nearest_neighbors(7, 10)
         neighbors = self.nearest_neighbors()
-#        f = self.forward * 0.01
-#        f = self.forward * 0.1
         f = self.forward * 0.05
         s = self.steer_to_separate(neighbors)
         a = self.steer_to_align(neighbors)
         c = self.steer_to_cohere(neighbors)
+#        combined_steering = f + (s / 20) + a + (c * 100)
 #        combined_steering = f + s + a + c
-#        combined_steering = f + s
-#        combined_steering = f + a * 10
-#        combined_steering = f + a
-#        combined_steering = f + a + s
-#        combined_steering = f + c
-#        combined_steering = f + s + a + c
-#        combined_steering = f + s + (a * 10) + (c * 10)
-#        combined_steering = f + (s / 20) + a + c
-        combined_steering = f + (s / 20) + a + (c * 100)
+#        combined_steering = f + s * 0.2 + a * 5 + c * 5
+#        combined_steering = f + s * 0.2 + a * 5 + c * 10
+#        combined_steering = f + s * 0.05 + a * 5 + c * 10
+#        combined_steering = f + (s * 0.2) + (a * 2) + (c * 2)
+#        combined_steering = f + (s * 4) + (a * 2) + (c * 1)
+#        combined_steering = f + (s * 3) + (a * 2) + (c * 0.5)
+#        combined_steering = f + (s * 4) + (a * 2) + (c * 0.2)
+#        combined_steering = f + (s * 8) + (a * 2) + (c * 0.2)
+#        combined_steering = f + (s * 1) + (a * 1) + (c * 1)
+#        combined_steering = f + (s * 1) + (a * 1) + (c * 0.1)
+#        combined_steering = f + (s * 10) + (a * 1) + (c * 0.2)
+        combined_steering = f + (s * 10) + (a * 0.5) + (c * 0.2)
         self.steer(combined_steering, time_step)
 
+#    # Steering force component to move away from neighbors.
+#    def steer_to_separate(self, neighbors):
+#        direction = Vec3()
+#        for neighbor in neighbors:
+#            offset = self.position - neighbor.position
+#            dist = offset.length()
+#            if dist > 0:
+#                weight = 1 / (dist ** 2)
+#                direction += (offset / (dist * weight))
+#        perp = direction.perpendicular_component(self.forward)
+#        steer = perp.normalize()
+#        return steer
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
-        direction = Vec3()
-        for neighbor in neighbors:
-            offset = self.position - neighbor.position
-            dist = offset.length()
-            if dist > 0:
-                weight = 1 / (dist ** 2)
-                direction += (offset / (dist * weight))
-        perp = direction.perpendicular_component(self.forward)
-        steer = perp.normalize()
+    
+        # TODO 20230420 just for debugging ##################################
+        neighbors = self.nearest_neighbors(7, 5)
+    
+        steer = Vec3()
+        if len(neighbors) > 0:
+            direction = Vec3()
+            for neighbor in neighbors:
+#                offset = self.position - neighbor.position
+                offset = neighbor.position - self.position
+                dist = offset.length()
+                if dist > 0:
+                    weight = 1 / (dist ** 2)
+                    direction += (offset / (dist * weight))
+            perp = direction.perpendicular_component(self.forward)
+            steer = perp.normalize()
         return steer
+
+#    # Steering force component to align path with neighbors.
+#    def steer_to_align(self, neighbors):
+#        direction = Vec3()
+#        for neighbor in neighbors:
+#            heading_offset = neighbor.forward - self.forward
+#            if heading_offset.length_squared() > 0:
+#                dist = (neighbor.position - self.position).length()
+#                weight = 1 / (dist ** 2) # TODO ?
+#                direction += heading_offset.normalize() * weight
+#        # Return "pure" steering component: perpendicular to forward.
+#        if direction.length_squared() > 0:
+#            direction = direction.perpendicular_component(self.forward)
+#            direction = direction.normalize()
+#        return direction
 
     # Steering force component to align path with neighbors.
     def steer_to_align(self, neighbors):
         direction = Vec3()
-        for neighbor in neighbors:
-            heading_offset = neighbor.forward - self.forward
-            if heading_offset.length_squared() > 0:
-                dist = (neighbor.position - self.position).length()
-                weight = 1 / (dist ** 2) # TODO ?
-                direction += heading_offset.normalize() * weight
-        # Return "pure" steering component: perpendicular to forward.
-        if direction.length_squared() > 0:
-            direction = direction.perpendicular_component(self.forward)
-            direction = direction.normalize()
+        if len(neighbors) > 0:
+            for neighbor in neighbors:
+                heading_offset = neighbor.forward - self.forward
+                if heading_offset.length_squared() > 0:
+                    dist = (neighbor.position - self.position).length()
+                    weight = 1 / (dist ** 2) # TODO ?
+                    direction += heading_offset.normalize() * weight
+            # Return "pure" steering component: perpendicular to forward.
+            if direction.length_squared() > 0:
+                direction = direction.perpendicular_component(self.forward)
+                direction = direction.normalize()
         return direction
+
+#    # Steering force component to cohere with neighbors: toward neighbor center.
+#    def steer_to_cohere(self, neighbors):
+#        neighbor_center  = Vec3()
+#        total_weight = 0
+#        for neighbor in neighbors:
+#            if self.position != neighbor.position:
+#                dist = (neighbor.position - self.position).length()
+#                weight = 1 / (dist ** 2)
+#                neighbor_center += neighbor.position * weight
+#                total_weight += weight
+#        neighbor_center /= total_weight
+#        direction = self.position - neighbor_center
+#        # "Pure" steering component: perpendicular to forward.
+#        direction = direction.perpendicular_component(self.forward)
+#        direction = direction.normalize()
+#        return direction
 
     # Steering force component to cohere with neighbors: toward neighbor center.
     def steer_to_cohere(self, neighbors):
-        neighbor_center  = Vec3()
-        total_weight = 0
-        for neighbor in neighbors:
-            if self.position != neighbor.position:
+        direction = Vec3()
+        if len(neighbors) > 0:
+            neighbor_center  = Vec3()
+            total_weight = 0
+            for neighbor in neighbors:
+#                if self.position != neighbor.position:
+#                    dist = (neighbor.position - self.position).length()
+#                    weight = 1 / (dist ** 2)
+#                    neighbor_center += neighbor.position * weight
+#                    total_weight += weight
                 dist = (neighbor.position - self.position).length()
                 weight = 1 / (dist ** 2)
                 neighbor_center += neighbor.position * weight
                 total_weight += weight
-        neighbor_center /= total_weight
-        direction = self.position - neighbor_center
-        # "Pure" steering component: perpendicular to forward.
-        direction = direction.perpendicular_component(self.forward)
-        direction = direction.normalize()
+            neighbor_center /= total_weight
+            # DING DING DING this was the problem
+#            direction = self.position - neighbor_center
+            direction = neighbor_center - self.position
+            # "Pure" steering component: perpendicular to forward.
+#            direction = direction.perpendicular_component(self.forward)
+#            direction = direction.normalize()
+            direction = direction.normalize()
+            direction = direction.perpendicular_component(self.forward)
         return direction
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -114,14 +181,14 @@ class Boid(Agent):
                 (1 / 3) *
                 (self.max_force * 0.5))
 
-    # Returns a list of the N(=7) Boids nearest this one.
-    def nearest_neighbors(self, n=7):
-        def distance_from_me(b):
-            return (b.position - self.position).length()
-        neighbors = Boid.flock.copy()
-        neighbors.sort(key=distance_from_me)
-        n_neighbors = neighbors[1:n+1]
-        return n_neighbors
+#    # Returns a list of the N(=7) Boids nearest this one.
+#    def nearest_neighbors(self, n=7):
+#        def distance_from_me(b):
+#            return (b.position - self.position).length()
+#        neighbors = Boid.flock.copy()
+#        neighbors.sort(key=distance_from_me)
+#        n_neighbors = neighbors[1:n+1]
+#        return n_neighbors
 
 #    # TODO 20230417 a version that has a max distance
 #    # Returns a list of the N(=7) Boids nearest this one.
@@ -140,104 +207,59 @@ class Boid(Agent):
 #
 #        return near_neighbors
 
-
-
-#    # Draw this Boid's “body” -- currently an irregular tetrahedron.
-#    def draw(self):
-#        center = self.position
-#        nose = self.forward * +0.5
-#        tail = self.forward * -0.5
-#        top = self.up * 0.25 + self.forward * 0.1
-#        wingtip0 = tail + (self.side * +0.3)
-#        wingtip1 = tail + (self.side * -0.3)
-#        color = Vec3(util.frandom2(0.6, 0.8),
-#                     util.frandom2(0.6, 0.8),
-#                     util.frandom2(0.6, 0.8))
-#        Draw.add_triangle_single_color(center + nose,       # bottom
-#                                       center + wingtip1,
-#                                       center + wingtip0,
-#                                       color * 0.7)
-#        Draw.add_triangle_single_color(center + nose,       # left
-#                                       center + wingtip0,
-#                                       center + tail + top,
-#                                       color * 0.95)
-#        Draw.add_triangle_single_color(center + nose,       # right
-#                                       center + tail + top,
-#                                       center + wingtip1,
-#                                       color)
-#        Draw.add_triangle_single_color(center + tail + top, # back
-#                                       center + wingtip0,
-#                                       center + wingtip1,
-#                                       color * 0.9)
-
-
-#        # Draw this Boid's “body” -- currently an irregular tetrahedron.
-#        def draw(self):
-#            center = self.position
-#            nose = self.forward * +0.5
-#            tail = self.forward * -0.5
-#            top = self.up * 0.25 + self.forward * 0.1
-#            wingtip0 = tail + (self.side * +0.3)
-#            wingtip1 = tail + (self.side * -0.3)
+#        # Returns a list of the N(=7) Boids nearest this one.
+#    #    def nearest_neighbors(self, n=7):
+#        def nearest_neighbors(self, n=7, max_distance=math.inf):
+#    #        def distance_from_me(b):
+#    #            return (b.position - self.position).length()
+#            def distance_from_me(boid):
+#                return (boid.position - self.position).length()
+#            def near_enough(boid):
+#                return ((max_distance == math.inf) or
+#                        ((boid.position - self.position).length() < max_distance))
 #
-#            apex = tail + top
+#    #        neighbors = Boid.flock.copy()
+#            neighbors = list(filter(near_enough, Boid.flock))
 #
-#    #        color = Vec3(util.frandom2(0.6, 0.8),
-#    #                     util.frandom2(0.6, 0.8),
-#    #                     util.frandom2(0.6, 0.8))
-#            def cc():
-#                return util.frandom2(0.6, 0.8)
-#            def tri(v1, v2, v3, color):
-#                Draw.add_triangle_single_color(v1, v2, v3, color)
 #
-#    #        color = Vec3(cc(), cc(), cc())
-#    #        tri(center + nose, center + wingtip1, center + wingtip0, color * 0.7)
-#    #        tri(center + nose, center + wingtip0, center + tail + top, color * 0.95)
-#    #        tri(center + nose, center + tail + top, center + wingtip1, color)
-#    #        tri(center + tail + top, center + wingtip0, center + wingtip1, color * 0.9)
 #
-#            color = Vec3(cc(), cc(), cc())
-#            tri(center + nose, center + wingtip1, center + wingtip0, color * 0.7)
-#            tri(center + nose, center + wingtip0, center + apex,     color * 0.95)
-#            tri(center + nose, center + apex,     center + wingtip1, color)
-#            tri(center + apex, center + wingtip0, center + wingtip1, color * 0.9)
+#            neighbors.sort(key=distance_from_me)
+#            n_neighbors = neighbors[1:n+1]
+#            return n_neighbors
 
+    # Returns a list of the N Boids nearest this one.
+    # Optionally filters by max_distance. N defaults to 7, ala STARFLAG.
+    def nearest_neighbors(self, n=7, max_distance=math.inf):
+        def distance_from_me(boid):
+            return (boid.position - self.position).length()
+        def near_enough(boid):
+            return ((max_distance == math.inf) or
+                    ((boid.position - self.position).length() < max_distance))
+        neighbors = list(filter(near_enough, Boid.flock))
+        neighbors.sort(key=distance_from_me)
+        n_neighbors = neighbors[1:n+1]
+        return n_neighbors
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
         center = self.position - Boid.camera_aim_boid_draw_offset_qqq()
-        nose = self.forward * +0.5
-        tail = self.forward * -0.5
-        top = self.up * 0.25 + self.forward * 0.1
-        wingtip0 = tail + (self.side * +0.3)
-        wingtip1 = tail + (self.side * -0.3)
-        apex = tail + top
-        color = Vec3.from_array([util.frandom2(0.6, 0.8) for i in range(10)])
-        def tri(v1, v2, v3, color):
-            Draw.add_triangle_single_color(v1, v2, v3, color)
-        tri(center + nose, center + wingtip1, center + wingtip0, color * 0.7)
-        tri(center + nose, center + wingtip0, center + apex,     color * 0.95)
-        tri(center + nose, center + apex,     center + wingtip1, color)
-        tri(center + apex, center + wingtip0, center + wingtip1, color * 0.9)
-
-
-
-
-
-
+        nose = center + self.forward * +0.5
+        tail = center + self.forward * -0.5
+        apex = tail + self.up * 0.25 + self.forward * 0.1
+        wingtip0 = tail + self.side * 0.3
+        wingtip1 = tail - self.side * 0.3
+        color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
+        Draw.add_triangle_single_color(nose, apex,     wingtip1, color * 1.0)
+        Draw.add_triangle_single_color(nose, wingtip0, apex,     color * 0.95)
+        Draw.add_triangle_single_color(apex, wingtip0, wingtip1, color * 0.9)
+        Draw.add_triangle_single_color(nose, wingtip1, wingtip0, color * 0.7)
 
     # TODO 20230418 since at the moment I cannot animate the camera, this is a
     # stop gap where we offset all boid drawing by the position of "some boid"
-#    camera_offset_qqq = Vec3()
     @staticmethod
     def camera_aim_boid_draw_offset_qqq():
 #        return Boid.flock[0].position
         return Vec3()
-
-
-
-
-
 
     # Make a new Boid, add it to flock. Defaults to one Boid at origin. Can add
     # "count" Boids, randomly placed within a sphere with "radius" and "center".

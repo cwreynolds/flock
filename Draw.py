@@ -102,7 +102,8 @@ class Draw:
     
     
     ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-    # TODO 20230419 random test code, to be removed eventually.
+    ##
+    ## TODO 20230419 random test code, to be removed eventually.
 
     # TODO 20230401
     # Trying to test per-triangle colors as claimed to exist on:
@@ -126,12 +127,10 @@ class Draw:
     # gives a copy” (https://github.com/isl-org/Open3D/issues/6009). So this
     # example (from https://github.com/isl-org/Open3D/blob/master/examples/python/visualization/customized_visualization.py#L39):
     def custom_draw_geometry_with_rotation(pcd):
-
         def rotate_view(vis):
             ctr = vis.get_view_control()
             ctr.rotate(10.0, 0.0)
             return False
-
         o3d.visualization.draw_geometries_with_animation_callback([pcd],
                                                                   rotate_view)
     # does not work:
@@ -139,83 +138,17 @@ class Draw:
         mesh = o3d.geometry.TriangleMesh.create_octahedron()
         Draw.custom_draw_geometry_with_rotation(mesh)
 
-#    # Test animation callback.
-#    def test_animation_callback():
-#        def callback(vis):
-#            Draw.frame_counter += 1
-#            print('frame', Draw.frame_counter)
-#            return False
-#        o = o3d.geometry.TriangleMesh.create_octahedron()
-#        o3d.visualization.draw_geometries_with_animation_callback([o], callback)
-
-#    # Test animation callback.
-#    def test_animation_callback():
-#        def callback(vis):
-#            Draw.frame_counter += 1
-#            print('frame', Draw.frame_counter)
-##            return False
-#        o = o3d.geometry.TriangleMesh.create_octahedron()
-#        o3d.visualization.draw([o],
-#                               on_animation_frame=callback,
-#                               on_animation_tick=callback,
-#                               show_skybox=False,
-#
-#                               animation_time_step=1.0,
-#                               animation_duration=100
-#
-#                               )
-
-#        # Test animation callback.
-#        def test_animation_callback():
-#            def callback(vis):
-#                Draw.frame_counter += 1
-#                print('frame', Draw.frame_counter)
-#                return False
-#            o = o3d.geometry.TriangleMesh.create_octahedron()
-#
-#            def recolor(vis):
-#                a = Vec3()
-#                b = Vec3(1, 1, 1)
-#                color = util.random_point_in_axis_aligned_box(a, b).asarray()
-#                o.paint_uniform_color(color)
-#                return False
-#            recolor(False)
-#
-#            o3d.visualization.draw([o],
-#    #                               on_animation_frame=callback,
-#    #                               on_animation_tick=callback,
-#                                   on_animation_frame=recolor,
-#                                   on_animation_tick=recolor,
-#                                   show_skybox=False,
-#
-#                                   animation_time_step=1.0,
-#                                   animation_duration=100
-#
-#                                   )
-
     # Test animation callback.
     def test_animation_callback():
-        o = o3d.geometry.TriangleMesh.create_octahedron()
-        
+        mesh = o3d.geometry.TriangleMesh.create_octahedron()
         def recolor(vis):
-            a = Vec3()
-            b = Vec3(1, 1, 1)
-            color = util.random_point_in_axis_aligned_box(a, b).asarray()
-            o.paint_uniform_color(color)
+            mesh.paint_uniform_color(np.random.rand(3))
+            vis.update_geometry(mesh)
             return False
-        recolor(False)
-        
-        o3d.visualization.draw([o],
-#                               on_animation_frame=callback,
-#                               on_animation_tick=callback,
-                               on_animation_frame=recolor,
-                               on_animation_tick=recolor,
-                               show_skybox=False,
-                               
-                               animation_time_step=1.0,
-                               animation_duration=100
-
-                               )
+        o3d.visualization.draw_geometries_with_animation_callback([mesh], recolor)
+#        o3d.visualization.draw([mesh], on_animation_frame=recolor)
+#        o3d.visualization.draw([mesh], on_animation_tick=recolor)
 
 
+    ##
     ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
