@@ -23,10 +23,18 @@ class Draw:
         self.temp = 0
 
     # Class properties to hold raw scene data for Open3D TriangleMesh.
-    mesh_vertex_count = 0
+#    mesh_vertex_count = 0
     mesh_vertices = o3d.utility.Vector3dVector()
     mesh_triangles = o3d.utility.Vector3iVector()
     mesh_vertex_colors = o3d.utility.Vector3dVector()
+    
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+    # TODO 20230426 add line drawing support for annotation
+#    line_vertex_count = 0
+    line_points = o3d.utility.Vector3dVector()
+    line_segments = o3d.utility.Vector2iVector()
+    line_colors = o3d.utility.Vector3dVector()
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 
     # class storage of current visualizer
     vis = None
@@ -42,6 +50,23 @@ class Draw:
         t = len(Draw.mesh_triangles) * 3
         Draw.mesh_triangles.append([t, t + 1, t + 2])
 
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+    # TODO 20230426 add line drawing support for annotation
+    @staticmethod
+    def add_line_segment(v1, v2, color1=None, color2=None):
+        if color1 == None:
+#            color1 = Vec3(0.5, 0.5, 0.5)
+            color1 = Vec3(1, 0, 0)
+        if color2 == None:
+            color2 = color1
+        Draw.line_points.append(v1.asarray())
+        Draw.line_points.append(v2.asarray())
+        Draw.line_colors.append(color1.asarray())
+        Draw.line_colors.append(color2.asarray())
+        i = len(Draw.line_segments) * 2
+        Draw.line_segments.append([i, i + 1])
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
     @staticmethod
     def start_visualizer():
         # Create a mesh from the triangle vertices and indices
@@ -49,10 +74,21 @@ class Draw:
         Draw.triangle_mesh.vertices = Draw.mesh_vertices
         Draw.triangle_mesh.triangles = Draw.mesh_triangles
         Draw.triangle_mesh.vertex_colors = Draw.mesh_vertex_colors
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230426 add line drawing support for annotation
+        Draw.line_set = o3d.geometry.LineSet()
+        Draw.line_set.points = Draw.line_points
+        Draw.line_set.lines = Draw.line_segments
+        Draw.line_set.colors = Draw.line_colors
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
         # Create Visualizer add mesh, enter draw loop.
         Draw.vis = o3d.visualization.Visualizer()
         Draw.vis.create_window()
         Draw.vis.add_geometry(Draw.triangle_mesh)
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230426 add line drawing support for annotation
+        Draw.vis.add_geometry(Draw.line_set)
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
         
         # TODO 23230411 temp ball for camera aim reference
         ball = o3d.geometry.TriangleMesh.create_sphere(0.1, 10)
@@ -73,16 +109,33 @@ class Draw:
 
     @staticmethod
     def clear_scene():
-        Draw.mesh_vertex_count = 0
+#        Draw.mesh_vertex_count = 0
         Draw.mesh_vertices.clear()
         Draw.mesh_triangles.clear()
         Draw.mesh_vertex_colors.clear()
+        
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230426 add line drawing support for annotation
+        Draw.line_points.clear()
+        Draw.line_segments.clear()
+        Draw.line_colors.clear()
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
 
     @staticmethod
     def update_scene():
         Draw.triangle_mesh.vertices = Draw.mesh_vertices
         Draw.triangle_mesh.triangles = Draw.mesh_triangles
         Draw.vis.update_geometry(Draw.triangle_mesh)
+
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230426 add line drawing support for annotation
+        Draw.line_set.points = Draw.line_points
+        Draw.line_set.lines = Draw.line_segments
+        Draw.line_set.colors = Draw.line_colors
+        Draw.vis.update_geometry(Draw.line_set)
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
         Draw.vis.update_renderer()
         # Measure frame duration:
         frame_end_time = time.time()

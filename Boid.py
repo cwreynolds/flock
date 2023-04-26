@@ -253,6 +253,12 @@ class Boid(Agent):
         Draw.add_triangle_single_color(nose, wingtip0, apex,     color * 0.95)
         Draw.add_triangle_single_color(apex, wingtip0, wingtip1, color * 0.9)
         Draw.add_triangle_single_color(nose, wingtip1, wingtip0, color * 0.7)
+        
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230426 add line drawing support for annotation
+        Draw.add_line_segment(center, center + self.up, Vec3(1, 0, 0))
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
 
     # TODO 20230418 since at the moment I cannot animate the camera, this is a
     # stop gap where we offset all boid drawing by the position of "some boid"
