@@ -12,7 +12,7 @@ from LocalSpace import LocalSpace
 # For initial placememnt and wrap-around.
 sphere_diameter = 60
 
-def prolog():
+def setup():
     # Log versions.
     print('Python', sys.version)
     print('Open3D', o3d.__version__)
@@ -24,7 +24,7 @@ def prolog():
 
 # TODO 20230408 prototype flock top level
 def run_flock(size, initial_diameter):
-    prolog()
+    setup()
     draw = Draw() ## ?? currently unused but should contain draw state
     Boid.add_boid_to_flock(size, initial_diameter)
     Boid.draw_flock()
@@ -42,8 +42,8 @@ def run_flock(size, initial_diameter):
     Draw.close_visualizer()
 
 if __name__ == "__main__":
-#    Draw.test_animation_callback()
+    Draw.test_animation_callback()
 #     print([util.frandom2(0.6, 0.8) for i in range(3)])
 #    run_flock(100, sphere_diameter)
 #    run_flock(500, sphere_diameter)
-    run_flock(200, sphere_diameter)
+#    run_flock(200, sphere_diameter)

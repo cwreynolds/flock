@@ -35,7 +35,12 @@ class Boid(Agent):
 
 
     # Basic flocking behavior.
+    # TODO 20230427 Hmmm this steer_to_...() function has no return value but
+    # does have side effect. Whereas the other steer_to_...() functions DO have
+    # return values and no side effect.
     def steer_to_flock(self, time_step):
+#        return 0
+    
 #        neighbors = self.nearest_neighbors()
 #        neighbors = self.nearest_neighbors(7, 10)
         neighbors = self.nearest_neighbors()
