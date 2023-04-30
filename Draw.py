@@ -14,6 +14,7 @@ import time
 import math
 import Utilities as util  # temp?
 from Vec3 import Vec3     # temp?
+import random             # temp?
 
 
 class Draw:
@@ -242,6 +243,197 @@ class Draw:
 
 
 
+
+
+    # Attempting to run inside modern o3d.visualization.draw()
+    # while running flock simulation via callbacks.
+    
+    # references
+    # https://github.com/isl-org/Open3D/blob/master/python/open3d/visualization/draw.py
+    # https://github.com/isl-org/Open3D/blob/master/cpp/open3d/visualization/visualizer/O3DVisualizer.cpp
+    
+    
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+    
+#        def test_callback():
+#            mesh = o3d.geometry.TriangleMesh.create_octahedron()
+#            Draw.custom_draw_geometry_with_rotation(mesh)
+#
+#    #        # Test animation callback.
+#    #        def test_animation_callback():
+#    #            mesh = o3d.geometry.TriangleMesh.create_octahedron()
+#    #            def recolor(vis):
+#    #                mesh.paint_uniform_color(np.random.rand(3))
+#    #                vis.update_geometry(mesh)
+#    #                return False
+#    #            o3d.visualization.draw_geometries_with_animation_callback([mesh], recolor)
+#    #    #        o3d.visualization.draw([mesh], on_animation_frame=recolor)
+#    #    #        o3d.visualization.draw([mesh], on_animation_tick=recolor)
+#
+#        # Test animation callback.
+#        def test_animation_callback():
+#    #        mesh = o3d.geometry.TriangleMesh.create_octahedron()
+#            mesh = o3d.t.geometry.TriangleMesh.create_octahedron()
+#
+#
+#    #            def cb_test(vis):
+#    #                print('in cb_test')
+#    #    #            return False
+#    #    #            return True
+#
+#            def cb_test(vis, value):
+#
+#    #            print(mesh.vertex.colors)
+#    #
+#    #            mesh.paint_uniform_color(np.random.rand(3))
+#
+#                mesh.translate(np.random.rand(3))
+#
+#
+#    #            vis.update_geometry(mesh)
+#                vis.update_geometry('wot', mesh, int(value))
+#
+#                print('in cb_test, value =', value)
+#
+#    #        o3d.visualization.draw_geometries_with_animation_callback([mesh], cb_test)
+#    #        o3d.visualization.draw([mesh], on_animation_frame=cb_test)
+#    #        o3d.visualization.draw([mesh], on_animation_tick=cb_test)
+#
+#
+#            # TODO Really would be nice to have “always animating” mode. No need to
+#            # specify fictitious animation_time_step and animation_duration. No need
+#            # to open UI and click run.
+#
+#            o3d.visualization.draw([mesh],
+#                                   on_animation_frame=cb_test,
+#    #                               animation_time_step=1.0,
+#                                   animation_time_step = 1 / 20,
+#                                   animation_duration=1000000000,
+#                                   show_ui=True,
+#                                   )
+
+    def test_callback():
+        mesh = o3d.geometry.TriangleMesh.create_octahedron()
+        Draw.custom_draw_geometry_with_rotation(mesh)
+
+#        # Test animation callback.
+#        def test_animation_callback():
+#            mesh = o3d.geometry.TriangleMesh.create_octahedron()
+#            def recolor(vis):
+#                mesh.paint_uniform_color(np.random.rand(3))
+#                vis.update_geometry(mesh)
+#                return False
+#            o3d.visualization.draw_geometries_with_animation_callback([mesh], recolor)
+#    #        o3d.visualization.draw([mesh], on_animation_frame=recolor)
+#    #        o3d.visualization.draw([mesh], on_animation_tick=recolor)
+
+
+
+
+#        # Test animation callback.
+#        def test_animation_callback():
+#            mesh = o3d.geometry.TriangleMesh.create_octahedron()
+#
+#            counter = 0
+#
+#            def cb_test(vis, value):
+#                print('in cb_test, value =', value)
+#
+#                nonlocal counter
+#    #            vis.remove_geometry(str(counter))
+#                counter += 1
+#    #            vis.add_geometry(str(counter), mesh)
+#    #            vis.add_geometry(str(counter), mesh, time=value)
+#    #            vis.add_geometry(str(counter), mesh, time=value + 1/30)
+#
+#                mesh.paint_uniform_color(np.random.rand(3))
+#
+#                vis.remove_geometry()
+#
+#    #            print('clear_geometries() =', clear_geometries())
+#
+#
+#    #            vis.update_renderer()
+#
+#    #            vis.update_geometry(mesh)
+#    #            vis.add_geometry(mesh)
+#
+#    #            vis.remove_geometry("mesh")
+#    #            vis.add_geometry("mesh", mesh)
+#
+#    #            vis.update_geometry("mesh", mesh)
+#    #            vis.update_geometry(str(counter), mesh)
+#
+#    #            return False
+#
+#    #         (self: open3d.cpu.pybind.visualization.O3DVisualizer, name: str, geometry: open3d.cpu.pybind.t.geometry.Geometry, material: open3d.cpu.pybind.visualization.rendering.MaterialRecord = None, group: str = '', time: float = 0.0, is_visible: bool = True) -> None
+#
+#    #        o3d.visualization.draw([mesh],
+#    #        o3d.visualization.draw({"name": "mesh", "geometry": mesh},
+#            o3d.visualization.draw({"name": str(counter), "geometry": mesh},
+#                                   on_animation_frame=cb_test,
+#    #                               animation_time_step = 1 / 30,
+#                                   animation_time_step = 1 / 60,
+#                                   animation_duration=1000000000,
+#                                   show_ui=True,
+#                                   )
+
+
+
+#        # Test animation callback.
+#        def test_animation_callback():
+#            oct = o3d.geometry.TriangleMesh.create_octahedron()
+#            def cb_test(vis, time):
+#                print('in cb_test, time =', time)
+#                oct.paint_uniform_color(np.random.rand(3))
+#    #            vis.remove_geometry('oct')
+#    #            vis.add_geometry('oct', oct)
+#            o3d.visualization.draw({'name': 'oct', 'geometry': oct},
+#                                   on_animation_frame = cb_test,
+#                                   animation_time_step = 1 / 10,
+#                                   animation_duration = 1000000,
+#                                   show_ui=True)
+
+#    # Test animation callback.
+#    def test_animation_callback():
+#        oct = o3d.geometry.TriangleMesh.create_octahedron()
+#
+#        last_hit = -1
+#
+#        def cb_test(vis, time):
+#            print('in cb_test, time =', time)
+#
+#            nonlocal last_hit
+#            i = round(time * 10)
+#            if i != last_hit:
+#                print('i =', i)
+#                last_hit = i
+#                oct.paint_uniform_color(np.random.rand(3))
+#                vis.remove_geometry('oct')
+#                vis.add_geometry('oct', oct)
+#        o3d.visualization.draw({'name': 'oct', 'geometry': oct},
+#                               on_animation_frame = cb_test,
+#                               animation_time_step = 1 / 60,
+#                               animation_duration = 1000000,
+#                               show_ui=True)
+
+    # Test animation callback.
+    def test_animation_callback():
+        oct = o3d.geometry.TriangleMesh.create_octahedron()
+        def cb_test(vis, time):
+            print('in cb_test, time =', time)
+            oct.paint_uniform_color(np.random.rand(3))
+            vis.remove_geometry('oct')
+            vis.add_geometry('oct', oct)
+        o3d.visualization.draw({'name': 'oct', 'geometry': oct},
+                               on_animation_frame = cb_test,
+                               animation_time_step = 1 / 60,
+                               animation_duration = 1000000,
+                               show_ui=True)
+
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
+
 #import open3d as o3d
 #import random
 #
@@ -288,78 +480,68 @@ class Draw:
 #    main()
 
 
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
+
+    # expand line_width.py sample code: http://www.open3d.org/docs/release/python_example/visualization/index.html#line-width-py
+
+
+    def expand_line_width_sample():
+
+        NUM_LINES = 10
+
+
+        def random_point():
+            return [5 * random.random(), 5 * random.random(), 5 * random.random()]
 
 
 
-    # Attempting to run inside modern o3d.visualization.draw()
-    # while running flock simulation via callbacks.
-    
-    # references
-    # https://github.com/isl-org/Open3D/blob/master/python/open3d/visualization/draw.py
-    # https://github.com/isl-org/Open3D/blob/master/cpp/open3d/visualization/visualizer/O3DVisualizer.cpp
-    # https://github.com/isl-org/Open3D/blob/88693971ae7a7c3df27546ff7c5b1d91188e39cf/cpp/open3d/visualization/visualizer/O3DVisualizer.cpp
-    
-    
-    
-    def test_callback():
-        mesh = o3d.geometry.TriangleMesh.create_octahedron()
-        Draw.custom_draw_geometry_with_rotation(mesh)
+        pts = [random_point() for _ in range(0, 2 * NUM_LINES)]
+        line_indices = [[2 * i, 2 * i + 1] for i in range(0, NUM_LINES)]
+    #    colors = [[0.0, 0.0, 0.0] for _ in range(0, NUM_LINES)]
+        colors = [[random.random(), random.random(), random.random()]
+                  for _ in range(0, NUM_LINES)]
 
-#        # Test animation callback.
-#        def test_animation_callback():
-#            mesh = o3d.geometry.TriangleMesh.create_octahedron()
-#            def recolor(vis):
-#                mesh.paint_uniform_color(np.random.rand(3))
-#                vis.update_geometry(mesh)
-#                return False
-#            o3d.visualization.draw_geometries_with_animation_callback([mesh], recolor)
-#    #        o3d.visualization.draw([mesh], on_animation_frame=recolor)
-#    #        o3d.visualization.draw([mesh], on_animation_tick=recolor)
+        lines = o3d.geometry.LineSet()
+        lines.points = o3d.utility.Vector3dVector(pts)
+        lines.lines = o3d.utility.Vector2iVector(line_indices)
+        # The default color of the lines is white, which will be invisible on the
+        # default white background. So we either need to set the color of the lines
+        # or the base_color of the material.
+        lines.colors = o3d.utility.Vector3dVector(colors)
 
-    # Test animation callback.
-    def test_animation_callback():
-#        mesh = o3d.geometry.TriangleMesh.create_octahedron()
-        mesh = o3d.t.geometry.TriangleMesh.create_octahedron()
+        # Some platforms do not require OpenGL implementations to support wide lines,
+        # so the renderer requires a custom shader to implement this: "unlitLine".
+        # The line_width field is only used by this shader; all other shaders ignore
+        # it.
+        mat = o3d.visualization.rendering.MaterialRecord()
+        mat.shader = "unlitLine"
+    #    mat.line_width = 10  # note that this is scaled with respect to pixels,
+        mat.line_width = 3  # note that this is scaled with respect to pixels,
+        # so will give different results depending on the
+        # scaling values of your system
         
-        
-#            def cb_test(vis):
-#                print('in cb_test')
-#    #            return False
-#    #            return True
-
         def cb_test(vis, value):
-            
-#            print(mesh.vertex.colors)
-#
-#            mesh.paint_uniform_color(np.random.rand(3))
-            
-            mesh.translate(np.random.rand(3))
-            
-            
-#            vis.update_geometry(mesh)
-            vis.update_geometry('wot', mesh, int(value))
-
             print('in cb_test, value =', value)
+            
+            # vis.update_geometry(lines)
+            
+#            vis.clear_geometries()
+#            vis.add_geometry(lines)
+            vis.add_geometry(lines)
+            
+            return True
 
-#        o3d.visualization.draw_geometries_with_animation_callback([mesh], cb_test)
-#        o3d.visualization.draw([mesh], on_animation_frame=cb_test)
-#        o3d.visualization.draw([mesh], on_animation_tick=cb_test)
-
-
-        # TODO Really would be nice to have “always animating” mode. No need to
-        # specify fictitious animation_time_step and animation_duration. No need
-        # to open UI and click run.
-
-        o3d.visualization.draw([mesh],
+        
+        o3d.visualization.draw({"name": "lines",
+                                "geometry": lines,
+                                "material": mat},
                                on_animation_frame=cb_test,
-#                               animation_time_step=1.0,
-                               animation_time_step = 1 / 20,
+                               animation_time_step = 1 / 30,
                                animation_duration=1000000000,
                                show_ui=True,
-                               )
+                              )
 
 
 
-
-    ##
     ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
