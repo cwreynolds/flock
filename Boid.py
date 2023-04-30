@@ -278,7 +278,7 @@ class Boid(Agent):
     def add_boid_to_flock(count=1, radius=0, center=Vec3()):
         for i in range(count):
             boid = Boid()
-            random_point = util.random_point_in_unit_radius_sphere()
+            random_point = Vec3.random_point_in_unit_radius_sphere()
             
             # TODO 20230418 for testing, probably too much randomness for real.
             boid.ls.randomize_orientation()

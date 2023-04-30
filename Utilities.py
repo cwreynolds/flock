@@ -9,8 +9,6 @@
 #------------------------------------------------------------------------------
 
 import numpy as np
-from Vec3 import Vec3
-
 
 def interpolate(alpha, p, q):
     return (p * (1 - alpha)) + (q * alpha)
@@ -45,9 +43,12 @@ def clip01 (x):
 def between(x, a, b):
     return (min(a, b) <= x) and (x <= max(a, b))
 
+# This value works on my laptop with Python 3.10
+epsilon = 0.00000000000001
+
 # True when a and b differ by no more than epsilon.
-def within_epsilon(a, b, epsilon):
-    return abs(a - b) <= epsilon
+def within_epsilon(a, b, e=epsilon):
+    return abs(a - b) <= e
 
 # Takes a 32 bit value and shuffles it around to produce a new 32 bit value.
 # "Robert Jenkins' 32 bit integer hash function" from "Integer Hash Function"
@@ -63,39 +64,6 @@ def rehash32bits(int32):
     int32 = ones & ((int32 + 0xfd7046c5) + (int32 <<  3))
     int32 = ones & ((int32 ^ 0xb55a4f09) ^ (int32 >> 16))
     return int32
-
-# class RandomSequence
-# Vec3 randomUnitVector();
-# does Python allow the trick where RandomSequence is defined one
-# place but RandomSequence::randomUnitVector() is defined elsewhere?
-# oh, maybe yes: https://stackoverflow.com/a/2982/1991373
-
-# Generate a random point in an axis aligned box, given two opposite corners.
-def random_point_in_axis_aligned_box(a, b):
-    return Vec3(random2(min(a.x, b.x), max(a.x, b.x)),
-                random2(min(a.y, b.y), max(a.y, b.y)),
-                random2(min(a.z, b.z), max(a.z, b.z)))
-
-# Generate a random point inside a unit diameter disk centered on origin.
-def random_point_in_unit_radius_sphere():
-    v = None
-    while True:
-        v = random_point_in_axis_aligned_box(Vec3(-1, -1, -1), Vec3(1, 1, 1))
-        if v.length() <= 1:
-            break
-    return v;
-
-# Generate a random unit vector.
-def random_unit_vector():
-    v = None
-    m = None
-    while True:
-        v = random_point_in_unit_radius_sphere()
-        m = v.length()
-        if m > 0:
-            break
-    return v / m;
-
 
 @staticmethod
 def unit_test():

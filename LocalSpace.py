@@ -50,13 +50,12 @@ class LocalSpace:
         return ((v.x * self.i) + (v.y * self.j) + (v.z * self.k) + self.p)
 
     def is_orthonormal(self):
-        epsilon = 0.00000000000001 # works on my laptop with Python 3.10
-        return (util.within_epsilon(self.i.length_squared(), 1, epsilon) and
-                util.within_epsilon(self.j.length_squared(), 1, epsilon) and
-                util.within_epsilon(self.k.length_squared(), 1, epsilon) and
-                util.within_epsilon(self.i.dot(self.j), 0, epsilon) and
-                util.within_epsilon(self.j.dot(self.k), 0, epsilon) and
-                util.within_epsilon(self.k.dot(self.i), 0, epsilon))
+        return (util.within_epsilon(self.i.length_squared(), 1) and
+                util.within_epsilon(self.j.length_squared(), 1) and
+                util.within_epsilon(self.k.length_squared(), 1) and
+                util.within_epsilon(self.i.dot(self.j), 0) and
+                util.within_epsilon(self.j.dot(self.k), 0) and
+                util.within_epsilon(self.k.dot(self.i), 0))
 
     # TODO 20230405 speculative API, maybe for PinholeCameraParameters?
     def asarray(self):
@@ -74,8 +73,8 @@ class LocalSpace:
 
     # Set to random orientation. Almost certainly the wrong way to do this.
     def randomize_orientation(self):
-        self.i = util.random_unit_vector()
-        self.j = util.random_unit_vector()
+        self.i = Vec3.random_unit_vector()
+        self.j = Vec3.random_unit_vector()
         self.k = self.i.cross(self.j).normalize()
         self.j = self.k.cross(self.i).normalize()
         # assert self.is_orthonormal()

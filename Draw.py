@@ -53,26 +53,42 @@ class Draw:
         Draw.mesh_triangles.append([t, t + 1, t + 2])
 
     ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+    
+#        # TODO 20230426 add line drawing support for annotation
+#        @staticmethod
+#        def add_line_segment(v1, v2, color1=None, color2=None):
+#            if color1 == None:
+#    #            color1 = Vec3(0.5, 0.5, 0.5)
+#                color1 = Vec3(1, 0, 0)
+#            if color2 == None:
+#                color2 = color1
+#            Draw.line_points.append(v1.asarray())
+#            Draw.line_points.append(v2.asarray())
+#            # TODO 20230427 may actually be just one color per line segment (see
+#            # http://www.open3d.org/docs/release/python_example/visualization/index.html#line-width-py )
+#            Draw.line_colors.append(color1.asarray())
+#            Draw.line_colors.append(color2.asarray())
+#
+#    #        print(Draw.line_colors.asarray())
+#    #        print(color1,color2)
+#
+#            i = len(Draw.line_segments) * 2
+#            Draw.line_segments.append([i, i + 1])
+        
+    # TODO 20230430 line drawing support for annotation
+    # given all the problems getting LineSets to draw in bright unshaded colors,
+    # trying this approach drawing lines as several triangles.
+
     # TODO 20230426 add line drawing support for annotation
     @staticmethod
-    def add_line_segment(v1, v2, color1=None, color2=None):
-        if color1 == None:
-#            color1 = Vec3(0.5, 0.5, 0.5)
-            color1 = Vec3(1, 0, 0)
-        if color2 == None:
-            color2 = color1
-        Draw.line_points.append(v1.asarray())
-        Draw.line_points.append(v2.asarray())
-        # TODO 20230427 may actually be just one color per line segment (see
-        # http://www.open3d.org/docs/release/python_example/visualization/index.html#line-width-py )
-        Draw.line_colors.append(color1.asarray())
-        Draw.line_colors.append(color2.asarray())
-        
-#        print(Draw.line_colors.asarray())
-#        print(color1,color2)
-        
-        i = len(Draw.line_segments) * 2
-        Draw.line_segments.append([i, i + 1])
+    def add_line_segment(v1, v2, color=None):
+        if color == None:
+            color = Vec3(1, 0, 0)
+        o = Vec3(0.1, 0.1, 0.1)
+        Draw.add_triangle_single_color(v1, v2, v2 + o, color)
+        Draw.add_triangle_single_color(v1, v2 + o, v1 + o, color)
+
+
     ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 
     @staticmethod
@@ -148,7 +164,7 @@ class Draw:
         ball = o3d.geometry.TriangleMesh.create_sphere(0.1, 10)
         ball.compute_vertex_normals()
         ball.paint_uniform_color([0.8, 0.1, 0.1])
-        Draw.vis.add_geometry(ball)
+#        Draw.vis.add_geometry(ball)
 
         Draw.frame_start_time = time.time()
 

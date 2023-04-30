@@ -15,6 +15,7 @@
 
 import math
 import numpy as np
+import Utilities as util
 
 class Vec3:
     """Utility class for 3d vectors and operations on them."""
@@ -90,13 +91,12 @@ class Vec3:
         return truncated
 
     # return component of vector parallel to a unit basis vector
-    # (IMPORTANT NOTE: assumes "basis" has unit magnitude (length==1))
     def parallel_component(self, unit_basis):
+        assert unit_basis.is_unit_length()
         projection = self.dot(unit_basis)
         return unit_basis * projection
 
     # return component of vector perpendicular to a unit basis vector
-    # (IMPORTANT NOTE: assumes "basis" has unit magnitude (length==1))
     def perpendicular_component(self, unit_basis):
         return self - self.parallel_component(unit_basis)
 
@@ -106,6 +106,45 @@ class Vec3:
         return Vec3(a.y * b.z - a.z * b.y,
                     a.z * b.x - a.x * b.z,
                     a.x * b.y - a.y * b.x)
+
+    def is_unit_length(self):
+        return util.within_epsilon(self.length_squared(), 1)
+
+    # class RandomSequence
+    # Vec3 randomUnitVector();
+    # does Python allow the trick where RandomSequence is defined one
+    # place but RandomSequence::randomUnitVector() is defined elsewhere?
+    # oh, maybe yes: https://stackoverflow.com/a/2982/1991373
+
+    # Generate a random point in an axis aligned box, given two opposite corners.
+    @staticmethod
+    def random_point_in_axis_aligned_box(a, b):
+        return Vec3(util.random2(min(a.x, b.x), max(a.x, b.x)),
+                    util.random2(min(a.y, b.y), max(a.y, b.y)),
+                    util.random2(min(a.z, b.z), max(a.z, b.z)))
+
+    # Generate a random point inside a unit diameter disk centered on origin.
+    @staticmethod
+    def random_point_in_unit_radius_sphere():
+        v = None
+        while True:
+            v = Vec3.random_point_in_axis_aligned_box(Vec3(-1, -1, -1),
+                                                      Vec3(1, 1, 1))
+            if v.length() <= 1:
+                break
+        return v;
+
+    # Generate a random unit vector.
+    @staticmethod
+    def random_unit_vector():
+        v = None
+        m = None
+        while True:
+            v = Vec3.random_point_in_unit_radius_sphere()
+            m = v.length()
+            if m > 0:
+                break
+        return v / m;
 
     @staticmethod
     def unit_test():
