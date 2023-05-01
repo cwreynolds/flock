@@ -78,7 +78,7 @@ class Vec3:
     def length(self):
         return math.sqrt(self.length_squared())
     def length_squared(self):
-        return (self.x * self.x) + (self.y * self.y) + (self.z * self.z)
+        return self.dot(self)
     def normalize(self):
         return self / self.length()
         
@@ -107,8 +107,39 @@ class Vec3:
                     a.z * b.x - a.x * b.z,
                     a.x * b.y - a.y * b.x)
 
+    # Check for unit length. (Uses fast length_squared() just 3 mults, 2 adds.)
     def is_unit_length(self):
         return util.within_epsilon(self.length_squared(), 1)
+
+    # Check if two vectors are perpendicular. (What about zero length?)
+    def is_perpendicular(self, other):
+        # TODO 20230430 Should it check for unit length, or normalize? For now,
+        # assert that given vectors are unit length to see if it ever comes up.
+        assert self.is_unit_length()
+        assert other.is_unit_length()
+        return util.within_epsilon(self.dot(other), 0)
+    
+    # Check if two unit vectors are parallel.
+    def is_parallel(self, other):
+        # TODO 20230430 Should it check for unit length, or normalize? For now,
+        # assert that given vectors are unit length to see if it ever comes up.
+        assert self.is_unit_length()
+        assert other.is_unit_length()
+        return util.within_epsilon(self.dot(other), 1)
+    
+    # Given a (unit) vector, return some vector that is purpendicular.
+    # (There are infinitely many such vectors, one is chosen arbitrarily.)
+    def find_perpendicular(self):
+        perpendicular = None
+        reference = Vec3(1, 0, 0) # Any vector NOT parallet to "self"
+        # If "self" is parallel to initial "reference":
+        if self.is_parallel(reference):
+            # Return fixed perpendicular to initial "reference".
+            perpendicular = Vec(0, 1, 0)
+        else:
+            # return cross product with non-parallel "reference".
+            perpendicular = self.cross(reference).normalize()
+        return perpendicular
 
     # class RandomSequence
     # Vec3 randomUnitVector();
@@ -176,6 +207,14 @@ class Vec3:
         assert Vec3(2, 4, 8).perpendicular_component(x_norm) == Vec3(0, 4, 8)
         assert x_norm.parallel_component(diag_norm) == Vec3(f33, f33, f33)
         assert x_norm.perpendicular_component(diag_norm) == Vec3(f66, -f33, -f33)
+        
+        a = Vec3(1, 2, 3).normalize()
+        b = Vec3(-9, 7, 5).normalize()
+        assert a.is_parallel(a)
+        assert not a.is_parallel(b)
+        assert a.is_perpendicular(a.find_perpendicular())
+        assert b.is_perpendicular(b.find_perpendicular())
+        assert not a.is_perpendicular(b)
         
         i = Vec3(1, 0, 0)
         j = Vec3(0, 1, 0)
