@@ -15,6 +15,7 @@
 # MIT License -- Copyright © 2023 Craig Reynolds#
 #-------------------------------------------------------------------------------
 
+import copy
 import numpy as np
 from Vec3 import Vec3
 import Utilities as util
@@ -23,14 +24,14 @@ class LocalSpace:
     """Local space (transformation) for a boid/agent."""
 
     # Initialize new instance.
-    def __init__(self):
-        self.set_state_ijkp(Vec3(1, 0, 0),
-                            Vec3(0, 1, 0),
-                            Vec3(0, 0, 1),
-                            Vec3(0, 0, 0))
+    def __init__(self,
+                 i=Vec3(1, 0, 0),
+                 j=Vec3(0, 1, 0),
+                 k=Vec3(0, 0, 1),
+                 p=Vec3(0, 0, 0)):
+        self.set_state_ijkp(i, j, k, p)
 
-    # Set non-homogeneous 3x4 portion of transform: 3 basis and one position vec.
-    # TODO 20230417 should this be replace with optional arguments on __init__()?
+    # Set non-homogeneous 3x4 portion of transform: 3 basis and 1 position vec.
     def set_state_ijkp(self, i, j, k, p):
         # Basis vectors of local coordinate axes, ijk → xyz:
         self.i = i
@@ -77,7 +78,7 @@ class LocalSpace:
         self.j = Vec3.random_unit_vector()
         self.k = self.i.cross(self.j).normalize()
         self.j = self.k.cross(self.i).normalize()
-        # assert self.is_orthonormal()
+        return self
 
     @staticmethod
     def unit_test():
@@ -85,11 +86,27 @@ class LocalSpace:
                                      [0, 1, 0, 0],
                                      [0, 0, 1, 0],
                                      [0, 0, 0, 1]])
-        test_ls = LocalSpace()
-        test_ls.set_state_ijkp(test_i := Vec3(1, 2, 3).normalize(),
-                               test_j := test_i.cross(Vec3(0, 0, 1)).normalize(),
-                               test_i.cross(test_j).normalize(),
-                               Vec3(5, 6, 7))
+        ls_i = Vec3(1, 2, 3).normalize()
+        ls_j = ls_i.cross(Vec3(0, 0, 1)).normalize()
+        ls_k = ls_i.cross(ls_j).normalize()
+        ls_p = Vec3(5, 6, 7)
+        ls = LocalSpace(ls_i, ls_j, ls_k, ls_p)
+        r = copy.copy(ls).randomize_orientation()
+        a = Vec3.random_point_in_unit_radius_sphere() * 10
+        b = Vec3.random_point_in_unit_radius_sphere() * 100
         assert np.array_equal(LocalSpace().asarray(), identity_asarray)
         assert LocalSpace().is_orthonormal(), 'initial value is orthonormal'
-        assert test_ls.is_orthonormal(), 'handmade value is orthonormal'
+        assert ls.is_orthonormal(), 'handmade ls is orthonormal'
+        assert r.is_orthonormal(), 'randomized ls is still orthonormal'
+        assert a.is_equal_within_epsilon(r.globalize(r.localize(a)))
+        assert a.is_equal_within_epsilon(r.localize(r.globalize(a)))
+        assert b.is_equal_within_epsilon(r.globalize(r.localize(b)))
+        assert b.is_equal_within_epsilon(r.localize(r.globalize(b)))
+        
+        # Just to verify that copy.copy() works for LocalSpace, as expected.
+        a = LocalSpace()
+        b = copy.copy(a)
+        a.i = Vec3(1, 2, 3)
+        b.p = Vec3(9, 8, 7)
+        assert b.i == Vec3(1, 0, 0), 'verify copy.copy() prevents sharing'
+        assert a.p == Vec3(0, 0, 0), 'verify copy.copy() prevents sharing'

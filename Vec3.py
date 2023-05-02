@@ -141,6 +141,13 @@ class Vec3:
             perpendicular = self.cross(reference).normalize()
         return perpendicular
 
+    # Check if two vectors are within epsilon of being equal.
+    def is_equal_within_epsilon(self, other):
+        bigger_epsilon = util.epsilon * 10  # Got occasional fail with default.
+        return (util.within_epsilon(self.x, other.x, bigger_epsilon) and
+                util.within_epsilon(self.y, other.y, bigger_epsilon) and
+                util.within_epsilon(self.z, other.z, bigger_epsilon))
+
     # class RandomSequence
     # Vec3 randomUnitVector();
     # does Python allow the trick where RandomSequence is defined one
@@ -215,6 +222,11 @@ class Vec3:
         assert a.is_perpendicular(a.find_perpendicular())
         assert b.is_perpendicular(b.find_perpendicular())
         assert not a.is_perpendicular(b)
+        
+        e = Vec3(2, 4, 8)
+        f = Vec3(2, 4, 8 - util.epsilon / 2)
+        assert e.is_equal_within_epsilon(e)
+        assert e.is_equal_within_epsilon(f)
         
         i = Vec3(1, 0, 0)
         j = Vec3(0, 1, 0)

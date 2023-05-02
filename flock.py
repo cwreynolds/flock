@@ -1,6 +1,4 @@
 import sys
-import math
-import numpy as np
 import open3d as o3d
 from Vec3 import Vec3
 from Boid import Boid
@@ -21,6 +19,7 @@ def setup():
     LocalSpace.unit_test()
     Agent.unit_test()
     util.unit_test()
+    print('All unit tests OK.')
 
 # TODO 20230430 testing lines as triangles
 def lines():
@@ -28,7 +27,6 @@ def lines():
     Draw.add_line_segment(Vec3(-10, 0, 0), Vec3(10, 0, 0), Vec3(1, 0, 0))
     Draw.add_line_segment(Vec3(0, -10, 0), Vec3(0, 10, 0), Vec3(0, 1, 0))
     Draw.add_line_segment(Vec3(0, 0, -10), Vec3(0, 0, 10), Vec3(0, 0, 1))
-
 
 # TODO 20230408 prototype flock top level
 def run_flock(size, initial_diameter):
@@ -58,6 +56,3 @@ if __name__ == "__main__":
 #    run_flock(500, sphere_diameter)
 #    run_flock(200, sphere_diameter)
     run_flock(50, sphere_diameter)
-
-
-
