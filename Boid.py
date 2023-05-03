@@ -261,7 +261,9 @@ class Boid(Agent):
         
         ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
         # TODO 20230426 add line drawing support for annotation
-        Draw.add_line_segment(center, center + self.up, Vec3(1, 0, 0))
+        Draw.add_line_segment(center, center + self.side,    Vec3(1, 0, 0))
+        Draw.add_line_segment(center, center + self.up,      Vec3(0, 1, 0))
+        Draw.add_line_segment(center, center + self.forward, Vec3(0, 0, 1))
         ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 
 

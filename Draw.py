@@ -15,6 +15,7 @@ import math
 import Utilities as util  # temp?
 from Vec3 import Vec3     # temp?
 import random             # temp?
+from LocalSpace import LocalSpace
 
 
 class Draw:
@@ -54,40 +55,40 @@ class Draw:
 
     ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
     
-#        # TODO 20230426 add line drawing support for annotation
-#        @staticmethod
-#        def add_line_segment(v1, v2, color1=None, color2=None):
-#            if color1 == None:
-#    #            color1 = Vec3(0.5, 0.5, 0.5)
-#                color1 = Vec3(1, 0, 0)
-#            if color2 == None:
-#                color2 = color1
-#            Draw.line_points.append(v1.asarray())
-#            Draw.line_points.append(v2.asarray())
-#            # TODO 20230427 may actually be just one color per line segment (see
-#            # http://www.open3d.org/docs/release/python_example/visualization/index.html#line-width-py )
-#            Draw.line_colors.append(color1.asarray())
-#            Draw.line_colors.append(color2.asarray())
-#
-#    #        print(Draw.line_colors.asarray())
-#    #        print(color1,color2)
-#
-#            i = len(Draw.line_segments) * 2
-#            Draw.line_segments.append([i, i + 1])
         
     # TODO 20230430 line drawing support for annotation
     # given all the problems getting LineSets to draw in bright unshaded colors,
     # trying this approach drawing lines as several triangles.
-
     # TODO 20230426 add line drawing support for annotation
     @staticmethod
-    def add_line_segment(v1, v2, color=None):
-        if color == None:
-            color = Vec3(1, 0, 0)
-        o = Vec3(0.1, 0.1, 0.1)
-        Draw.add_triangle_single_color(v1, v2, v2 + o, color)
-        Draw.add_triangle_single_color(v1, v2 + o, v1 + o, color)
+    def add_line_segment(v1, v2, color=Vec3(1, 0, 0), radius = 0.01, sides = 3):
+        # Vector along the segment, from v1 to v2
+        offset = v2 - v1
+        distance = offset.length()
+        tangent = offset / distance
+        basis1 = tangent.find_perpendicular()
+        basis2 = tangent.cross(basis1)
+        # Make transform (LocalSpace) from "line segment space" to global space.
+        ls = LocalSpace(basis1, basis2, tangent, v1)
+        for i in range(sides):
+            angle_step = math.pi * 2 / sides
+            radial = Vec3(radius, 0, 0)
+            a = ls.globalize(radial.rotate_xy_about_z(angle_step * i))
+            b = ls.globalize(radial.rotate_xy_about_z(angle_step * (i+1)))
+            c = b + offset
+            d = a + offset
+            Draw.draw_quadrilateral(a, b, c, d, color)
 
+#    @staticmethod
+#    def draw_quadrilateral(v1, v2, v3, v4, color=Vec3(1, 0, 0)):
+#        Draw.add_triangle_single_color(v1, v2, v3, color)
+#        Draw.add_triangle_single_color(v1, v3, v4, color)
+
+    # Draw quadrilateral as 2 tris. Assumes planar and convex but does not care.
+    @staticmethod
+    def draw_quadrilateral(v1, v2, v3, v4, color=Vec3(1, 0, 0)):
+        Draw.add_triangle_single_color(v3, v2, v1, color)
+        Draw.add_triangle_single_color(v4, v3, v1, color)
 
     ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 

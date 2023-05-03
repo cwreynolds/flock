@@ -135,7 +135,7 @@ class Vec3:
         # If "self" is parallel to initial "reference":
         if self.is_parallel(reference):
             # Return fixed perpendicular to initial "reference".
-            perpendicular = Vec(0, 1, 0)
+            perpendicular = Vec3(0, 1, 0)
         else:
             # return cross product with non-parallel "reference".
             perpendicular = self.cross(reference).normalize()
@@ -147,6 +147,17 @@ class Vec3:
         return (util.within_epsilon(self.x, other.x, bigger_epsilon) and
                 util.within_epsilon(self.y, other.y, bigger_epsilon) and
                 util.within_epsilon(self.z, other.z, bigger_epsilon))
+
+    # Rotate X and Y values about the Z axis by given angle.
+    # This is used in combination with a LocalSpace transform to get model in
+    # correct orientation. A more generalized "rotate about given axis by given
+    # angle" might be nice to have for convenience.
+    def rotate_xy_about_z(self, angle):
+        s = math.sin(angle)
+        c = math.cos(angle)
+        return Vec3(self.x * c + self.y * s,
+                    self.y * c - self.x * s,
+                    self.z)
 
     # class RandomSequence
     # Vec3 randomUnitVector();
@@ -217,10 +228,12 @@ class Vec3:
         
         a = Vec3(1, 2, 3).normalize()
         b = Vec3(-9, 7, 5).normalize()
+        c = Vec3(1, 0, 0)
         assert a.is_parallel(a)
         assert not a.is_parallel(b)
         assert a.is_perpendicular(a.find_perpendicular())
         assert b.is_perpendicular(b.find_perpendicular())
+        assert c.is_perpendicular(c.find_perpendicular())
         assert not a.is_perpendicular(b)
         
         e = Vec3(2, 4, 8)

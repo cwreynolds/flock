@@ -23,10 +23,14 @@ def setup():
 
 # TODO 20230430 testing lines as triangles
 def lines():
-    Draw.add_line_segment(Vec3(-10, -10, -10), Vec3(10, 10, 10), Vec3(1, 0, 1))
-    Draw.add_line_segment(Vec3(-10, 0, 0), Vec3(10, 0, 0), Vec3(1, 0, 0))
-    Draw.add_line_segment(Vec3(0, -10, 0), Vec3(0, 10, 0), Vec3(0, 1, 0))
-    Draw.add_line_segment(Vec3(0, 0, -10), Vec3(0, 0, 10), Vec3(0, 0, 1))
+    r = 0.1
+    t = 10
+#    s = 3
+    s = 8
+    Draw.add_line_segment(Vec3(-t, -t, -t), Vec3(t, t, t), Vec3(1, 0, 1), r, s)
+    Draw.add_line_segment(Vec3(-t, 0, 0), Vec3(t, 0, 0), Vec3(1, 0, 0), r, s)
+    Draw.add_line_segment(Vec3(0, -t, 0), Vec3(0, t, 0), Vec3(0, 1, 0), r, s)
+    Draw.add_line_segment(Vec3(0, 0, -t), Vec3(0, 0, t), Vec3(0, 0, 1), r, s)
 
 # TODO 20230408 prototype flock top level
 def run_flock(size, initial_diameter):
