@@ -28,11 +28,51 @@ class Boid(Agent):
 #        self.max_force = 1.0      # Acceleration upper limit (m/s²)
         self.max_force = 0.3      # Acceleration upper limit (m/s²)
 
-        
         self.speed = self.max_speed * 0.25
+        
+        self.last_separation_force = Vec3()
+        self.last_alignment_force = Vec3()
+        self.last_coherance_force = Vec3()
+        self.last_combined_steering = Vec3()
+        
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230503 pick a random boid color and stick with it!
+        self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+
+#        # Basic flocking behavior.
+#        # TODO 20230427 Hmmm this steer_to_...() function has no return value but
+#        # does have side effect. Whereas the other steer_to_...() functions DO have
+#        # return values and no side effect.
+#        def steer_to_flock(self, time_step):
+#    #        return 0
+#
+#    #        neighbors = self.nearest_neighbors()
+#    #        neighbors = self.nearest_neighbors(7, 10)
+#            neighbors = self.nearest_neighbors()
+#            f = self.forward * 0.05
+#            s = self.steer_to_separate(neighbors)
+#            a = self.steer_to_align(neighbors)
+#            c = self.steer_to_cohere(neighbors)
+#    #        combined_steering = f + (s / 20) + a + (c * 100)
+#    #        combined_steering = f + s + a + c
+#    #        combined_steering = f + s * 0.2 + a * 5 + c * 5
+#    #        combined_steering = f + s * 0.2 + a * 5 + c * 10
+#    #        combined_steering = f + s * 0.05 + a * 5 + c * 10
+#    #        combined_steering = f + (s * 0.2) + (a * 2) + (c * 2)
+#    #        combined_steering = f + (s * 4) + (a * 2) + (c * 1)
+#    #        combined_steering = f + (s * 3) + (a * 2) + (c * 0.5)
+#    #        combined_steering = f + (s * 4) + (a * 2) + (c * 0.2)
+#    #        combined_steering = f + (s * 8) + (a * 2) + (c * 0.2)
+#    #        combined_steering = f + (s * 1) + (a * 1) + (c * 1)
+#    #        combined_steering = f + (s * 1) + (a * 1) + (c * 0.1)
+#    #        combined_steering = f + (s * 10) + (a * 1) + (c * 0.2)
+#            combined_steering = f + (s * 10) + (a * 0.5) + (c * 0.2)
+#            self.steer(combined_steering, time_step)
 
     # Basic flocking behavior.
     # TODO 20230427 Hmmm this steer_to_...() function has no return value but
@@ -40,28 +80,16 @@ class Boid(Agent):
     # return values and no side effect.
     def steer_to_flock(self, time_step):
 #        return 0
-    
-#        neighbors = self.nearest_neighbors()
-#        neighbors = self.nearest_neighbors(7, 10)
         neighbors = self.nearest_neighbors()
         f = self.forward * 0.05
         s = self.steer_to_separate(neighbors)
         a = self.steer_to_align(neighbors)
         c = self.steer_to_cohere(neighbors)
-#        combined_steering = f + (s / 20) + a + (c * 100)
-#        combined_steering = f + s + a + c
-#        combined_steering = f + s * 0.2 + a * 5 + c * 5
-#        combined_steering = f + s * 0.2 + a * 5 + c * 10
-#        combined_steering = f + s * 0.05 + a * 5 + c * 10
-#        combined_steering = f + (s * 0.2) + (a * 2) + (c * 2)
-#        combined_steering = f + (s * 4) + (a * 2) + (c * 1)
-#        combined_steering = f + (s * 3) + (a * 2) + (c * 0.5)
-#        combined_steering = f + (s * 4) + (a * 2) + (c * 0.2)
-#        combined_steering = f + (s * 8) + (a * 2) + (c * 0.2)
-#        combined_steering = f + (s * 1) + (a * 1) + (c * 1)
-#        combined_steering = f + (s * 1) + (a * 1) + (c * 0.1)
-#        combined_steering = f + (s * 10) + (a * 1) + (c * 0.2)
         combined_steering = f + (s * 10) + (a * 0.5) + (c * 0.2)
+        self.last_separation_force = s
+        self.last_alignment_force = a
+        self.last_coherance_force = c
+        self.last_combined_steering = combined_steering
         self.steer(combined_steering, time_step)
 
 #    # Steering force component to move away from neighbors.
@@ -253,7 +281,13 @@ class Boid(Agent):
         apex = tail + self.up * 0.25 + self.forward * 0.1
         wingtip0 = tail + self.side * 0.3
         wingtip1 = tail - self.side * 0.3
-        color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
+        
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230503 pick a random boid color and stick with it!
+#        color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
+        color = self.color
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
         Draw.add_triangle_single_color(nose, apex,     wingtip1, color * 1.0)
         Draw.add_triangle_single_color(nose, wingtip0, apex,     color * 0.95)
         Draw.add_triangle_single_color(apex, wingtip0, wingtip1, color * 0.9)
@@ -261,9 +295,38 @@ class Boid(Agent):
         
         ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
         # TODO 20230426 add line drawing support for annotation
-        Draw.add_line_segment(center, center + self.side,    Vec3(1, 0, 0))
-        Draw.add_line_segment(center, center + self.up,      Vec3(0, 1, 0))
-        Draw.add_line_segment(center, center + self.forward, Vec3(0, 0, 1))
+#        Draw.add_line_segment(center, center + self.side,    Vec3(1, 0, 0))
+#        Draw.add_line_segment(center, center + self.up,      Vec3(0, 1, 0))
+#        Draw.add_line_segment(center, center + self.forward, Vec3(0, 0, 1))
+        
+#        # Annotation for steering forces
+#        s = self.last_separation_force
+#        a = self.last_alignment_force
+#        c = self.last_coherance_force
+#        Draw.add_line_segment(center, center + s, Vec3(1, 0, 0))
+#        Draw.add_line_segment(center, center + a, Vec3(0, 1, 0))
+#        Draw.add_line_segment(center, center + c, Vec3(0, 0, 1))
+
+        # TODO 20230503
+        # Annotation for steering forces
+        def relative_force_annotation(offset, color):
+#            if offset.length_squared() == 0:
+#                offset = Vec3(0.01, 0, 0)
+            Draw.add_line_segment(center, center + offset, color)
+        relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
+        relative_force_annotation(self.last_alignment_force, Vec3(0, 1, 0))
+        relative_force_annotation(self.last_coherance_force, Vec3(0, 0, 1))
+
+#        relative_force_annotation((self.last_coherance_force +
+#                                   self.last_alignment_force +
+#                                   self.last_coherance_force),
+#                                  Vec3(0.7, 0.7, 0.7))
+
+        g = 0.8
+        relative_force_annotation(self.last_combined_steering, Vec3(g, g, g))
+
+                                  
+
         ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 
 

@@ -38,14 +38,14 @@ def run_flock(size, initial_diameter):
     draw = Draw() ## ?? currently unused but should contain draw state
     Boid.add_boid_to_flock(size, initial_diameter)
     Boid.draw_flock()
-    lines() ##################################### TODO 20230430
+#    lines() ##################################### TODO 20230430
     Draw.start_visualizer()
     while Draw.still_running():
         Boid.steer_flock(Draw.frame_duration)
         Boid.sphere_wrap_around_flock(sphere_diameter / 2) # this takes a radius
         Draw.clear_scene()
         Boid.draw_flock()
-        lines() ################################# TODO 20230430
+#        lines() ################################# TODO 20230430
         Draw.update_scene()
         some_boid = Boid.flock[0]
         Draw.update_camera(some_boid.position.asarray())

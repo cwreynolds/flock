@@ -26,7 +26,6 @@ class Draw:
         self.temp = 0
 
     # Class properties to hold raw scene data for Open3D TriangleMesh.
-#    mesh_vertex_count = 0
     mesh_vertices = o3d.utility.Vector3dVector()
     mesh_triangles = o3d.utility.Vector3iVector()
     mesh_vertex_colors = o3d.utility.Vector3dVector()
@@ -44,53 +43,58 @@ class Draw:
     frame_start_time = None
     frame_duration = 0.01
     
+#    @staticmethod
+#    def add_triangle_single_color(v1, v2, v3, color):
+#        color = color.asarray()
+#        for v in [v1, v2, v3]:
+#            Draw.mesh_vertices.append(v.asarray())
+#            Draw.mesh_vertex_colors.append(color)
+#        t = len(Draw.mesh_triangles) * 3
+#        Draw.mesh_triangles.append([t, t + 1, t + 2])
+
     @staticmethod
     def add_triangle_single_color(v1, v2, v3, color):
-        color = color.asarray()
         for v in [v1, v2, v3]:
             Draw.mesh_vertices.append(v.asarray())
-            Draw.mesh_vertex_colors.append(color)
+            Draw.mesh_vertex_colors.append(color.asarray())
         t = len(Draw.mesh_triangles) * 3
         Draw.mesh_triangles.append([t, t + 1, t + 2])
 
-    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-    
-        
     # TODO 20230430 line drawing support for annotation
     # given all the problems getting LineSets to draw in bright unshaded colors,
     # trying this approach drawing lines as several triangles.
     # TODO 20230426 add line drawing support for annotation
     @staticmethod
-    def add_line_segment(v1, v2, color=Vec3(1, 0, 0), radius = 0.01, sides = 3):
+    def add_line_segment(v1, v2, color=Vec3(), radius = 0.01, sides = 3):
         # Vector along the segment, from v1 to v2
         offset = v2 - v1
         distance = offset.length()
-        tangent = offset / distance
-        basis1 = tangent.find_perpendicular()
-        basis2 = tangent.cross(basis1)
-        # Make transform (LocalSpace) from "line segment space" to global space.
-        ls = LocalSpace(basis1, basis2, tangent, v1)
-        for i in range(sides):
-            angle_step = math.pi * 2 / sides
-            radial = Vec3(radius, 0, 0)
-            a = ls.globalize(radial.rotate_xy_about_z(angle_step * i))
-            b = ls.globalize(radial.rotate_xy_about_z(angle_step * (i+1)))
-            c = b + offset
-            d = a + offset
-            Draw.draw_quadrilateral(a, b, c, d, color)
-
-#    @staticmethod
-#    def draw_quadrilateral(v1, v2, v3, v4, color=Vec3(1, 0, 0)):
-#        Draw.add_triangle_single_color(v1, v2, v3, color)
-#        Draw.add_triangle_single_color(v1, v3, v4, color)
+        if distance > 0:
+            tangent = offset / distance
+            basis1 = tangent.find_perpendicular()
+            basis2 = tangent.cross(basis1)
+            # Make transform from "line segment space" to global space.
+            ls = LocalSpace(basis1, basis2, tangent, v1)
+            for i in range(sides):
+                angle_step = math.pi * 2 / sides
+                radial = Vec3(radius, 0, 0)
+                a = ls.globalize(radial.rotate_xy_about_z(angle_step * i))
+                b = ls.globalize(radial.rotate_xy_about_z(angle_step * (i+1)))
+                c = b + offset
+                d = a + offset
+                Draw.draw_quadrilateral(d, c, b, a, color)
+        else:
+            Draw.draw_quadrilateral(Vec3(),
+                                    Vec3(0.1, 0.0, 0.0),
+                                    Vec3(0.1, 0.1, 0.0),
+                                    Vec3(0.0, 0.1, 0.0),
+                                    color)
 
     # Draw quadrilateral as 2 tris. Assumes planar and convex but does not care.
     @staticmethod
-    def draw_quadrilateral(v1, v2, v3, v4, color=Vec3(1, 0, 0)):
-        Draw.add_triangle_single_color(v3, v2, v1, color)
-        Draw.add_triangle_single_color(v4, v3, v1, color)
-
-    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+    def draw_quadrilateral(v1, v2, v3, v4, color=Vec3()):
+        Draw.add_triangle_single_color(v1, v2, v3, color)
+        Draw.add_triangle_single_color(v1, v3, v4, color)
 
     @staticmethod
     def start_visualizer():
@@ -100,66 +104,21 @@ class Draw:
         Draw.triangle_mesh.triangles = Draw.mesh_triangles
         Draw.triangle_mesh.vertex_colors = Draw.mesh_vertex_colors
         
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
         # TODO 20230426 add line drawing support for annotation
-        Draw.line_set = o3d.geometry.LineSet()
-        Draw.line_set.points = Draw.line_points
-        Draw.line_set.lines = Draw.line_segments
-        Draw.line_set.colors = Draw.line_colors
-        
-#            # TODO 20230427 try to use "tensor version" (o3d.t) of LineSet.
-#            device = None
-#    #        device = o3d.core.Device.DeviceType.CPU
-#    #        device = o3d.cpu
-#            dtype_f = o3d.core.float32
-#            dtype_i = o3d.core.int32
-#
-#    #        Draw.t_line_set = o3d.t.geometry.LineSet(device)
-#    #        position_tensor = o3d.core.Tensor(Draw.line_points, dtype_f, device)
-#    #        Draw.t_line_set.point.positions = position_tensor
-#    #        line_index_tensor = o3d.core.Tensor(Draw.line_segments, dtype_f, device)
-#    #        Draw.t_line_set.line.indices = line_index_tensor
-#    #        line_color_tensor = o3d.core.Tensor(Draw.line_colors, dtype_f, device)
-#    #        Draw.t_line_set.line.colors = line_color_tensor
-#
-#            Draw.t_line_set = o3d.t.geometry.LineSet()
-#            position_tensor = o3d.core.Tensor(Draw.line_points, dtype_f)
-#            Draw.t_line_set.point.positions = position_tensor
-#            line_index_tensor = o3d.core.Tensor(Draw.line_segments, dtype_f)
-#            Draw.t_line_set.line.indices = line_index_tensor
-#            line_color_tensor = o3d.core.Tensor(Draw.line_colors, dtype_f)
-#            Draw.t_line_set.line.colors = line_color_tensor
-
-        
-        
-#        # TODO 20230427 add "material" for line drawing
-#        print(dir(Draw.line_set))
-        mat = o3d.visualization.rendering.MaterialRecord()
-        mat.shader = "unlitLine"
-        mat.line_width = 10  # note that this is scaled with respect to pixels,
-#        Draw.line_set.material = mat
-        
-        Draw.line_set.paint_uniform_color(Vec3(1, 0, 0).asarray())
-
-        
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230503 not being used now, couldn't color them, now use tris
+        #    Draw.line_set = o3d.geometry.LineSet()
+        #    Draw.line_set.points = Draw.line_points
+        #    Draw.line_set.lines = Draw.line_segments
+        #    Draw.line_set.colors = Draw.line_colors
         
         # Create Visualizer add mesh, enter draw loop.
         Draw.vis = o3d.visualization.Visualizer()
         Draw.vis.create_window()
         Draw.vis.add_geometry(Draw.triangle_mesh)
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-        # TODO 20230426 add line drawing support for annotation
-        Draw.vis.add_geometry(Draw.line_set)
-#        Draw.vis.add_geometry({
-#                                "name": "lines",
-#                                "geometry": Draw.line_set,
-#                                "material": mat
-#                              })
+#        Draw.vis.add_geometry(Draw.triangle_mesh, False)
         
-        # TODO 20230427 try to use "tensor version" (o3d.t) of LineSet.
-#        Draw.vis.add_geometry(Draw.t_line_set)
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230426 add line drawing support for annotation
+        #    Draw.vis.add_geometry(Draw.line_set)
         
         # TODO 23230411 temp ball for camera aim reference
         ball = o3d.geometry.TriangleMesh.create_sphere(0.1, 10)
@@ -180,32 +139,100 @@ class Draw:
 
     @staticmethod
     def clear_scene():
-#        Draw.mesh_vertex_count = 0
         Draw.mesh_vertices.clear()
         Draw.mesh_triangles.clear()
         Draw.mesh_vertex_colors.clear()
         
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
         # TODO 20230426 add line drawing support for annotation
-        Draw.line_points.clear()
-        Draw.line_segments.clear()
-        Draw.line_colors.clear()
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        #    Draw.line_points.clear()
+        #    Draw.line_segments.clear()
+        #    Draw.line_colors.clear()
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
+################################################################################
+
+#    @staticmethod
+#    def update_scene():
+#        Draw.triangle_mesh.vertices = Draw.mesh_vertices
+#        Draw.triangle_mesh.triangles = Draw.mesh_triangles
+#        Draw.vis.update_geometry(Draw.triangle_mesh)
+#
+#        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+#        # TODO 20230426 add line drawing support for annotation
+#        Draw.line_set.points = Draw.line_points
+#        Draw.line_set.lines = Draw.line_segments
+#        Draw.line_set.colors = Draw.line_colors
+#        Draw.vis.update_geometry(Draw.line_set)
+#        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+#
+#        Draw.vis.update_renderer()
+#        # Measure frame duration:
+#        frame_end_time = time.time()
+#        Draw.frame_duration = frame_end_time - Draw.frame_start_time
+#        Draw.frame_start_time = frame_end_time
+#        Draw.frame_counter += 1
+
+
+#    # Create Visualizer add mesh, enter draw loop.
+#    Draw.vis = o3d.visualization.Visualizer()
+#    Draw.vis.create_window()
+#    Draw.vis.add_geometry(Draw.triangle_mesh)
+
+
+#        @staticmethod
+#        def update_scene():
+#            #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
+#            # TODO 20230503 use remove/add instead of update_geometry since now the
+#            #               number of triangles can change (for "line" drawing)
+#    #        Draw.vis.remove_geometry(Draw.triangle_mesh, False)
+#
+#            # TODO 20230503 JUST CREATE A NEW MESH EACH DRAW.
+#            # Create a mesh from the triangle vertices and indices
+#    #        Draw.triangle_mesh = o3d.geometry.TriangleMesh()
+#            Draw.triangle_mesh.vertices = Draw.mesh_vertices
+#            Draw.triangle_mesh.triangles = Draw.mesh_triangles
+#            Draw.triangle_mesh.vertex_colors = Draw.mesh_vertex_colors
+#
+#            #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
+#
+#    #        Draw.triangle_mesh.vertices = Draw.mesh_vertices
+#    #        Draw.triangle_mesh.triangles = Draw.mesh_triangles
+#
+#            #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
+#            # TODO 20230503 use remove/add instead of update_geometry since now the
+#            #               number of triangles can change (for "line" drawing)
+#            Draw.vis.update_geometry(Draw.triangle_mesh)
+#    #        Draw.vis.add_geometry(Draw.triangle_mesh, False)
+#            #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
+#
+#            Draw.vis.update_renderer()
+#            # Measure frame duration:
+#            frame_end_time = time.time()
+#            Draw.frame_duration = frame_end_time - Draw.frame_start_time
+#            Draw.frame_start_time = frame_end_time
+#            Draw.frame_counter += 1
 
 
     @staticmethod
     def update_scene():
         Draw.triangle_mesh.vertices = Draw.mesh_vertices
         Draw.triangle_mesh.triangles = Draw.mesh_triangles
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230503 OOPS, had not been doing this!!
+        Draw.triangle_mesh.vertex_colors = Draw.mesh_vertex_colors
+        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
         Draw.vis.update_geometry(Draw.triangle_mesh)
+        
 
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-        # TODO 20230426 add line drawing support for annotation
-        Draw.line_set.points = Draw.line_points
-        Draw.line_set.lines = Draw.line_segments
-        Draw.line_set.colors = Draw.line_colors
-        Draw.vis.update_geometry(Draw.line_set)
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
+    #    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+    #    # TODO 20230426 add line drawing support for annotation
+    #    Draw.line_set.points = Draw.line_points
+    #    Draw.line_set.lines = Draw.line_segments
+    #    Draw.line_set.colors = Draw.line_colors
+    #    Draw.vis.update_geometry(Draw.line_set)
+    #    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 
         Draw.vis.update_renderer()
         # Measure frame duration:
@@ -213,6 +240,9 @@ class Draw:
         Draw.frame_duration = frame_end_time - Draw.frame_start_time
         Draw.frame_start_time = frame_end_time
         Draw.frame_counter += 1
+
+################################################################################
+
 
     # TODO 20230419 but does not work because "Visualizer.get_view_control()
     #               gives a copy." https://github.com/isl-org/Open3D/issues/6009
