@@ -20,59 +20,20 @@ import numpy as np  # temp?
 class Boid(Agent):
     def __init__(self):
         super().__init__()
-        self.wander_state = Vec3()
-        
         self.max_speed = 0.3      # Speed upper limit (m/s)
         self.max_force = 0.1      # Acceleration upper limit (m/s²)
-#        self.max_force = 0.3      # Acceleration upper limit (m/s²)
-#        self.max_force = 1.0      # Acceleration upper limit (m/s²)
         self.max_force = 0.3      # Acceleration upper limit (m/s²)
-
+        # Temp? Use nonzero initial speed.
         self.speed = self.max_speed * 0.25
-        
+        # Remember steering components for annotation.
         self.last_separation_force = Vec3()
         self.last_alignment_force = Vec3()
         self.last_coherance_force = Vec3()
         self.last_combined_steering = Vec3()
-        
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-        # TODO 20230503 pick a random boid color and stick with it!
+        # Temp? Pick a random midrange boid color.
         self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-
-
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-
-#        # Basic flocking behavior.
-#        # TODO 20230427 Hmmm this steer_to_...() function has no return value but
-#        # does have side effect. Whereas the other steer_to_...() functions DO have
-#        # return values and no side effect.
-#        def steer_to_flock(self, time_step):
-#    #        return 0
-#
-#    #        neighbors = self.nearest_neighbors()
-#    #        neighbors = self.nearest_neighbors(7, 10)
-#            neighbors = self.nearest_neighbors()
-#            f = self.forward * 0.05
-#            s = self.steer_to_separate(neighbors)
-#            a = self.steer_to_align(neighbors)
-#            c = self.steer_to_cohere(neighbors)
-#    #        combined_steering = f + (s / 20) + a + (c * 100)
-#    #        combined_steering = f + s + a + c
-#    #        combined_steering = f + s * 0.2 + a * 5 + c * 5
-#    #        combined_steering = f + s * 0.2 + a * 5 + c * 10
-#    #        combined_steering = f + s * 0.05 + a * 5 + c * 10
-#    #        combined_steering = f + (s * 0.2) + (a * 2) + (c * 2)
-#    #        combined_steering = f + (s * 4) + (a * 2) + (c * 1)
-#    #        combined_steering = f + (s * 3) + (a * 2) + (c * 0.5)
-#    #        combined_steering = f + (s * 4) + (a * 2) + (c * 0.2)
-#    #        combined_steering = f + (s * 8) + (a * 2) + (c * 0.2)
-#    #        combined_steering = f + (s * 1) + (a * 1) + (c * 1)
-#    #        combined_steering = f + (s * 1) + (a * 1) + (c * 0.1)
-#    #        combined_steering = f + (s * 10) + (a * 1) + (c * 0.2)
-#            combined_steering = f + (s * 10) + (a * 0.5) + (c * 0.2)
-#            self.steer(combined_steering, time_step)
+        # For wander_steer()
+        self.wander_state = Vec3()
 
     # Basic flocking behavior.
     # TODO 20230427 Hmmm this steer_to_...() function has no return value but
@@ -92,29 +53,16 @@ class Boid(Agent):
         self.last_combined_steering = combined_steering
         self.steer(combined_steering, time_step)
 
-#    # Steering force component to move away from neighbors.
-#    def steer_to_separate(self, neighbors):
-#        direction = Vec3()
-#        for neighbor in neighbors:
-#            offset = self.position - neighbor.position
-#            dist = offset.length()
-#            if dist > 0:
-#                weight = 1 / (dist ** 2)
-#                direction += (offset / (dist * weight))
-#        perp = direction.perpendicular_component(self.forward)
-#        steer = perp.normalize()
-#        return steer
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
-    
-        # TODO 20230420 just for debugging ##################################
+        ########################################################################
+        # TODO 20230420 just for debugging
         neighbors = self.nearest_neighbors(7, 5)
-    
+        ########################################################################
         steer = Vec3()
         if len(neighbors) > 0:
             direction = Vec3()
             for neighbor in neighbors:
-#                offset = self.position - neighbor.position
                 offset = neighbor.position - self.position
                 dist = offset.length()
                 if dist > 0:
@@ -123,21 +71,6 @@ class Boid(Agent):
             perp = direction.perpendicular_component(self.forward)
             steer = perp.normalize()
         return steer
-
-#    # Steering force component to align path with neighbors.
-#    def steer_to_align(self, neighbors):
-#        direction = Vec3()
-#        for neighbor in neighbors:
-#            heading_offset = neighbor.forward - self.forward
-#            if heading_offset.length_squared() > 0:
-#                dist = (neighbor.position - self.position).length()
-#                weight = 1 / (dist ** 2) # TODO ?
-#                direction += heading_offset.normalize() * weight
-#        # Return "pure" steering component: perpendicular to forward.
-#        if direction.length_squared() > 0:
-#            direction = direction.perpendicular_component(self.forward)
-#            direction = direction.normalize()
-#        return direction
 
     # Steering force component to align path with neighbors.
     def steer_to_align(self, neighbors):
@@ -155,23 +88,6 @@ class Boid(Agent):
                 direction = direction.normalize()
         return direction
 
-#    # Steering force component to cohere with neighbors: toward neighbor center.
-#    def steer_to_cohere(self, neighbors):
-#        neighbor_center  = Vec3()
-#        total_weight = 0
-#        for neighbor in neighbors:
-#            if self.position != neighbor.position:
-#                dist = (neighbor.position - self.position).length()
-#                weight = 1 / (dist ** 2)
-#                neighbor_center += neighbor.position * weight
-#                total_weight += weight
-#        neighbor_center /= total_weight
-#        direction = self.position - neighbor_center
-#        # "Pure" steering component: perpendicular to forward.
-#        direction = direction.perpendicular_component(self.forward)
-#        direction = direction.normalize()
-#        return direction
-
     # Steering force component to cohere with neighbors: toward neighbor center.
     def steer_to_cohere(self, neighbors):
         direction = Vec3()
@@ -179,27 +95,16 @@ class Boid(Agent):
             neighbor_center  = Vec3()
             total_weight = 0
             for neighbor in neighbors:
-#                if self.position != neighbor.position:
-#                    dist = (neighbor.position - self.position).length()
-#                    weight = 1 / (dist ** 2)
-#                    neighbor_center += neighbor.position * weight
-#                    total_weight += weight
                 dist = (neighbor.position - self.position).length()
                 weight = 1 / (dist ** 2)
                 neighbor_center += neighbor.position * weight
                 total_weight += weight
             neighbor_center /= total_weight
-            # DING DING DING this was the problem
-#            direction = self.position - neighbor_center
             direction = neighbor_center - self.position
             # "Pure" steering component: perpendicular to forward.
-#            direction = direction.perpendicular_component(self.forward)
-#            direction = direction.normalize()
             direction = direction.normalize()
             direction = direction.perpendicular_component(self.forward)
         return direction
-
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # TODO 20230408 implement RandomSequence equvilent
     def wander_steer(self, rs):
@@ -213,52 +118,6 @@ class Boid(Agent):
         return ((self.wander_state + (self.forward * 2)) *
                 (1 / 3) *
                 (self.max_force * 0.5))
-
-#    # Returns a list of the N(=7) Boids nearest this one.
-#    def nearest_neighbors(self, n=7):
-#        def distance_from_me(b):
-#            return (b.position - self.position).length()
-#        neighbors = Boid.flock.copy()
-#        neighbors.sort(key=distance_from_me)
-#        n_neighbors = neighbors[1:n+1]
-#        return n_neighbors
-
-#    # TODO 20230417 a version that has a max distance
-#    # Returns a list of the N(=7) Boids nearest this one.
-#    def nearest_neighbors(self, n=7, max_distance=30):
-#        def distance_from_me(b):
-#            return (b.position - self.position).length()
-#
-#        neighbors = Boid.flock.copy()
-#        neighbors.sort(key=distance_from_me)
-#
-#        near_neighbors = []
-#        for i in range(n):
-#            b = neighbors[i]
-#            if (i < 2) or (distance_from_me(b) < max_distance):
-#                near_neighbors.append(b)
-#
-#        return near_neighbors
-
-#        # Returns a list of the N(=7) Boids nearest this one.
-#    #    def nearest_neighbors(self, n=7):
-#        def nearest_neighbors(self, n=7, max_distance=math.inf):
-#    #        def distance_from_me(b):
-#    #            return (b.position - self.position).length()
-#            def distance_from_me(boid):
-#                return (boid.position - self.position).length()
-#            def near_enough(boid):
-#                return ((max_distance == math.inf) or
-#                        ((boid.position - self.position).length() < max_distance))
-#
-#    #        neighbors = Boid.flock.copy()
-#            neighbors = list(filter(near_enough, Boid.flock))
-#
-#
-#
-#            neighbors.sort(key=distance_from_me)
-#            n_neighbors = neighbors[1:n+1]
-#            return n_neighbors
 
     # Returns a list of the N Boids nearest this one.
     # Optionally filters by max_distance. N defaults to 7, ala STARFLAG.
@@ -281,54 +140,21 @@ class Boid(Agent):
         apex = tail + self.up * 0.25 + self.forward * 0.1
         wingtip0 = tail + self.side * 0.3
         wingtip1 = tail - self.side * 0.3
-        
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-        # TODO 20230503 pick a random boid color and stick with it!
-#        color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
-        color = self.color
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-
-        Draw.add_triangle_single_color(nose, apex,     wingtip1, color * 1.0)
-        Draw.add_triangle_single_color(nose, wingtip0, apex,     color * 0.95)
-        Draw.add_triangle_single_color(apex, wingtip0, wingtip1, color * 0.9)
-        Draw.add_triangle_single_color(nose, wingtip1, wingtip0, color * 0.7)
-        
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-        # TODO 20230426 add line drawing support for annotation
-#        Draw.add_line_segment(center, center + self.side,    Vec3(1, 0, 0))
-#        Draw.add_line_segment(center, center + self.up,      Vec3(0, 1, 0))
-#        Draw.add_line_segment(center, center + self.forward, Vec3(0, 0, 1))
-        
-#        # Annotation for steering forces
-#        s = self.last_separation_force
-#        a = self.last_alignment_force
-#        c = self.last_coherance_force
-#        Draw.add_line_segment(center, center + s, Vec3(1, 0, 0))
-#        Draw.add_line_segment(center, center + a, Vec3(0, 1, 0))
-#        Draw.add_line_segment(center, center + c, Vec3(0, 0, 1))
-
-        # TODO 20230503
+        # Draw the 4 triangles of a boid's body.
+        def draw_tri(a, b, c, color):
+            Draw.add_triangle_single_color(a, b, c, color)
+        draw_tri(nose, apex,     wingtip1, self.color * 1.00)
+        draw_tri(nose, wingtip0, apex,     self.color * 0.95)
+        draw_tri(apex, wingtip0, wingtip1, self.color * 0.90)
+        draw_tri(nose, wingtip1, wingtip0, self.color * 0.70)
         # Annotation for steering forces
         def relative_force_annotation(offset, color):
-#            if offset.length_squared() == 0:
-#                offset = Vec3(0.01, 0, 0)
             Draw.add_line_segment(center, center + offset, color)
         relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
         relative_force_annotation(self.last_alignment_force, Vec3(0, 1, 0))
         relative_force_annotation(self.last_coherance_force, Vec3(0, 0, 1))
-
-#        relative_force_annotation((self.last_coherance_force +
-#                                   self.last_alignment_force +
-#                                   self.last_coherance_force),
-#                                  Vec3(0.7, 0.7, 0.7))
-
-        g = 0.8
-        relative_force_annotation(self.last_combined_steering, Vec3(g, g, g))
-
-                                  
-
-        ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-
+        gray80 = Vec3(0.8, 0.8, 0.8)
+        relative_force_annotation(self.last_combined_steering, gray80)
 
     # TODO 20230418 since at the moment I cannot animate the camera, this is a
     # stop gap where we offset all boid drawing by the position of "some boid"
