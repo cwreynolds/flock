@@ -84,13 +84,21 @@ class Draw:
         # Create Visualizer add mesh, enter draw loop.
         Draw.vis = o3d.visualization.Visualizer()
         Draw.vis.create_window()
-        Draw.vis.add_geometry(Draw.triangle_mesh)
+        
+        # Add (then remove) sphere to init view. aim_radius controls distance.
+        aim_radius = 20
+        aim_ball = o3d.geometry.TriangleMesh.create_sphere(aim_radius, 10)
+        Draw.vis.add_geometry(aim_ball)
+        Draw.vis.remove_geometry(aim_ball, False)
+
+        # Add the flock's TriangleMesh to the scene.
+        Draw.vis.add_geometry(Draw.triangle_mesh, False)
         
         # TODO 23230411 temp ball for camera aim reference
-#        ball = o3d.geometry.TriangleMesh.create_sphere(0.1, 10)
-#        ball.compute_vertex_normals()
-#        ball.paint_uniform_color([0.8, 0.1, 0.1])
-#        Draw.vis.add_geometry(ball)
+        ball = o3d.geometry.TriangleMesh.create_sphere(0.1, 10)
+        ball.compute_vertex_normals()
+        ball.paint_uniform_color([0.1, 0.1, 0.1])
+        Draw.vis.add_geometry(ball, False)
 
         Draw.frame_start_time = time.time()
 

@@ -21,16 +21,18 @@ def setup():
     util.unit_test()
     print('All unit tests OK.')
 
-# TODO 20230430 testing lines as triangles
-def lines():
-    r = 0.1
-    t = 10
-#    s = 3
-    s = 8
-    Draw.add_line_segment(Vec3(-t, -t, -t), Vec3(t, t, t), Vec3(1, 0, 1), r, s)
-    Draw.add_line_segment(Vec3(-t, 0, 0), Vec3(t, 0, 0), Vec3(1, 0, 0), r, s)
-    Draw.add_line_segment(Vec3(0, -t, 0), Vec3(0, t, 0), Vec3(0, 1, 0), r, s)
-    Draw.add_line_segment(Vec3(0, 0, -t), Vec3(0, 0, t), Vec3(0, 0, 1), r, s)
+def draw_global_axes():
+    size = 10
+    sides = 8
+    radius = 0.05
+    black = Vec3()
+    x = Vec3(size, 0, 0)
+    y = Vec3(0, size, 0)
+    z = Vec3(0, 0, size)
+    move = Boid.camera_aim_boid_draw_offset_qqq()
+    Draw.add_line_segment(-x - move, x - move, black, radius, sides)
+    Draw.add_line_segment(-y - move, y - move, black, radius, sides)
+    Draw.add_line_segment(-z - move, z - move, black, radius, sides)
 
 # TODO 20230408 prototype flock top level
 def run_flock(size, initial_diameter):
@@ -38,14 +40,14 @@ def run_flock(size, initial_diameter):
     draw = Draw() ## ?? currently unused but should contain draw state
     Boid.add_boid_to_flock(size, initial_diameter)
     Boid.draw_flock()
-#    lines() ##################################### TODO 20230430
+    draw_global_axes() ##################################### TODO 20230430
     Draw.start_visualizer()
     while Draw.still_running():
         Boid.steer_flock(Draw.frame_duration)
         Boid.sphere_wrap_around_flock(sphere_diameter / 2) # this takes a radius
         Draw.clear_scene()
         Boid.draw_flock()
-#        lines() ################################# TODO 20230430
+        draw_global_axes() ################################# TODO 20230430
         Draw.update_scene()
         some_boid = Boid.flock[0]
         Draw.update_camera(some_boid.position.asarray())
@@ -56,7 +58,7 @@ if __name__ == "__main__":
 #    Draw.test_animation_callback()
 #    Draw.expand_line_width_sample()
 
-#    run_flock(100, sphere_diameter)
+    run_flock(100, sphere_diameter)
 #    run_flock(500, sphere_diameter)
 #    run_flock(200, sphere_diameter)
-    run_flock(50, sphere_diameter)
+#    run_flock(50, sphere_diameter)

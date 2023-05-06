@@ -135,8 +135,8 @@ class Boid(Agent):
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
         center = self.position - Boid.camera_aim_boid_draw_offset_qqq()
-        nose = center + self.forward * +0.5
-        tail = center + self.forward * -0.5
+        nose = center + self.forward * 0.5
+        tail = center - self.forward * 0.5
         apex = tail + self.up * 0.25 + self.forward * 0.1
         wingtip0 = tail + self.side * 0.3
         wingtip1 = tail - self.side * 0.3
@@ -148,20 +148,21 @@ class Boid(Agent):
         draw_tri(apex, wingtip0, wingtip1, self.color * 0.90)
         draw_tri(nose, wingtip1, wingtip0, self.color * 0.70)
         # Annotation for steering forces
-        def relative_force_annotation(offset, color):
-            Draw.add_line_segment(center, center + offset, color)
-        relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
-        relative_force_annotation(self.last_alignment_force, Vec3(0, 1, 0))
-        relative_force_annotation(self.last_coherance_force, Vec3(0, 0, 1))
-        gray80 = Vec3(0.8, 0.8, 0.8)
-        relative_force_annotation(self.last_combined_steering, gray80)
+        if center.length() < 3:
+            def relative_force_annotation(offset, color):
+                Draw.add_line_segment(center, center + offset, color)
+            relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
+            relative_force_annotation(self.last_alignment_force, Vec3(0, 1, 0))
+            relative_force_annotation(self.last_coherance_force, Vec3(0, 0, 1))
+            gray80 = Vec3(0.8, 0.8, 0.8)
+            relative_force_annotation(self.last_combined_steering, gray80)
 
     # TODO 20230418 since at the moment I cannot animate the camera, this is a
     # stop gap where we offset all boid drawing by the position of "some boid"
     @staticmethod
     def camera_aim_boid_draw_offset_qqq():
-#        return Boid.flock[0].position
-        return Vec3()
+        return Boid.flock[0].position
+#        return Vec3()
 
     # Make a new Boid, add it to flock. Defaults to one Boid at origin. Can add
     # "count" Boids, randomly placed within a sphere with "radius" and "center".
