@@ -17,6 +17,12 @@ from Vec3 import Vec3     # temp?
 import random             # temp?
 from LocalSpace import LocalSpace
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# TODO 20230506 prototype adding key commands
+from functools import partial
+import curses
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 
 class Draw:
     """Graphics utilities based on Open3D."""
@@ -34,6 +40,12 @@ class Draw:
     vis = None
     frame_start_time = None
     frame_duration = 0.01
+    
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # TODO 20230506 prototype adding key commands
+    simulation_paused = False
+    single_step = False
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     
     @staticmethod
     def add_triangle_single_color(v1, v2, v3, color):
@@ -73,6 +85,7 @@ class Draw:
         Draw.add_triangle_single_color(v1, v2, v3, color)
         Draw.add_triangle_single_color(v1, v3, v4, color)
 
+    # Initialize visualizer for simulation run.
     @staticmethod
     def start_visualizer():
         # Create a mesh from the triangle vertices and indices
@@ -82,9 +95,37 @@ class Draw:
         Draw.triangle_mesh.vertex_colors = Draw.mesh_vertex_colors
                 
         # Create Visualizer add mesh, enter draw loop.
-        Draw.vis = o3d.visualization.Visualizer()
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # TODO 20230506 prototype adding key commands
+#        Draw.vis = o3d.visualization.Visualizer()
+        Draw.vis = o3d.visualization.VisualizerWithKeyCallback()
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         Draw.vis.create_window()
+
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # TODO 20230506 prototype adding key commands
+        # still have not figured out how to detect a right arrow
+        # but see: https://docs.python.org/3/library/curses.html
+        # https://stackoverflow.com/questions/63510366/curses-key-right-not-recognised
+        # from https://stackoverflow.com/q/75030061/1991373
+        #        (key==65363 or key==2555904):#right
+        #        print ('right')
+        #        elif (key == 27):#Esc
+
         
+        def space_key_typed(vis):
+            Draw.simulation_paused = not Draw.simulation_paused
+            print('space_key_typed, simulation_paused =', Draw.simulation_paused)
+            return False
+        def one_key_typed(vis):
+            single_step = True
+            print('one_key_typed, single_step= ', single_step)
+            return False
+        Draw.vis.register_key_callback(ord(' '), partial(space_key_typed))
+        Draw.vis.register_key_callback(ord('1'), partial(one_key_typed))
+
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
         # Add (then remove) sphere to init view. aim_radius controls distance.
         aim_radius = 20
         aim_ball = o3d.geometry.TriangleMesh.create_sphere(aim_radius, 10)
@@ -102,6 +143,7 @@ class Draw:
 
         Draw.frame_start_time = time.time()
 
+    # Close visualizer after simulation run.
     @staticmethod
     def close_visualizer():
         Draw.vis.destroy_window()
@@ -110,16 +152,31 @@ class Draw:
     def still_running():
         return Draw.vis.poll_events()
 
+    # Clear all flock geometry held in a TriangleMesh.
     @staticmethod
     def clear_scene():
         Draw.mesh_vertices.clear()
         Draw.mesh_triangles.clear()
         Draw.mesh_vertex_colors.clear()
 
-    # Update scene geometry.
+    # Update scene geometry. Called once each simulation step (rendered frame).
     # In this application, all geometry is regenerated anew every frame.
     @staticmethod
     def update_scene():
+
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # TODO 20230506 prototype adding key commands
+
+        while (Draw.simulation_paused and
+               (not Draw.single_step) and
+               Draw.still_running()):
+            time.sleep(1 / 30)
+        if Draw.single_step:
+            Draw.single_step = False
+            Draw.simulation_paused = True
+
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
         # Copy new simulation data into TriangleMesh object.
         Draw.triangle_mesh.vertices = Draw.mesh_vertices
         Draw.triangle_mesh.triangles = Draw.mesh_triangles
