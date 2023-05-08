@@ -17,12 +17,6 @@ from Vec3 import Vec3     # temp?
 import random             # temp?
 from LocalSpace import LocalSpace
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# TODO 20230506 prototype adding key commands
-from functools import partial
-import curses
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
 
 class Draw:
     """Graphics utilities based on Open3D."""
@@ -38,14 +32,11 @@ class Draw:
     
     # class storage of current visualizer
     vis = None
-    frame_start_time = None
-    frame_duration = 0.01
-    
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # TODO 20230506 prototype adding key commands
+    frame_start_time = 0
+    frame_duration = 0
+    frame_counter = 0
     simulation_paused = False
     single_step = False
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     
     @staticmethod
     def add_triangle_single_color(v1, v2, v3, color):
@@ -94,39 +85,13 @@ class Draw:
         Draw.triangle_mesh.triangles = Draw.mesh_triangles
         Draw.triangle_mesh.vertex_colors = Draw.mesh_vertex_colors
                 
-        # Create Visualizer add mesh, enter draw loop.
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        # TODO 20230506 prototype adding key commands
-#        Draw.vis = o3d.visualization.Visualizer()
+        # Create Visualizer, register key command handlers, create window.
         Draw.vis = o3d.visualization.VisualizerWithKeyCallback()
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        Draw.vis.register_key_callback(ord(' '), Draw.toggle_paused_mode)
+        Draw.vis.register_key_callback(ord('1'), Draw.set_single_step_mode)
         Draw.vis.create_window()
 
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        # TODO 20230506 prototype adding key commands
-        # still have not figured out how to detect a right arrow
-        # but see: https://docs.python.org/3/library/curses.html
-        # https://stackoverflow.com/questions/63510366/curses-key-right-not-recognised
-        # from https://stackoverflow.com/q/75030061/1991373
-        #        (key==65363 or key==2555904):#right
-        #        print ('right')
-        #        elif (key == 27):#Esc
-
-        
-        def space_key_typed(vis):
-            Draw.simulation_paused = not Draw.simulation_paused
-            print('space_key_typed, simulation_paused =', Draw.simulation_paused)
-            return False
-        def one_key_typed(vis):
-            single_step = True
-            print('one_key_typed, single_step= ', single_step)
-            return False
-        Draw.vis.register_key_callback(ord(' '), partial(space_key_typed))
-        Draw.vis.register_key_callback(ord('1'), partial(one_key_typed))
-
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-        # Add (then remove) sphere to init view. aim_radius controls distance.
+        # Init view: add (then remove) sphere, aim_radius controls distance.
         aim_radius = 20
         aim_ball = o3d.geometry.TriangleMesh.create_sphere(aim_radius, 10)
         Draw.vis.add_geometry(aim_ball)
@@ -141,7 +106,19 @@ class Draw:
         ball.paint_uniform_color([0.1, 0.1, 0.1])
         Draw.vis.add_geometry(ball, False)
 
+        # Keep track of time elapsed per frame.
         Draw.frame_start_time = time.time()
+
+    # Modify global modes, used as handlers for single key commands.
+    @staticmethod
+    def toggle_paused_mode(vis):
+        Draw.simulation_paused = not Draw.simulation_paused
+        return False
+    @staticmethod
+    def set_single_step_mode(vis):
+        Draw.single_step = True
+        Draw.simulation_paused = True
+        return False
 
     # Close visualizer after simulation run.
     @staticmethod
@@ -163,34 +140,17 @@ class Draw:
     # In this application, all geometry is regenerated anew every frame.
     @staticmethod
     def update_scene():
-
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        # TODO 20230506 prototype adding key commands
-
-        while (Draw.simulation_paused and
-               (not Draw.single_step) and
-               Draw.still_running()):
-            time.sleep(1 / 30)
-        if Draw.single_step:
-            Draw.single_step = False
-            Draw.simulation_paused = True
-
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
         # Copy new simulation data into TriangleMesh object.
         Draw.triangle_mesh.vertices = Draw.mesh_vertices
         Draw.triangle_mesh.triangles = Draw.mesh_triangles
         Draw.triangle_mesh.vertex_colors = Draw.mesh_vertex_colors
         Draw.vis.update_geometry(Draw.triangle_mesh)
-        
-        # I'm not sure why this is unneeded. Maybe new geometry implies it?
-        # Draw.vis.update_renderer()
-        
         # Measure frame duration:
-        frame_end_time = time.time()
-        Draw.frame_duration = frame_end_time - Draw.frame_start_time
-        Draw.frame_start_time = frame_end_time
-        Draw.frame_counter += 1
+        if not Draw.simulation_paused:
+            frame_end_time = time.time()
+            Draw.frame_duration = frame_end_time - Draw.frame_start_time
+            Draw.frame_start_time = frame_end_time
+            Draw.frame_counter += 1
 
     # TODO 20230419 but does not work because "Visualizer.get_view_control()
     #               gives a copy." https://github.com/isl-org/Open3D/issues/6009
@@ -199,9 +159,15 @@ class Draw:
         camera = Draw.vis.get_view_control()
         camera.set_lookat(lookat)
 
-    # Frame counter
-    frame_counter = 0
-    
+    # Handle pause/play and singel step. Called once per frame from main loop.
+    @staticmethod
+    def run_simulation_this_frame():
+        ok_to_run = Draw.single_step or not Draw.simulation_paused
+        Draw.single_step = False
+        return ok_to_run
+
+
+
 ################################################################################
 ##
 ## TODO 20230419 random test code, to be removed eventually.

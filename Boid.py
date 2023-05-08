@@ -204,7 +204,7 @@ class Boid(Agent):
     # Calculate and log various statistics for flock.
     @staticmethod
     def log_stats_for_flock():
-        if Draw.frame_counter % 100 == 0:
+        if Draw.frame_counter % 100 == 0 and not Draw.simulation_paused:
             average_speed = mean([b.speed for b in Boid.flock])
             # Loop over all unique pairs of distinct boids: ab==ba, not aa
             min_sep = math.inf
