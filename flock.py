@@ -29,19 +29,19 @@ def draw_global_axes():
     x = Vec3(size, 0, 0)
     y = Vec3(0, size, 0)
     z = Vec3(0, 0, size)
-    move = Boid.camera_aim_boid_draw_offset_qqq()
+    move = Boid.temp_camera_aim_boid_draw_offset()
     Draw.add_line_segment(-x - move, x - move, black, radius, sides)
     Draw.add_line_segment(-y - move, y - move, black, radius, sides)
     Draw.add_line_segment(-z - move, z - move, black, radius, sides)
 
-# TODO 20230408 prototype flock top level
+# Flock top level.
 def run_flock(size, initial_diameter):
     setup()
     draw = Draw() ## ?? currently unused but should contain draw state
+    Draw.start_visualizer()
     Boid.add_boid_to_flock(size, initial_diameter)
     Boid.draw_flock()
     draw_global_axes()
-    Draw.start_visualizer()
     while Draw.still_running():
         if Draw.run_simulation_this_frame():
             Boid.steer_flock(Draw.frame_duration)
@@ -50,8 +50,6 @@ def run_flock(size, initial_diameter):
         Boid.draw_flock()
         draw_global_axes()
         Draw.update_scene()
-        some_boid = Boid.flock[0]
-        Draw.update_camera(some_boid.position.asarray())
         Boid.log_stats_for_flock()
     Draw.close_visualizer()
 

@@ -134,7 +134,7 @@ class Boid(Agent):
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
-        center = self.position - Boid.camera_aim_boid_draw_offset_qqq()
+        center = self.position - Boid.temp_camera_aim_boid_draw_offset()
         nose = center + self.forward * 0.5
         tail = center - self.forward * 0.5
         apex = tail + self.up * 0.25 + self.forward * 0.1
@@ -160,9 +160,8 @@ class Boid(Agent):
     # TODO 20230418 since at the moment I cannot animate the camera, this is a
     # stop gap where we offset all boid drawing by the position of "some boid"
     @staticmethod
-    def camera_aim_boid_draw_offset_qqq():
-        return Boid.flock[0].position
-#        return Vec3()
+    def temp_camera_aim_boid_draw_offset():
+        return Boid.selected_boid().position
 
     # Make a new Boid, add it to flock. Defaults to one Boid at origin. Can add
     # "count" Boids, randomly placed within a sphere with "radius" and "center".
@@ -177,6 +176,9 @@ class Boid(Agent):
             
             boid.ls.p = center + (radius * random_point)
             Boid.flock.append(boid)
+        # TODO modularity issue: other key callbacks are in Draw which does not
+        #      import Boid. But this S command is implemented by Boid.
+        Draw.vis.register_key_callback(ord('S'), Boid.select_next_boid)
 
     # Apply steer_to_flock() to each boid in flock.
     @staticmethod
@@ -190,8 +192,8 @@ class Boid(Agent):
         for boid in Boid.flock:
             boid.draw()
 
-    # When a Boid gets more than "radius" from the original, teleport it to the
-    # other side of the world, its antipodal point.
+    # When a Boid gets more than "radius" from the origin, teleport it to the
+    # other side of the world, just inside of its antipodal point.
     @staticmethod
     def sphere_wrap_around_flock(radius):
         for boid in Boid.flock:
@@ -232,7 +234,23 @@ class Boid(Agent):
                   ', ave_sep=' + str(ave_sep)[0:5] +
                   ', max_nn_dist=' + str(max_nn_dist)[0:5])
 
+    # Returns currently selected boid, the one tracked by visualizer's camera.
+    @staticmethod
+    def selected_boid():
+        return Boid.flock[Boid.selected_boid_index]
+    
+    # Select the "next" boid. This gets bound to the "s" key in the interactive
+    # visualizer (hence the ignored "vis" arg). So typing s s s can be used to
+    # cycle through the boids of a flock.
+    @staticmethod
+    def select_next_boid(vis = None):
+        Boid.selected_boid_index += 1
+        Boid.selected_boid_index = Boid.selected_boid_index % len(Boid.flock)
+    
     # List of Boids in a flock
     # TODO 20230409 assumes there is only one flock. If more are
     #               ever needed there should be a Flock class.
     flock = []
+    
+    # The selected boid
+    selected_boid_index = 0
