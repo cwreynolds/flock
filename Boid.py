@@ -16,19 +16,19 @@ from statistics import mean
 import math
 import itertools
 import numpy as np  # temp?
+import copy
 
 class Boid(Agent):
     def __init__(self):
         super().__init__()
         self.max_speed = 0.3      # Speed upper limit (m/s)
-        self.max_force = 0.1      # Acceleration upper limit (m/s²)
         self.max_force = 0.3      # Acceleration upper limit (m/s²)
         # Temp? Use nonzero initial speed.
         self.speed = self.max_speed * 0.25
         # Remember steering components for annotation.
         self.last_separation_force = Vec3()
         self.last_alignment_force = Vec3()
-        self.last_coherance_force = Vec3()
+        self.last_cohesion_force = Vec3()
         self.last_combined_steering = Vec3()
         # Temp? Pick a random midrange boid color.
         self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
@@ -40,16 +40,18 @@ class Boid(Agent):
     # does have side effect. Whereas the other steer_to_...() functions DO have
     # return values and no side effect.
     def steer_to_flock(self, time_step):
-#        return 0
         neighbors = self.nearest_neighbors()
         f = self.forward * 0.05
-        s = self.steer_to_separate(neighbors)
-        a = self.steer_to_align(neighbors)
-        c = self.steer_to_cohere(neighbors)
-        combined_steering = f + (s * 10) + (a * 0.5) + (c * 0.2)
+        
+        s = 0.8 * self.steer_to_separate(neighbors)
+        a = 0.5 * self.steer_to_align(neighbors)
+        c = 0.6 * self.steer_to_cohere(neighbors)
+
+        combined_steering = f + s + a + c
+
         self.last_separation_force = s
         self.last_alignment_force = a
-        self.last_coherance_force = c
+        self.last_cohesion_force = c
         self.last_combined_steering = combined_steering
         self.steer(combined_steering, time_step)
 
@@ -57,13 +59,13 @@ class Boid(Agent):
     def steer_to_separate(self, neighbors):
         ########################################################################
         # TODO 20230420 just for debugging
-        neighbors = self.nearest_neighbors(7, 5)
+        neighbors = self.filter_boids_by_distance(3, neighbors)
         ########################################################################
         steer = Vec3()
         if len(neighbors) > 0:
             direction = Vec3()
             for neighbor in neighbors:
-                offset = neighbor.position - self.position
+                offset = self.position - neighbor.position
                 dist = offset.length()
                 if dist > 0:
                     weight = 1 / (dist ** 2)
@@ -74,6 +76,10 @@ class Boid(Agent):
 
     # Steering force component to align path with neighbors.
     def steer_to_align(self, neighbors):
+        ########################################################################
+        # TODO 20230509 just for debugging
+        neighbors = self.filter_boids_by_distance(10, neighbors)
+        ########################################################################
         direction = Vec3()
         if len(neighbors) > 0:
             for neighbor in neighbors:
@@ -120,17 +126,27 @@ class Boid(Agent):
                 (self.max_force * 0.5))
 
     # Returns a list of the N Boids nearest this one.
-    # Optionally filters by max_distance. N defaults to 7, ala STARFLAG.
-    def nearest_neighbors(self, n=7, max_distance=math.inf):
-        def distance_from_me(boid):
-            return (boid.position - self.position).length()
-        def near_enough(boid):
-            return ((max_distance == math.inf) or
-                    ((boid.position - self.position).length() < max_distance))
-        neighbors = list(filter(near_enough, Boid.flock))
-        neighbors.sort(key=distance_from_me)
+    def nearest_neighbors(self, n=7):
+        def distance_squared_from_me(boid):
+            return (boid.position - self.position).length_squared()
+        neighbors = sorted(Boid.flock, key=distance_squared_from_me)
         n_neighbors = neighbors[1:n+1]
         return n_neighbors
+
+    # Filter collection of boids by distance.
+    def filter_boids_by_distance(self, max_distance, boids=None):
+        result = []
+        if boids == None:
+            boids = Boid.flock
+        if max_distance == math.inf:
+            result = copy.copy(boids)
+        else:
+            mdsq = max_distance ** 2
+            def near_enough(boid):
+                dist = (boid.position - self.position).length_squared()
+                return dist < mdsq
+            result = list(filter(near_enough, boids))
+        return result
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
@@ -153,7 +169,7 @@ class Boid(Agent):
                 Draw.add_line_segment(center, center + offset, color)
             relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
             relative_force_annotation(self.last_alignment_force, Vec3(0, 1, 0))
-            relative_force_annotation(self.last_coherance_force, Vec3(0, 0, 1))
+            relative_force_annotation(self.last_cohesion_force, Vec3(0, 0, 1))
             gray80 = Vec3(0.8, 0.8, 0.8)
             relative_force_annotation(self.last_combined_steering, gray80)
 
