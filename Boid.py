@@ -207,6 +207,10 @@ class Boid(Agent):
     def draw_flock():
         for boid in Boid.flock:
             boid.draw()
+        ########################################################################
+        # TODO 20230510
+        Boid.selected_boid().path_sphere_intersection(30)
+        ########################################################################
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
     # other side of the world, just inside of its antipodal point.
@@ -270,3 +274,81 @@ class Boid(Agent):
     
     # The selected boid
     selected_boid_index = 0
+
+
+    ############################################################################
+    # TODO 20230510 I don't know where this should go. Some kind of geometric
+    # utilities, perhaps Utilities.py? Maybe a class for steering behaviors?
+    #
+    # Also this is a special case for a preocedural sphere. It would be nice to
+    # have for an arbitrary triangle mesh.
+    
+    # TODO WIP prototype
+    # Given a sphere and an agent, where will the agent's path first intersect the sphere?
+    
+#    def first_path_sphere_intersection(self, radius, center=Vec3()):
+#
+#        a = self.forward.x;
+#        b = self.forward.y;
+#        c = self.forward.z;
+#
+#        # t = (-b ± sqrt(b^2 - 4ac))/2a
+#        if (b**2 - 4*a*c) < 0:
+#            return
+#        t1 = (-b + math.sqrt(b**2 - 4*a*c)) / (2 * a)
+#        t2 = (-b - math.sqrt(b**2 - 4*a*c)) / (2 * a)
+#
+#        # (x1, y1, z1) = (x0 + at1, y0 + bt1, z0 + ct1)
+#        # (x2, y2, z2) = (x0 + at2, y0 + bt2, z0 + ct2)
+#
+#        p0 = self.position
+#        p1 = p0 + Vec3(a * t1, b * t1, c * t1)
+#        p2 = p0 + Vec3(a * t2, b * t2, c * t2)
+#
+#        print()
+#        print(p0)
+#        print(p1)
+#        print(p2)
+#
+#        Draw.add_line_segment(p0, p1, Vec3(1, 0, 1))
+#        Draw.add_line_segment(p0, p2, Vec3(0, 1, 1))
+
+
+    # Returns the point of intersection of the agent's "forward" axis (half
+    # line) with the given sphere. Returns None if there is no intersection.
+    #
+    # From https://en.wikipedia.org/wiki/Line–sphere_intersection particularly
+    # the two equations under the text “Note that in the specific case where u
+    # is a unit vector...”
+    def path_sphere_intersection(self, radius, center=Vec3()):
+        # Center and radius of sphere
+        c = center
+        r = radius
+        # Origin and tangent (basis) of line
+        o = self.position
+        u = self.forward
+
+        delta = (u.dot(o - c) ** 2) - (((o - c).length() ** 2) - r ** 2)
+        if delta < 0:
+            print('delta negative, no intersection')
+            return None
+        else:
+
+            d1 = -(u.dot(o - c)) + math.sqrt(delta)
+#            d2 = -(u.dot(o - c)) - math.sqrt(delta)
+
+#            if d1 == d2:
+#                print('roots equal, one intersection')
+
+            p1 = o + u * d1
+#            p2 = o + u * d2
+
+            q = Boid.temp_camera_aim_boid_draw_offset()
+
+            Draw.add_line_segment(o - q, p1 - q, Vec3(1, 0, 1))
+#            Draw.add_line_segment(o - q, p2 - q, Vec3(0, 1, 1))
+
+            return p1
+
+
+    ############################################################################
