@@ -49,6 +49,15 @@ class Boid(Agent):
 
         combined_steering = f + s + a + c
 
+        ########################################################################
+        # TODO 20230512 WIP
+        # Steer to avoid collision with spherical containment (boids inside sphere).
+#        min_distance = self.max_speed * 1
+#        min_distance = self.max_speed * 10
+        min_distance = self.max_speed * 20
+        combined_steering += 2 * self.sphere_avoidance(min_distance)
+        ########################################################################
+
         self.last_separation_force = s
         self.last_alignment_force = a
         self.last_cohesion_force = c
@@ -350,5 +359,31 @@ class Boid(Agent):
 
             return p1
 
+
+    # TODO 20230512 WIP for prototyping, duplicate constant from flock.py
+    # For initial placememnt and wrap-around.
+    sphere_diameter = 60
+    sphere_radius = sphere_diameter / 2
+
+    # TODO 20230512 WIP
+    # Steer to avoid collision with spherical containment (boids inside sphere).
+    def sphere_avoidance(self, min_dist, radius=sphere_radius, center=Vec3()):
+        avoidance = Vec3()
+        path_intersection = self.path_sphere_intersection(radius, center)
+        if not path_intersection == None:
+            # Too far away to care?
+            dist_squared = (path_intersection - self.position).length_squared()
+            if dist_squared < min_dist ** 2:
+                toward_center = center - path_intersection
+                pure_steering = toward_center.perpendicular_component(self.forward)
+                avoidance = pure_steering.normalize()
+
+                Draw.add_line_segment(path_intersection,
+                                      path_intersection + avoidance,
+                                      Vec3())
+                Draw.add_line_segment(self.position,
+                                      self.position + avoidance,
+                                      Vec3())
+        return avoidance
 
     ############################################################################
