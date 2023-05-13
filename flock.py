@@ -44,20 +44,20 @@ def run_flock(size, initial_diameter):
     draw_global_axes()
     while Draw.still_running():
         if Draw.run_simulation_this_frame():
+            Draw.clear_scene()
             Boid.steer_flock(Draw.frame_duration)
             Boid.sphere_wrap_around_flock(sphere_diameter / 2) # takes radius
-        Draw.clear_scene()
-        Boid.draw_flock()
-        draw_global_axes()
-        Draw.update_scene()
-        Boid.log_stats_for_flock()
+            Boid.draw_flock()
+            draw_global_axes()
+            Draw.update_scene()
+            Boid.log_stats_for_flock()
     Draw.close_visualizer()
 
 if __name__ == "__main__":
 #    Draw.test_animation_callback()
 #    Draw.expand_line_width_sample()
 
-    run_flock(100, sphere_diameter)
 #    run_flock(500, sphere_diameter)
-#    run_flock(200, sphere_diameter)
 #    run_flock(50, sphere_diameter)
+#    run_flock(200, sphere_diameter)
+    run_flock(100, sphere_diameter)

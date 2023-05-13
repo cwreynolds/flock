@@ -52,10 +52,13 @@ class Boid(Agent):
         ########################################################################
         # TODO 20230512 WIP
         # Steer to avoid collision with spherical containment (boids inside sphere).
-#        min_distance = self.max_speed * 1
-#        min_distance = self.max_speed * 10
-        min_distance = self.max_speed * 20
-        combined_steering += 2 * self.sphere_avoidance(min_distance)
+        if not Boid.wrap_vs_avoid:
+            min_distance = self.max_speed * 40
+            avoidance = self.sphere_avoidance(min_distance)
+            if avoidance != Vec3():
+                a = Vec3()
+                c = Vec3()
+                combined_steering = f + s + avoidance
         ########################################################################
 
         self.last_separation_force = s
@@ -173,7 +176,7 @@ class Boid(Agent):
         draw_tri(apex, wingtip0, wingtip1, self.color * 0.90)
         draw_tri(nose, wingtip1, wingtip0, self.color * 0.70)
         # Annotation for steering forces
-        if center.length() < 3:
+        if Boid.enable_annotation and center.length() < 3:
             def relative_force_annotation(offset, color):
                 Draw.add_line_segment(center, center + offset, color)
             relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
@@ -186,7 +189,9 @@ class Boid(Agent):
     # stop gap where we offset all boid drawing by the position of "some boid"
     @staticmethod
     def temp_camera_aim_boid_draw_offset():
-        return Boid.selected_boid().position
+        return (Boid.selected_boid().position
+                if Boid.tracking_camera
+                else Vec3())
 
     # Make a new Boid, add it to flock. Defaults to one Boid at origin. Can add
     # "count" Boids, randomly placed within a sphere with "radius" and "center".
@@ -201,9 +206,17 @@ class Boid(Agent):
             
             boid.ls.p = center + (radius * random_point)
             Boid.flock.append(boid)
-        # TODO modularity issue: other key callbacks are in Draw which does not
-        #      import Boid. But this S command is implemented by Boid.
+        # TODO modularity issue: other key callbacks are in Draw which
+        #      does not import Boid. Maybe they should all be defined here?
+        Boid.register_single_key_commands()
+
+    # Register single key commands with the Open3D visualizer GUI.
+    @staticmethod
+    def register_single_key_commands():
         Draw.vis.register_key_callback(ord('S'), Boid.select_next_boid)
+        Draw.vis.register_key_callback(ord('A'), Boid.toggle_annotation)
+        Draw.vis.register_key_callback(ord('C'), Boid.toggle_tracking_camera)
+        Draw.vis.register_key_callback(ord('W'), Boid.toggle_wrap_vs_avoid)
 
     # Apply steer_to_flock() to each boid in flock.
     @staticmethod
@@ -216,15 +229,14 @@ class Boid(Agent):
     def draw_flock():
         for boid in Boid.flock:
             boid.draw()
-        ########################################################################
-        # TODO 20230510
-        Boid.selected_boid().path_sphere_intersection(30)
-        ########################################################################
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
     # other side of the world, just inside of its antipodal point.
     @staticmethod
     def sphere_wrap_around_flock(radius):
+        # TODO totally ad hoc, catch any escapees in avoidance mode.
+        if not Boid.wrap_vs_avoid:
+            radius += 5
         for boid in Boid.flock:
             bp = boid.position
             distance_from_origin = bp.length()
@@ -275,6 +287,31 @@ class Boid(Agent):
     def select_next_boid(vis = None):
         Boid.selected_boid_index += 1
         Boid.selected_boid_index = Boid.selected_boid_index % len(Boid.flock)
+
+    # Global animation switch.
+    enable_annotation = True
+
+    # Toggle global animation switch.
+    @staticmethod
+    def toggle_annotation(vis = None):
+        Boid.enable_annotation = not Boid.enable_annotation
+    
+    # Global tracking camera mode.
+    tracking_camera = True
+
+    # Toggle global tracking camera mode.
+    @staticmethod
+    def toggle_tracking_camera(vis = None):
+        Boid.tracking_camera = not Boid.tracking_camera
+
+    # Global tracking camera mode.
+    wrap_vs_avoid = False
+
+    # Toggle global tracking camera mode.
+    @staticmethod
+    def toggle_wrap_vs_avoid(vis = None):
+        Boid.wrap_vs_avoid = not Boid.wrap_vs_avoid
+
     
     # List of Boids in a flock
     # TODO 20230409 assumes there is only one flock. If more are
@@ -292,37 +329,6 @@ class Boid(Agent):
     # Also this is a special case for a preocedural sphere. It would be nice to
     # have for an arbitrary triangle mesh.
     
-    # TODO WIP prototype
-    # Given a sphere and an agent, where will the agent's path first intersect the sphere?
-    
-#    def first_path_sphere_intersection(self, radius, center=Vec3()):
-#
-#        a = self.forward.x;
-#        b = self.forward.y;
-#        c = self.forward.z;
-#
-#        # t = (-b ± sqrt(b^2 - 4ac))/2a
-#        if (b**2 - 4*a*c) < 0:
-#            return
-#        t1 = (-b + math.sqrt(b**2 - 4*a*c)) / (2 * a)
-#        t2 = (-b - math.sqrt(b**2 - 4*a*c)) / (2 * a)
-#
-#        # (x1, y1, z1) = (x0 + at1, y0 + bt1, z0 + ct1)
-#        # (x2, y2, z2) = (x0 + at2, y0 + bt2, z0 + ct2)
-#
-#        p0 = self.position
-#        p1 = p0 + Vec3(a * t1, b * t1, c * t1)
-#        p2 = p0 + Vec3(a * t2, b * t2, c * t2)
-#
-#        print()
-#        print(p0)
-#        print(p1)
-#        print(p2)
-#
-#        Draw.add_line_segment(p0, p1, Vec3(1, 0, 1))
-#        Draw.add_line_segment(p0, p2, Vec3(0, 1, 1))
-
-
     # Returns the point of intersection of the agent's "forward" axis (half
     # line) with the given sphere. Returns None if there is no intersection.
     #
@@ -339,7 +345,7 @@ class Boid(Agent):
 
         delta = (u.dot(o - c) ** 2) - (((o - c).length() ** 2) - r ** 2)
         if delta < 0:
-            print('delta negative, no intersection')
+#            print('delta negative, no intersection')
             return None
         else:
 
@@ -352,10 +358,14 @@ class Boid(Agent):
             p1 = o + u * d1
 #            p2 = o + u * d2
 
-            q = Boid.temp_camera_aim_boid_draw_offset()
-
-            Draw.add_line_segment(o - q, p1 - q, Vec3(1, 0, 1))
-#            Draw.add_line_segment(o - q, p2 - q, Vec3(0, 1, 1))
+#                q = Boid.temp_camera_aim_boid_draw_offset()
+#
+#    #                Draw.add_line_segment(o - q, p1 - q, Vec3(1, 0, 1))
+#    #    #            Draw.add_line_segment(o - q, p2 - q, Vec3(0, 1, 1))
+#
+#                if Boid.enable_annotation:
+#                    Draw.add_line_segment(o - q, p1 - q, Vec3(1, 0, 1))
+#    #                Draw.add_line_segment(o - q, p2 - q, Vec3(0, 1, 1))
 
             return p1
 
@@ -377,13 +387,20 @@ class Boid(Agent):
                 toward_center = center - path_intersection
                 pure_steering = toward_center.perpendicular_component(self.forward)
                 avoidance = pure_steering.normalize()
-
-                Draw.add_line_segment(path_intersection,
-                                      path_intersection + avoidance,
-                                      Vec3())
-                Draw.add_line_segment(self.position,
-                                      self.position + avoidance,
-                                      Vec3())
+                self.sphere_avoidance_annotation(avoidance, path_intersection)
         return avoidance
+
+    def sphere_avoidance_annotation(self, avoidance, path_intersection):
+        if Boid.enable_annotation:
+            q = Boid.temp_camera_aim_boid_draw_offset()
+            Draw.add_line_segment(path_intersection - q,
+                                  path_intersection - q + avoidance,
+                                  Vec3())
+            Draw.add_line_segment(self.position - q,
+                                  self.position - q + avoidance,
+                                  Vec3())
+            Draw.add_line_segment(self.position - q,
+                                  path_intersection - q,
+                                  Vec3(1, 0, 1))
 
     ############################################################################
