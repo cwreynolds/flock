@@ -217,6 +217,7 @@ class Boid(Agent):
         Draw.vis.register_key_callback(ord('A'), Boid.toggle_annotation)
         Draw.vis.register_key_callback(ord('C'), Boid.toggle_tracking_camera)
         Draw.vis.register_key_callback(ord('W'), Boid.toggle_wrap_vs_avoid)
+        Draw.vis.register_key_callback(ord('H'), Boid.print_help)
 
     # Apply steer_to_flock() to each boid in flock.
     @staticmethod
@@ -312,7 +313,29 @@ class Boid(Agent):
     def toggle_wrap_vs_avoid(vis = None):
         Boid.wrap_vs_avoid = not Boid.wrap_vs_avoid
 
-    
+    # Print mini-help on shell.
+    @staticmethod
+    def print_help(vis = None):
+        print()
+        print('  flock single key commands:')
+        print('    space: toggle simulation run/pause')
+        print('    1:     single simulation step, then pause')
+        print('    c:     toggle camera between static and boid tracking')
+        print('    s:     select next boid for camera tracking')
+        print('    a:     toggle drawing of steering annotation')
+        print('    w:     toggle between sphere wrap-around or avoidance')
+        print('    h:     print this message')
+        print('    esc:   exit simulation.')
+        print()
+        print('  mouse view controls:')
+        print('    Left button + drag         : Rotate.')
+        print('    Ctrl + left button + drag  : Translate.')
+        print('    Wheel button + drag        : Translate.')
+        print('    Shift + left button + drag : Roll.')
+        print('    Wheel                      : Zoom in/out.')
+        print()
+
+
     # List of Boids in a flock
     # TODO 20230409 assumes there is only one flock. If more are
     #               ever needed there should be a Flock class.
