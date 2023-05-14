@@ -298,7 +298,9 @@ class Boid(Agent):
         Boid.enable_annotation = not Boid.enable_annotation
     
     # Global tracking camera mode.
-    tracking_camera = True
+    # TODO 20230514 decided static camera might be the better initial value.
+#    tracking_camera = True
+    tracking_camera = False
 
     # Toggle global tracking camera mode.
     @staticmethod
