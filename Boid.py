@@ -56,9 +56,11 @@ class Boid(Agent):
             min_distance = self.max_speed * 40
             avoidance = self.sphere_avoidance(min_distance)
             if avoidance != Vec3():
-                a = Vec3()
+#                a = Vec3()
+#                c = Vec3()
+#                combined_steering = f + s + avoidance
                 c = Vec3()
-                combined_steering = f + s + avoidance
+                combined_steering = f + s + a + avoidance
         ########################################################################
 
         self.last_separation_force = s
@@ -82,7 +84,11 @@ class Boid(Agent):
                 if dist > 0:
                     weight = 1 / (dist ** 2)
                     direction += (offset / (dist * weight))
-            perp = direction.perpendicular_component(self.forward)
+            ####################################################################
+            # TODO 20230515 reconsider "pure lateral steering"
+#            perp = direction.perpendicular_component(self.forward)
+            perp = direction
+            ####################################################################
             steer = perp.normalize()
         return steer
 
@@ -102,7 +108,10 @@ class Boid(Agent):
                     direction += heading_offset.normalize() * weight
             # Return "pure" steering component: perpendicular to forward.
             if direction.length_squared() > 0:
-                direction = direction.perpendicular_component(self.forward)
+                ################################################################
+                # TODO 20230515 reconsider "pure lateral steering"
+#                direction = direction.perpendicular_component(self.forward)
+                ################################################################
                 direction = direction.normalize()
         return direction
 
@@ -121,7 +130,10 @@ class Boid(Agent):
             direction = neighbor_center - self.position
             # "Pure" steering component: perpendicular to forward.
             direction = direction.normalize()
-            direction = direction.perpendicular_component(self.forward)
+            ####################################################################
+            # TODO 20230515 reconsider "pure lateral steering"
+#            direction = direction.perpendicular_component(self.forward)
+            ####################################################################
         return direction
 
     # TODO 20230408 implement RandomSequence equvilent

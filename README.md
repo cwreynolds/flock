@@ -41,8 +41,10 @@ You can control the view using Open3D's standard gestures. There are also severa
 
 Lots, since it is so preliminary, but for example:
 
-- The Boid/Agent class does not actively control its “roll” axis — rotation about its “forward” basis vector — so it is essentially random. Two boids flying next to each other might be upside-down relative to each other.
+- The Boid/Agent class does not actively control its “roll” axis — rotation about its “forward” basis vector — so it is essentially random. Two boids flying parallel paths might be upside-down relative to each other.
 - Similarly because they ignore global orientation, they are just as happy to move vertically as horizontally.
+- The boid's “bodies” sort of look like they are shaded, but it is just painted on. It ought to be rendered to provide more orientation cueing.
+- Often two boids will get too close, failing to maintain separation, while otherwise seeming to flock normally. Could be interference from Boid.sphere_avoidance().
 
 ### Installation
 
