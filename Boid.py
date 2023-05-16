@@ -34,6 +34,8 @@ class Boid(Agent):
         self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
         # For wander_steer()
         self.wander_state = Vec3()
+        # Low pass filter for steering vector.
+        self.smoothed_steering_state = Vec3()
 
     # Basic flocking behavior.
     # TODO 20230427 Hmmm this steer_to_...() function has no return value but
@@ -49,26 +51,22 @@ class Boid(Agent):
 
         combined_steering = f + s + a + c
 
-        ########################################################################
         # TODO 20230512 WIP
         # Steer to avoid collision with spherical containment (boids inside sphere).
         if not Boid.wrap_vs_avoid:
             min_distance = self.max_speed * 40
             avoidance = self.sphere_avoidance(min_distance)
             if avoidance != Vec3():
-#                a = Vec3()
-#                c = Vec3()
-#                combined_steering = f + s + avoidance
                 c = Vec3()
                 combined_steering = f + s + a + avoidance
-        ########################################################################
 
+        combined_steering = self.smoothed_steering(combined_steering)
         self.last_separation_force = s
         self.last_alignment_force = a
         self.last_cohesion_force = c
         self.last_combined_steering = combined_steering
         self.steer(combined_steering, time_step)
-
+        
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
         ########################################################################
@@ -84,12 +82,7 @@ class Boid(Agent):
                 if dist > 0:
                     weight = 1 / (dist ** 2)
                     direction += (offset / (dist * weight))
-            ####################################################################
-            # TODO 20230515 reconsider "pure lateral steering"
-#            perp = direction.perpendicular_component(self.forward)
-            perp = direction
-            ####################################################################
-            steer = perp.normalize()
+            steer = direction.normalize()
         return steer
 
     # Steering force component to align path with neighbors.
@@ -108,10 +101,6 @@ class Boid(Agent):
                     direction += heading_offset.normalize() * weight
             # Return "pure" steering component: perpendicular to forward.
             if direction.length_squared() > 0:
-                ################################################################
-                # TODO 20230515 reconsider "pure lateral steering"
-#                direction = direction.perpendicular_component(self.forward)
-                ################################################################
                 direction = direction.normalize()
         return direction
 
@@ -130,10 +119,6 @@ class Boid(Agent):
             direction = neighbor_center - self.position
             # "Pure" steering component: perpendicular to forward.
             direction = direction.normalize()
-            ####################################################################
-            # TODO 20230515 reconsider "pure lateral steering"
-#            direction = direction.perpendicular_component(self.forward)
-            ####################################################################
         return direction
 
     # TODO 20230408 implement RandomSequence equvilent
@@ -171,6 +156,14 @@ class Boid(Agent):
                 return dist < mdsq
             result = list(filter(near_enough, boids))
         return result
+
+    # Ad hoc low-pass filtering of steering force. Blends this step's raw
+    # steering into a per-boid accumulator, then returns that smoothed value
+    # to use for steering the boid this simulation step.
+    def smoothed_steering(self, raw_steering):
+        s = util.interpolate(0.9, raw_steering, self.smoothed_steering_state)
+        self.smoothed_steering_state = s
+        return s
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
@@ -364,7 +357,8 @@ class Boid(Agent):
     # utilities, perhaps Utilities.py? Maybe a class for steering behaviors?
     #
     # Also this is a special case for a preocedural sphere. It would be nice to
-    # have for an arbitrary triangle mesh.
+    # have for an arbitrary triangle mesh. See eg:
+    # https://github.com/isl-org/Open3D/issues/6149#issuecomment-1549407410
     
     # Returns the point of intersection of the agent's "forward" axis (half
     # line) with the given sphere. Returns None if there is no intersection.
