@@ -36,6 +36,10 @@ class Boid(Agent):
         self.wander_state = Vec3()
         # Low pass filter for steering vector.
         self.smoothed_steering_state = Vec3()
+        ########################################################################
+        # TODO 20230517 prototyping slower neighborhood updates
+        self.cached_nearest_neighbors = []
+        ########################################################################
 
     # Basic flocking behavior.
     # TODO 20230427 Hmmm this steer_to_...() function has no return value but
@@ -134,13 +138,24 @@ class Boid(Agent):
                 (1 / 3) *
                 (self.max_force * 0.5))
 
+    ############################################################################
+    # TODO 20230517 prototyping slower neighborhood updates
+
     # Returns a list of the N Boids nearest this one.
     def nearest_neighbors(self, n=7):
+        likelihood = 1 / 10  # TODO WIP update neighbors once every 10 steps.
+        if util.random01() < likelihood:
+            self.recompute_nearest_neighbors(n)
+        return self.cached_nearest_neighbors
+        
+    # Recomputes a list of the N Boids nearest this one.
+    def recompute_nearest_neighbors(self, n=7):
         def distance_squared_from_me(boid):
             return (boid.position - self.position).length_squared()
         neighbors = sorted(Boid.flock, key=distance_squared_from_me)
-        n_neighbors = neighbors[1:n+1]
-        return n_neighbors
+        self.cached_nearest_neighbors = neighbors[1:n+1]
+
+    ############################################################################
 
     # Filter collection of boids by distance.
     def filter_boids_by_distance(self, max_distance, boids=None):
@@ -161,7 +176,9 @@ class Boid(Agent):
     # steering into a per-boid accumulator, then returns that smoothed value
     # to use for steering the boid this simulation step.
     def smoothed_steering(self, raw_steering):
-        s = util.interpolate(0.9, raw_steering, self.smoothed_steering_state)
+        # TODO completely ad hoc smoothing "rate".
+#        s = util.interpolate(0.9, raw_steering, self.smoothed_steering_state)
+        s = util.interpolate(0.8, raw_steering, self.smoothed_steering_state)
         self.smoothed_steering_state = s
         return s
 
@@ -211,6 +228,11 @@ class Boid(Agent):
             
             boid.ls.p = center + (radius * random_point)
             Boid.flock.append(boid)
+        ########################################################################
+        # TODO 20230517 prototyping slower neighborhood updates
+        for b in Boid.flock:
+            b.recompute_nearest_neighbors()
+        ########################################################################
         # TODO modularity issue: other key callbacks are in Draw which
         #      does not import Boid. Maybe they should all be defined here?
         Boid.register_single_key_commands()

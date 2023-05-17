@@ -59,5 +59,5 @@ if __name__ == "__main__":
 
 #    run_flock(500, sphere_diameter)
 #    run_flock(50, sphere_diameter)
-#    run_flock(200, sphere_diameter)
-    run_flock(100, sphere_diameter)
+    run_flock(200, sphere_diameter)
+#    run_flock(100, sphere_diameter)
