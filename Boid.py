@@ -12,19 +12,17 @@ from Agent import Agent
 from Draw import Draw
 from Vec3 import Vec3
 import Utilities as util
-from statistics import mean
+import copy
 import math
 import itertools
-import numpy as np  # temp?
-import copy
+from statistics import mean
 
 class Boid(Agent):
     def __init__(self):
         super().__init__()
         self.max_speed = 0.3      # Speed upper limit (m/s)
-        self.max_force = 0.3      # Acceleration upper limit (m/s²)
-        # Temp? Use nonzero initial speed.
-        self.speed = self.max_speed * 0.25
+        self.max_force = 0.2      # Acceleration upper limit (m/s²)
+        self.speed = self.max_speed * 0.6
         # Remember steering components for annotation.
         self.last_separation_force = Vec3()
         self.last_alignment_force = Vec3()
@@ -47,12 +45,10 @@ class Boid(Agent):
     # return values and no side effect.
     def steer_to_flock(self, time_step):
         neighbors = self.nearest_neighbors()
-        f = self.forward * 0.05
-        
+        f = self.forward * 0.1
         s = 0.8 * self.steer_to_separate(neighbors)
         a = 0.5 * self.steer_to_align(neighbors)
         c = 0.6 * self.steer_to_cohere(neighbors)
-
         combined_steering = f + s + a + c
 
         # TODO 20230512 WIP
