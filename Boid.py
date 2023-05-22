@@ -37,13 +37,29 @@ class Boid(Agent):
         ########################################################################
         # TODO 20230517 prototyping slower neighborhood updates
         self.cached_nearest_neighbors = []
+        # TODO 20230521 fixed realtime duration between neighbor updates.
+#        self.neighbor_refresh_rate = 0.3  # seconds between neighbor refresh
+        self.neighbor_refresh_rate = 0.5  # seconds between neighbor refresh
+        
+#        # TODO maybe (like cached_nearest_neighbors) this should be set in
+#        # add_boid_to_flock()
+#        self.time_since_last_neighbor_refresh = (self.neighbor_refresh_rate *                                             util.frandom01())
+        # TODO maybe (like cached_nearest_neighbors) this should be set in
+        # add_boid_to_flock()
+        self.time_since_last_neighbor_refresh = 0
         ########################################################################
 
     # Basic flocking behavior.
     # TODO 20230427 Hmmm this steer_to_...() function has no return value but
     # does have side effect. Whereas the other steer_to_...() functions DO have
-    # return values and no side effect.
+    # return values and no side effect. Maybe it should be called something else
+    # like fly() or fly_with_flock() ?
     def steer_to_flock(self, time_step):
+        ########################################################################
+        # TODO 20230521 fixed realtime duration between neighbor updates.
+        # TODO should this be here or inside nearest_neighbors()?
+        self.time_since_last_neighbor_refresh += time_step
+        ########################################################################
         neighbors = self.nearest_neighbors()
         f = self.forward * 0.1
         s = 0.8 * self.steer_to_separate(neighbors)
@@ -137,10 +153,25 @@ class Boid(Agent):
     ############################################################################
     # TODO 20230517 prototyping slower neighborhood updates
 
+#    # Returns a list of the N Boids nearest this one.
+#    def nearest_neighbors(self, n=7):
+#        likelihood = 1 / 10  # TODO WIP update neighbors once every 10 steps.
+#        if util.random01() < likelihood:
+#            self.recompute_nearest_neighbors(n)
+#        return self.cached_nearest_neighbors
+#
+#    # Recomputes a list of the N Boids nearest this one.
+#    def recompute_nearest_neighbors(self, n=7):
+#        def distance_squared_from_me(boid):
+#            return (boid.position - self.position).length_squared()
+#        neighbors = sorted(Boid.flock, key=distance_squared_from_me)
+#        self.cached_nearest_neighbors = neighbors[1:n+1]
+
     # Returns a list of the N Boids nearest this one.
     def nearest_neighbors(self, n=7):
-        likelihood = 1 / 10  # TODO WIP update neighbors once every 10 steps.
-        if util.random01() < likelihood:
+#        likelihood = 1 / 10  # TODO WIP update neighbors once every 10 steps.
+#        if util.random01() < likelihood:
+        if self.time_since_last_neighbor_refresh > self.neighbor_refresh_rate:
             self.recompute_nearest_neighbors(n)
         return self.cached_nearest_neighbors
         
@@ -150,6 +181,7 @@ class Boid(Agent):
             return (boid.position - self.position).length_squared()
         neighbors = sorted(Boid.flock, key=distance_squared_from_me)
         self.cached_nearest_neighbors = neighbors[1:n+1]
+        self.time_since_last_neighbor_refresh = 0
 
     ############################################################################
 
@@ -228,6 +260,9 @@ class Boid(Agent):
         # TODO 20230517 prototyping slower neighborhood updates
         for b in Boid.flock:
             b.recompute_nearest_neighbors()
+            # TODO 20230521 fixed realtime duration between neighbor updates.
+            t = util.frandom01() * b.neighbor_refresh_rate
+            b.time_since_last_neighbor_refresh = t
         ########################################################################
         # TODO modularity issue: other key callbacks are in Draw which
         #      does not import Boid. Maybe they should all be defined here?
