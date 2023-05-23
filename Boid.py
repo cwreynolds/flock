@@ -21,7 +21,7 @@ class Boid(Agent):
     def __init__(self):
         super().__init__()
         self.max_speed = 0.3      # Speed upper limit (m/s)
-        self.max_force = 0.2      # Acceleration upper limit (m/s²)
+        self.max_force = 0.3      # Acceleration upper limit (m/s²)
         self.speed = self.max_speed * 0.6
         # Remember steering components for annotation.
         self.last_separation_force = Vec3()
@@ -34,20 +34,10 @@ class Boid(Agent):
         self.wander_state = Vec3()
         # Low pass filter for steering vector.
         self.smoothed_steering_state = Vec3()
-        ########################################################################
-        # TODO 20230517 prototyping slower neighborhood updates
+        # Cache of nearest neighbors, updating "ocasionally".
         self.cached_nearest_neighbors = []
-        # TODO 20230521 fixed realtime duration between neighbor updates.
-#        self.neighbor_refresh_rate = 0.3  # seconds between neighbor refresh
         self.neighbor_refresh_rate = 0.5  # seconds between neighbor refresh
-        
-#        # TODO maybe (like cached_nearest_neighbors) this should be set in
-#        # add_boid_to_flock()
-#        self.time_since_last_neighbor_refresh = (self.neighbor_refresh_rate *                                             util.frandom01())
-        # TODO maybe (like cached_nearest_neighbors) this should be set in
-        # add_boid_to_flock()
         self.time_since_last_neighbor_refresh = 0
-        ########################################################################
 
     # Basic flocking behavior.
     # TODO 20230427 Hmmm this steer_to_...() function has no return value but
@@ -55,12 +45,7 @@ class Boid(Agent):
     # return values and no side effect. Maybe it should be called something else
     # like fly() or fly_with_flock() ?
     def steer_to_flock(self, time_step):
-        ########################################################################
-        # TODO 20230521 fixed realtime duration between neighbor updates.
-        # TODO should this be here or inside nearest_neighbors()?
-        self.time_since_last_neighbor_refresh += time_step
-        ########################################################################
-        neighbors = self.nearest_neighbors()
+        neighbors = self.nearest_neighbors(time_step)
         f = self.forward * 0.1
         s = 0.8 * self.steer_to_separate(neighbors)
         a = 0.5 * self.steer_to_align(neighbors)
@@ -150,31 +135,13 @@ class Boid(Agent):
                 (1 / 3) *
                 (self.max_force * 0.5))
 
-    ############################################################################
-    # TODO 20230517 prototyping slower neighborhood updates
-
-#    # Returns a list of the N Boids nearest this one.
-#    def nearest_neighbors(self, n=7):
-#        likelihood = 1 / 10  # TODO WIP update neighbors once every 10 steps.
-#        if util.random01() < likelihood:
-#            self.recompute_nearest_neighbors(n)
-#        return self.cached_nearest_neighbors
-#
-#    # Recomputes a list of the N Boids nearest this one.
-#    def recompute_nearest_neighbors(self, n=7):
-#        def distance_squared_from_me(boid):
-#            return (boid.position - self.position).length_squared()
-#        neighbors = sorted(Boid.flock, key=distance_squared_from_me)
-#        self.cached_nearest_neighbors = neighbors[1:n+1]
-
     # Returns a list of the N Boids nearest this one.
-    def nearest_neighbors(self, n=7):
-#        likelihood = 1 / 10  # TODO WIP update neighbors once every 10 steps.
-#        if util.random01() < likelihood:
+    def nearest_neighbors(self, time_step, n=7):
+        self.time_since_last_neighbor_refresh += time_step
         if self.time_since_last_neighbor_refresh > self.neighbor_refresh_rate:
             self.recompute_nearest_neighbors(n)
         return self.cached_nearest_neighbors
-        
+
     # Recomputes a list of the N Boids nearest this one.
     def recompute_nearest_neighbors(self, n=7):
         def distance_squared_from_me(boid):
@@ -182,8 +149,6 @@ class Boid(Agent):
         neighbors = sorted(Boid.flock, key=distance_squared_from_me)
         self.cached_nearest_neighbors = neighbors[1:n+1]
         self.time_since_last_neighbor_refresh = 0
-
-    ############################################################################
 
     # Filter collection of boids by distance.
     def filter_boids_by_distance(self, max_distance, boids=None):
@@ -205,7 +170,6 @@ class Boid(Agent):
     # to use for steering the boid this simulation step.
     def smoothed_steering(self, raw_steering):
         # TODO completely ad hoc smoothing "rate".
-#        s = util.interpolate(0.9, raw_steering, self.smoothed_steering_state)
         s = util.interpolate(0.8, raw_steering, self.smoothed_steering_state)
         self.smoothed_steering_state = s
         return s
@@ -256,14 +220,11 @@ class Boid(Agent):
             
             boid.ls.p = center + (radius * random_point)
             Boid.flock.append(boid)
-        ########################################################################
-        # TODO 20230517 prototyping slower neighborhood updates
+        # Initialize per-Boid cached_nearest_neighbors. Randomize time stamp.
         for b in Boid.flock:
             b.recompute_nearest_neighbors()
-            # TODO 20230521 fixed realtime duration between neighbor updates.
             t = util.frandom01() * b.neighbor_refresh_rate
             b.time_since_last_neighbor_refresh = t
-        ########################################################################
         # TODO modularity issue: other key callbacks are in Draw which
         #      does not import Boid. Maybe they should all be defined here?
         Boid.register_single_key_commands()
@@ -302,6 +263,11 @@ class Boid(Agent):
             if distance_from_origin > radius:
                 new_position = (-bp).normalize() * radius * 0.95
                 boid.ls.p = new_position
+                if not Boid.wrap_vs_avoid:
+                    Boid.total_avoid_fail += 1
+
+    # Counter for any boid tunneling through the spherical containment.
+    total_avoid_fail = 0
 
     # Calculate and log various statistics for flock.
     @staticmethod
@@ -323,7 +289,7 @@ class Boid(Agent):
             #
             max_nn_dist = 0
             for b in Boid.flock:
-                n = b.nearest_neighbors(1)[0]
+                n = b.cached_nearest_neighbors[0]
                 dist = (b.position - n.position).length()
                 if max_nn_dist < dist:
                     max_nn_dist = dist
@@ -332,7 +298,9 @@ class Boid(Agent):
                   ', ave_speed=' + str(average_speed)[0:5] +
                   ', min_sep=' + str(min_sep)[0:5] +
                   ', ave_sep=' + str(ave_sep)[0:5] +
-                  ', max_nn_dist=' + str(max_nn_dist)[0:5])
+                  ', max_nn_dist=' + str(max_nn_dist)[0:5] +
+                  ', avoid_fail/boid=' + str(Boid.total_avoid_fail /
+                                             len(Boid.flock)))
 
     # Returns currently selected boid, the one tracked by visualizer's camera.
     @staticmethod
@@ -365,10 +333,10 @@ class Boid(Agent):
     def toggle_tracking_camera(vis = None):
         Boid.tracking_camera = not Boid.tracking_camera
 
-    # Global tracking camera mode.
+    # Global mode for sphere-wrap-around (True) versus sphere-avoidance (false).
     wrap_vs_avoid = False
 
-    # Toggle global tracking camera mode.
+    # Toggle mode for sphere-wrap-around versus sphere-avoidance.
     @staticmethod
     def toggle_wrap_vs_avoid(vis = None):
         Boid.wrap_vs_avoid = not Boid.wrap_vs_avoid
