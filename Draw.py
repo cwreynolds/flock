@@ -37,10 +37,15 @@ class Draw:
     frame_counter = 0
     simulation_paused = False
     single_step = False
-    
+
+    # TODO 20230524 since at the moment I cannot animate Open3D's camera, this
+    # is a stopgap where all drawing is offset by the given "lookat" position.
+    temp_camera_lookat = Vec3()
+
     @staticmethod
     def add_triangle_single_color(v1, v2, v3, color):
         for v in [v1, v2, v3]:
+            v -= Draw.temp_camera_lookat
             Draw.mesh_vertices.append(v.asarray())
             Draw.mesh_vertex_colors.append(color.asarray())
         t = len(Draw.mesh_triangles) * 3
@@ -52,6 +57,8 @@ class Draw:
     # TODO 20230426 add line drawing support for annotation
     @staticmethod
     def add_line_segment(v1, v2, color=Vec3(), radius = 0.01, sides = 3):
+        v1 -= Draw.temp_camera_lookat
+        v2 -= Draw.temp_camera_lookat
         # Vector along the segment, from v1 to v2
         offset = v2 - v1
         distance = offset.length()
