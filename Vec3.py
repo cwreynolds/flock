@@ -159,6 +159,13 @@ class Vec3:
                     self.y * c - self.x * s,
                     self.z)
 
+    def rotate_xz_about_y(self, angle):
+        s = math.sin(angle)
+        c = math.cos(angle)
+        return Vec3(self.x * c + self.z * s,
+                    self.y,
+                    self.z * c - self.x * s)
+
     # class RandomSequence
     # Vec3 randomUnitVector();
     # does Python allow the trick where RandomSequence is defined one

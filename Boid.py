@@ -4,6 +4,12 @@
 #
 # Boid class, specialization of Agent.
 #
+# Each boid in a flock is an instance of this class. The flock is represented as
+# a class level attribute, the list Boid.flock. This class also contains several
+# static methods related to the flock, such as Boid.draw_flock(). It might make
+# sense for "flock" to be its own class. Certainly so if we ever need more than
+# one.
+#
 # MIT License -- Copyright © 2023 Craig Reynolds
 #
 #-------------------------------------------------------------------------------
@@ -28,8 +34,6 @@ class Boid(Agent):
         self.last_alignment_force = Vec3()
         self.last_cohesion_force = Vec3()
         self.last_combined_steering = Vec3()
-        # Temp? Pick a random midrange boid color.
-        self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
         # For wander_steer()
         self.wander_state = Vec3()
         # Low pass filter for steering vector.
@@ -38,6 +42,8 @@ class Boid(Agent):
         self.cached_nearest_neighbors = []
         self.neighbor_refresh_rate = 0.5  # seconds between neighbor refresh
         self.time_since_last_neighbor_refresh = 0
+        # Temp? Pick a random midrange boid color.
+        self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
 
     # Basic flocking behavior.
     # TODO 20230427 Hmmm this steer_to_...() function has no return value but
@@ -70,10 +76,8 @@ class Boid(Agent):
         
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
-        ########################################################################
-        # TODO 20230420 just for debugging
+        # TODO experimental, ignore neighbors more than 3 units away.
         neighbors = self.filter_boids_by_distance(3, neighbors)
-        ########################################################################
         steer = Vec3()
         if len(neighbors) > 0:
             direction = Vec3()
@@ -88,10 +92,8 @@ class Boid(Agent):
 
     # Steering force component to align path with neighbors.
     def steer_to_align(self, neighbors):
-        ########################################################################
-        # TODO 20230509 just for debugging
+        # TODO experimental, ignore neighbors more than 10 units away.
         neighbors = self.filter_boids_by_distance(10, neighbors)
-        ########################################################################
         direction = Vec3()
         if len(neighbors) > 0:
             for neighbor in neighbors:
@@ -177,6 +179,10 @@ class Boid(Agent):
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
         center = self.position - Boid.temp_camera_aim_boid_draw_offset()
+    
+#        print('Boid.tracking_camera =', Boid.tracking_camera)
+#        print('center =', center)
+    
         nose = center + self.forward * 0.5
         tail = center - self.forward * 0.5
         apex = tail + self.up * 0.25 + self.forward * 0.1
@@ -190,14 +196,31 @@ class Boid(Agent):
         draw_tri(apex, wingtip0, wingtip1, self.color * 0.90)
         draw_tri(nose, wingtip1, wingtip0, self.color * 0.70)
         # Annotation for steering forces
-        if Boid.enable_annotation and center.length() < 3:
+#        if Boid.enable_annotation and center.length() < 3:
+#        dist_selected = (Boid.selected_boid().position - self.position).length()
+#        if (Boid.enable_annotation and
+#            Boid.tracking_camera and
+#            dist_selected < 3):
+
+#        print('selpos =', Boid.selected_boid().position)
+
+        dist_select = (Boid.selected_boid().position - self.position).length()
+        if (Boid.enable_annotation and Boid.tracking_camera and dist_select < 3):
+#        if (Boid.enable_annotation and dist_selected < 3):
             def relative_force_annotation(offset, color):
+#                print('center =', center)
+#                print('c+off  =', center + offset)
                 Draw.add_line_segment(center, center + offset, color)
             relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
             relative_force_annotation(self.last_alignment_force, Vec3(0, 1, 0))
             relative_force_annotation(self.last_cohesion_force, Vec3(0, 0, 1))
-            gray80 = Vec3(0.8, 0.8, 0.8)
-            relative_force_annotation(self.last_combined_steering, gray80)
+#            gray80 = Vec3(0.8, 0.8, 0.8)
+#            relative_force_annotation(self.last_combined_steering, gray80)
+            relative_force_annotation(self.last_combined_steering,
+                                      Vec3(0.5, 0.5, 0.5))
+
+    ########################################################################
+    # TODO 20230524 build in lookat offset to Draw routines
 
     # TODO 20230418 since at the moment I cannot animate the camera, this is a
     # stop gap where we offset all boid drawing by the position of "some boid"
@@ -207,8 +230,17 @@ class Boid(Agent):
                 if Boid.tracking_camera
                 else Vec3())
 
+#    # TODO 20230418 since at the moment I cannot animate the camera, this is a
+#    # stop gap where we offset all boid drawing by the position of "some boid"
+#    @staticmethod
+#    def temp_camera_aim_boid_draw_offset():
+#        return Vec3()
+
+    ########################################################################
+
     # Make a new Boid, add it to flock. Defaults to one Boid at origin. Can add
     # "count" Boids, randomly placed within a sphere with "radius" and "center".
+    # TODO Maybe this should have a name more like create_flock() ?
     @staticmethod
     def add_boid_to_flock(count=1, radius=0, center=Vec3()):
         for i in range(count):
@@ -247,8 +279,72 @@ class Boid(Agent):
     # Draw each boid in flock.
     @staticmethod
     def draw_flock():
+#        print()
+        
+        
+#        # TODO 20230418 since at the moment I cannot animate the camera, this is a
+#        # stop gap where we offset all boid drawing by the position of "some boid"
+#        Draw.temp_camera_lookat = (Boid.selected_boid().position
+#                                   if Boid.tracking_camera
+#                                   else Vec3())
+
         for boid in Boid.flock:
+#            print()
             boid.draw()
+        ########################################################################
+        # TODO 20230524 test add_everted_shere()
+        Boid.add_everted_sphere(35, -Boid.temp_camera_aim_boid_draw_offset())
+        ########################################################################
+
+    ############################################################################
+    # TODO 20230524 test add_everted_shere()
+    
+    # Maybe this should be moved to Draw?
+    
+    # Prototype construction of an everted sphere to visualize the spherical
+    # containment for this flock simulation. It is based on a 1-to-4 triangle
+    # subdivision applied to an octahedron.
+    grays = []
+    @staticmethod
+    def add_everted_sphere(radius=1, center=Vec3()):
+        gray_index = 0
+        if not Boid.grays:
+            for i in range(29):
+                i = util.frandom2(0.8, 0.90)
+                Boid.grays.append(Vec3(i, i, i))
+        def subdivide_spherical_triangle(a, b, c, levels):
+            if levels <= 0:
+                nonlocal gray_index
+                gray_index = (gray_index + 1) % len(Boid.grays)
+                Draw.add_triangle_single_color(a * radius + center,
+                                               b * radius + center,
+                                               c * radius + center,
+                                               Boid.grays[gray_index])
+            else:
+                ab = util.interpolate(0.5, a, b).normalize()
+                bc = util.interpolate(0.5, b, c).normalize()
+                ca = util.interpolate(0.5, c, a).normalize()
+                subdivide_spherical_triangle(a,  ab, ca, levels - 1)
+                subdivide_spherical_triangle(ab, b,  bc, levels - 1)
+                subdivide_spherical_triangle(ca, bc,  c, levels - 1)
+                subdivide_spherical_triangle(ab, bc, ca, levels - 1)
+
+        a = Vec3(0, 0, 1)
+        b = Vec3(0, 1, 0)
+        c = Vec3(1, 0, 0)
+        for i in range(8):
+            subdivide_spherical_triangle(a, b, c, 2)
+            if i == 3:
+                a = a.rotate_xz_about_y(math.pi)
+                b = b.rotate_xz_about_y(math.pi)
+                c = c.rotate_xz_about_y(math.pi)
+            else:
+                a = a.rotate_xy_about_z(math.pi / 2)
+                b = b.rotate_xy_about_z(math.pi / 2)
+                c = c.rotate_xy_about_z(math.pi / 2)
+
+
+    ############################################################################
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
     # other side of the world, just inside of its antipodal point.
@@ -324,8 +420,6 @@ class Boid(Agent):
         Boid.enable_annotation = not Boid.enable_annotation
     
     # Global tracking camera mode.
-    # TODO 20230514 decided static camera might be the better initial value.
-#    tracking_camera = True
     tracking_camera = False
 
     # Toggle global tracking camera mode.
@@ -445,12 +539,12 @@ class Boid(Agent):
     def sphere_avoidance_annotation(self, avoidance, path_intersection):
         if Boid.enable_annotation:
             q = Boid.temp_camera_aim_boid_draw_offset()
-            Draw.add_line_segment(path_intersection - q,
-                                  path_intersection - q + avoidance,
-                                  Vec3())
-            Draw.add_line_segment(self.position - q,
-                                  self.position - q + avoidance,
-                                  Vec3())
+#            Draw.add_line_segment(path_intersection - q,
+#                                  path_intersection - q + avoidance,
+#                                  Vec3())
+#            Draw.add_line_segment(self.position - q,
+#                                  self.position - q + avoidance,
+#                                  Vec3())
             Draw.add_line_segment(self.position - q,
                                   path_intersection - q,
                                   Vec3(1, 0, 1))
