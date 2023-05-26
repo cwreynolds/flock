@@ -222,19 +222,38 @@ class Boid(Agent):
     ########################################################################
     # TODO 20230524 build in lookat offset to Draw routines
 
-    # TODO 20230418 since at the moment I cannot animate the camera, this is a
-    # stop gap where we offset all boid drawing by the position of "some boid"
-    @staticmethod
-    def temp_camera_aim_boid_draw_offset():
-        return (Boid.selected_boid().position
-                if Boid.tracking_camera
-                else Vec3())
+#    # TODO 20230418 since at the moment I cannot animate the camera, this is a
+#    # stop gap where we offset all boid drawing by the position of "some boid"
+#    @staticmethod
+#    def temp_camera_aim_boid_draw_offset():
+#        return (Boid.selected_boid().position
+#                if Boid.tracking_camera
+#                else Vec3())
 
 #    # TODO 20230418 since at the moment I cannot animate the camera, this is a
 #    # stop gap where we offset all boid drawing by the position of "some boid"
 #    @staticmethod
 #    def temp_camera_aim_boid_draw_offset():
 #        return Vec3()
+
+
+
+    # TODO 20230526 after meeting with Gilbert and Matt, take a few days to
+    #               clean up. When this flag -- "Boid.handles_lookat" -- is true,
+    #               things work as before, otherwise "Draw handles lookat"
+    
+    handles_lookat = True
+    
+    # TODO 20230418 since at the moment I cannot animate the camera, this is a
+    # stop gap where we offset all boid drawing by the position of "some boid"
+    @staticmethod
+    def temp_camera_aim_boid_draw_offset():
+        if Boid.handles_lookat:
+            return (Boid.selected_boid().position
+                    if Boid.tracking_camera
+                    else Vec3())
+        else:
+            return Vec3()
 
     ########################################################################
 
@@ -279,21 +298,23 @@ class Boid(Agent):
     # Draw each boid in flock.
     @staticmethod
     def draw_flock():
-#        print()
-        
-        
-#        # TODO 20230418 since at the moment I cannot animate the camera, this is a
-#        # stop gap where we offset all boid drawing by the position of "some boid"
-#        Draw.temp_camera_lookat = (Boid.selected_boid().position
-#                                   if Boid.tracking_camera
-#                                   else Vec3())
+
+        # TODO 20230526 after meeting with Gilbert and Matt, take a few days
+        # to clean up. When this flag -- "Boid.handles_lookat" -- is true,
+        # things work as before, otherwise "Draw handles lookat"
+        if not Boid.handles_lookat:
+            Draw.temp_camera_lookat = (Boid.selected_boid().position
+                                       if Boid.tracking_camera
+                                       else Vec3())
 
         for boid in Boid.flock:
-#            print()
             boid.draw()
+        
         ########################################################################
         # TODO 20230524 test add_everted_shere()
-        Boid.add_everted_sphere(35, -Boid.temp_camera_aim_boid_draw_offset())
+#        Boid.add_everted_sphere(35, -Boid.temp_camera_aim_boid_draw_offset())
+        Boid.add_everted_sphere(Boid.sphere_radius + 5,
+                                -Boid.temp_camera_aim_boid_draw_offset())
         ########################################################################
 
     ############################################################################
@@ -364,6 +385,7 @@ class Boid(Agent):
 
     # Counter for any boid tunneling through the spherical containment.
     total_avoid_fail = 0
+    total_sep_fail = 0
 
     # Calculate and log various statistics for flock.
     @staticmethod
@@ -381,6 +403,8 @@ class Boid(Agent):
                     min_sep = dist
                 ave_sep += dist
                 pair_count += 1
+                if dist < 2:
+                    Boid.total_sep_fail += 1
             ave_sep /= pair_count
             #
             max_nn_dist = 0
@@ -395,6 +419,8 @@ class Boid(Agent):
                   ', min_sep=' + str(min_sep)[0:5] +
                   ', ave_sep=' + str(ave_sep)[0:5] +
                   ', max_nn_dist=' + str(max_nn_dist)[0:5] +
+                  ', sep_fail/boid=' + str(Boid.total_sep_fail  /
+                                           len(Boid.flock)) +
                   ', avoid_fail/boid=' + str(Boid.total_avoid_fail /
                                              len(Boid.flock)))
 
@@ -539,12 +565,6 @@ class Boid(Agent):
     def sphere_avoidance_annotation(self, avoidance, path_intersection):
         if Boid.enable_annotation:
             q = Boid.temp_camera_aim_boid_draw_offset()
-#            Draw.add_line_segment(path_intersection - q,
-#                                  path_intersection - q + avoidance,
-#                                  Vec3())
-#            Draw.add_line_segment(self.position - q,
-#                                  self.position - q + avoidance,
-#                                  Vec3())
             Draw.add_line_segment(self.position - q,
                                   path_intersection - q,
                                   Vec3(1, 0, 1))
