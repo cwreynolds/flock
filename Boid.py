@@ -24,10 +24,11 @@ import itertools
 from statistics import mean
 
 class Boid(Agent):
+
     def __init__(self):
         super().__init__()
-        self.max_speed = 0.3      # Speed upper limit (m/s)
-        self.max_force = 0.3      # Acceleration upper limit (m/s²)
+        self.max_speed = 0.3     # Speed upper limit (m/s)
+        self.max_force = 0.6     # Acceleration upper limit (m/s²)
         self.speed = self.max_speed * 0.6
         # Remember steering components for annotation.
         self.last_separation_force = Vec3()
@@ -178,11 +179,7 @@ class Boid(Agent):
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
-        center = self.position - Boid.temp_camera_aim_boid_draw_offset()
-    
-#        print('Boid.tracking_camera =', Boid.tracking_camera)
-#        print('center =', center)
-    
+        center = self.position
         nose = center + self.forward * 0.5
         tail = center - self.forward * 0.5
         apex = tail + self.up * 0.25 + self.forward * 0.1
@@ -196,66 +193,15 @@ class Boid(Agent):
         draw_tri(apex, wingtip0, wingtip1, self.color * 0.90)
         draw_tri(nose, wingtip1, wingtip0, self.color * 0.70)
         # Annotation for steering forces
-#        if Boid.enable_annotation and center.length() < 3:
-#        dist_selected = (Boid.selected_boid().position - self.position).length()
-#        if (Boid.enable_annotation and
-#            Boid.tracking_camera and
-#            dist_selected < 3):
-
-#        print('selpos =', Boid.selected_boid().position)
-
         dist_select = (Boid.selected_boid().position - self.position).length()
         if (Boid.enable_annotation and Boid.tracking_camera and dist_select < 3):
-#        if (Boid.enable_annotation and dist_selected < 3):
             def relative_force_annotation(offset, color):
-#                print('center =', center)
-#                print('c+off  =', center + offset)
                 Draw.add_line_segment(center, center + offset, color)
             relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
             relative_force_annotation(self.last_alignment_force, Vec3(0, 1, 0))
             relative_force_annotation(self.last_cohesion_force, Vec3(0, 0, 1))
-#            gray80 = Vec3(0.8, 0.8, 0.8)
-#            relative_force_annotation(self.last_combined_steering, gray80)
             relative_force_annotation(self.last_combined_steering,
                                       Vec3(0.5, 0.5, 0.5))
-
-    ########################################################################
-    # TODO 20230524 build in lookat offset to Draw routines
-
-#    # TODO 20230418 since at the moment I cannot animate the camera, this is a
-#    # stop gap where we offset all boid drawing by the position of "some boid"
-#    @staticmethod
-#    def temp_camera_aim_boid_draw_offset():
-#        return (Boid.selected_boid().position
-#                if Boid.tracking_camera
-#                else Vec3())
-
-#    # TODO 20230418 since at the moment I cannot animate the camera, this is a
-#    # stop gap where we offset all boid drawing by the position of "some boid"
-#    @staticmethod
-#    def temp_camera_aim_boid_draw_offset():
-#        return Vec3()
-
-
-
-    # TODO 20230526 after meeting with Gilbert and Matt, take a few days to
-    #               clean up. When this flag -- "Boid.handles_lookat" -- is true,
-    #               things work as before, otherwise "Draw handles lookat"
-    
-    handles_lookat = True
-    
-    # TODO 20230418 since at the moment I cannot animate the camera, this is a
-    # stop gap where we offset all boid drawing by the position of "some boid"
-    @staticmethod
-    def temp_camera_aim_boid_draw_offset():
-        if Boid.handles_lookat:
-            return (Boid.selected_boid().position
-                    if Boid.tracking_camera
-                    else Vec3())
-        else:
-            return Vec3()
-
-    ########################################################################
 
     # Make a new Boid, add it to flock. Defaults to one Boid at origin. Can add
     # "count" Boids, randomly placed within a sphere with "radius" and "center".
@@ -298,24 +244,19 @@ class Boid(Agent):
     # Draw each boid in flock.
     @staticmethod
     def draw_flock():
-
         # TODO 20230526 after meeting with Gilbert and Matt, take a few days
         # to clean up. When this flag -- "Boid.handles_lookat" -- is true,
         # things work as before, otherwise "Draw handles lookat"
-        if not Boid.handles_lookat:
-            Draw.temp_camera_lookat = (Boid.selected_boid().position
-                                       if Boid.tracking_camera
-                                       else Vec3())
-
+        Draw.temp_camera_lookat = (Boid.selected_boid().position
+                                   if Boid.tracking_camera
+                                   else Vec3())
         for boid in Boid.flock:
             boid.draw()
-        
-        ########################################################################
-        # TODO 20230524 test add_everted_shere()
-#        Boid.add_everted_sphere(35, -Boid.temp_camera_aim_boid_draw_offset())
-        Boid.add_everted_sphere(Boid.sphere_radius + 5,
-                                -Boid.temp_camera_aim_boid_draw_offset())
-        ########################################################################
+        Boid.add_everted_sphere(Boid.sphere_radius + 5)
+
+
+
+
 
     ############################################################################
     # TODO 20230524 test add_everted_shere()
@@ -559,14 +500,9 @@ class Boid(Agent):
                 toward_center = center - path_intersection
                 pure_steering = toward_center.perpendicular_component(self.forward)
                 avoidance = pure_steering.normalize()
-                self.sphere_avoidance_annotation(avoidance, path_intersection)
+                if Boid.enable_annotation:
+                    c = Vec3(1, 0, 1) # magenta
+                    Draw.add_line_segment(self.position, path_intersection, c)
         return avoidance
-
-    def sphere_avoidance_annotation(self, avoidance, path_intersection):
-        if Boid.enable_annotation:
-            q = Boid.temp_camera_aim_boid_draw_offset()
-            Draw.add_line_segment(self.position - q,
-                                  path_intersection - q,
-                                  Vec3(1, 0, 1))
 
     ############################################################################

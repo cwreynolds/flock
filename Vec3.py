@@ -119,13 +119,13 @@ class Vec3:
         assert other.is_unit_length()
         return util.within_epsilon(self.dot(other), 0)
     
-    # Check if two unit vectors are parallel.
+    # Check if two unit vectors are parallel (or anti-parallel).
     def is_parallel(self, other):
         # TODO 20230430 Should it check for unit length, or normalize? For now,
         # assert that given vectors are unit length to see if it ever comes up.
         assert self.is_unit_length()
         assert other.is_unit_length()
-        return util.within_epsilon(self.dot(other), 1)
+        return util.within_epsilon(abs(self.dot(other)), 1)
     
     # Given a (unit) vector, return some vector that is purpendicular.
     # (There are infinitely many such vectors, one is chosen arbitrarily.)
@@ -237,6 +237,7 @@ class Vec3:
         b = Vec3(-9, 7, 5).normalize()
         c = Vec3(1, 0, 0)
         assert a.is_parallel(a)
+        assert a.is_parallel(-a)
         assert not a.is_parallel(b)
         assert a.is_perpendicular(a.find_perpendicular())
         assert b.is_perpendicular(b.find_perpendicular())

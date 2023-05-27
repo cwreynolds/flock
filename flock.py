@@ -29,10 +29,9 @@ def draw_global_axes():
     x = Vec3(size, 0, 0)
     y = Vec3(0, size, 0)
     z = Vec3(0, 0, size)
-    move = -Boid.temp_camera_aim_boid_draw_offset()
-    Draw.add_line_segment(move - x, move + x, black, radius, sides)
-    Draw.add_line_segment(move - y, move + y, black, radius, sides)
-    Draw.add_line_segment(move - z, move + z, black, radius, sides)
+    Draw.add_line_segment(-x, x, black, radius, sides)
+    Draw.add_line_segment(-y, y, black, radius, sides)
+    Draw.add_line_segment(-z, z, black, radius, sides)
 
 # Flock top level.
 def run_flock(size, initial_diameter):

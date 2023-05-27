@@ -45,7 +45,8 @@ class Draw:
     @staticmethod
     def add_triangle_single_color(v1, v2, v3, color):
         for v in [v1, v2, v3]:
-            v -= Draw.temp_camera_lookat
+#            v -= Draw.temp_camera_lookat
+            v = v - Draw.temp_camera_lookat  # TODO 20230524 temp workaround
             Draw.mesh_vertices.append(v.asarray())
             Draw.mesh_vertex_colors.append(color.asarray())
         t = len(Draw.mesh_triangles) * 3
@@ -55,10 +56,12 @@ class Draw:
     # given all the problems getting LineSets to draw in bright unshaded colors,
     # trying this approach drawing lines as several triangles.
     # TODO 20230426 add line drawing support for annotation
+    # TODO 20230526 note that this is implicitly adjusted by temp_camera_lookat
+    #               via being layered on top of add_triangle_single_color(). If
+    #               this is ever reimplemented using Open3D's LineSet that
+    #               adjustment will need to be made explicit.
     @staticmethod
     def add_line_segment(v1, v2, color=Vec3(), radius = 0.01, sides = 3):
-        v1 -= Draw.temp_camera_lookat
-        v2 -= Draw.temp_camera_lookat
         # Vector along the segment, from v1 to v2
         offset = v2 - v1
         distance = offset.length()
