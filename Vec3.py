@@ -202,6 +202,40 @@ class Vec3:
                 break
         return v / m;
 
+    # Returns the point of intersection of a ray (half-line) and sphere. Returns
+    # None if there is no intersection. But currently assumes endpoint is inside
+    # sphere. Used for finding intersection of an Agent's "forward" axis with a
+    # spherical containment.
+    #
+    # Formulation from https://en.wikipedia.org/wiki/Line–sphere_intersection
+    # particularly the two equations under the text "Note that in the specific
+    # case where is a unit vector..."
+    #
+    # (Not certain where this should go. It is a "geometric utility" but
+    # Utilities.py does not import Vec3. So it is here for now.)
+    #
+    # TODO 20230527 -- needs unit test
+    #
+    @staticmethod
+    def ray_sphere_intersection(origin, tangent, radius, center):
+        # Center and radius of sphere.
+        c = center
+        r = radius
+        # Origin and tangent (basis) of line.
+        o = origin
+        u = tangent
+        # Following derivation in Wikipedia.
+        delta = (u.dot(o - c) ** 2) - (((o - c).length() ** 2) - r ** 2)
+        if delta >= 0:
+            # Given asumptions (o inside sphere, u is "forward") we want p1:
+            d1 = -(u.dot(o - c)) + math.sqrt(delta)
+            # d2 = -(u.dot(o - c)) - math.sqrt(delta)
+            p1 = o + u * d1
+            # p2 = o + u * d2
+            return p1
+        else:
+            return None
+
     @staticmethod
     def unit_test():
         assert str(Vec3(1, 2, 3)) == 'Vec3(1, 2, 3)'

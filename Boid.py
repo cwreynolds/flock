@@ -62,8 +62,10 @@ class Boid(Agent):
         # TODO 20230512 WIP
         # Steer to avoid collision with spherical containment (boids inside sphere).
         if not Boid.wrap_vs_avoid:
-            min_distance = self.max_speed * 40
+            # TODO shouldn't this take `time_step` into account?
+            min_distance = self.max_speed * 50
             avoidance = self.sphere_avoidance(min_distance)
+            # Very ad hoc (also bad for differentiation)
             if avoidance != Vec3():
                 c = Vec3()
                 combined_steering = f + s + a + avoidance
@@ -433,67 +435,21 @@ class Boid(Agent):
     # The selected boid
     selected_boid_index = 0
 
-
-    ############################################################################
-    # TODO 20230510 I don't know where this should go. Some kind of geometric
-    # utilities, perhaps Utilities.py? Maybe a class for steering behaviors?
-    #
-    # Also this is a special case for a preocedural sphere. It would be nice to
-    # have for an arbitrary triangle mesh. See eg:
-    # https://github.com/isl-org/Open3D/issues/6149#issuecomment-1549407410
-    
-    # Returns the point of intersection of the agent's "forward" axis (half
-    # line) with the given sphere. Returns None if there is no intersection.
-    #
-    # From https://en.wikipedia.org/wiki/Line–sphere_intersection particularly
-    # the two equations under the text “Note that in the specific case where u
-    # is a unit vector...”
-    def path_sphere_intersection(self, radius, center=Vec3()):
-        # Center and radius of sphere
-        c = center
-        r = radius
-        # Origin and tangent (basis) of line
-        o = self.position
-        u = self.forward
-
-        delta = (u.dot(o - c) ** 2) - (((o - c).length() ** 2) - r ** 2)
-        if delta < 0:
-#            print('delta negative, no intersection')
-            return None
-        else:
-
-            d1 = -(u.dot(o - c)) + math.sqrt(delta)
-#            d2 = -(u.dot(o - c)) - math.sqrt(delta)
-
-#            if d1 == d2:
-#                print('roots equal, one intersection')
-
-            p1 = o + u * d1
-#            p2 = o + u * d2
-
-#                q = Boid.temp_camera_aim_boid_draw_offset()
-#
-#    #                Draw.add_line_segment(o - q, p1 - q, Vec3(1, 0, 1))
-#    #    #            Draw.add_line_segment(o - q, p2 - q, Vec3(0, 1, 1))
-#
-#                if Boid.enable_annotation:
-#                    Draw.add_line_segment(o - q, p1 - q, Vec3(1, 0, 1))
-#    #                Draw.add_line_segment(o - q, p2 - q, Vec3(0, 1, 1))
-
-            return p1
-
-
-    # TODO 20230512 WIP for prototyping, duplicate constant from flock.py
-    # For initial placememnt and wrap-around.
+    # TODO 20230512 WIP for prototyping, duplicate constants from flock.py
+    # For initial placement and wrap-around or avoidance.
     sphere_diameter = 60
     sphere_radius = sphere_diameter / 2
 
-    # TODO 20230512 WIP
-    # Steer to avoid collision with spherical containment (boids inside sphere).
+    # Steer to avoid collision with spherical containment (assumes boids are
+    # inside sphere). Eventually it would be nice to provide avoidance for
+    # arbitrary triangle meshes via ray tracing (eg see
+    # https://github.com/isl-org/Open3D/issues/6149#issuecomment-1549407410)
     def sphere_avoidance(self, min_dist, radius=sphere_radius, center=Vec3()):
         avoidance = Vec3()
-        path_intersection = self.path_sphere_intersection(radius, center)
-        if not path_intersection == None:
+        path_intersection = Vec3.ray_sphere_intersection(self.position,
+                                                         self.forward,
+                                                         radius, center)
+        if path_intersection:
             # Too far away to care?
             dist_squared = (path_intersection - self.position).length_squared()
             if dist_squared < min_dist ** 2:
@@ -504,5 +460,3 @@ class Boid(Agent):
                     c = Vec3(1, 0, 1) # magenta
                     Draw.add_line_segment(self.position, path_intersection, c)
         return avoidance
-
-    ############################################################################
