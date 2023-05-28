@@ -254,61 +254,6 @@ class Boid(Agent):
                                    else Vec3())
         for boid in Boid.flock:
             boid.draw()
-        Boid.add_everted_sphere(Boid.sphere_radius + 5)
-
-
-
-
-
-    ############################################################################
-    # TODO 20230524 test add_everted_shere()
-    
-    # Maybe this should be moved to Draw?
-    
-    # Prototype construction of an everted sphere to visualize the spherical
-    # containment for this flock simulation. It is based on a 1-to-4 triangle
-    # subdivision applied to an octahedron.
-    grays = []
-    @staticmethod
-    def add_everted_sphere(radius=1, center=Vec3()):
-        gray_index = 0
-        if not Boid.grays:
-            for i in range(29):
-                i = util.frandom2(0.8, 0.90)
-                Boid.grays.append(Vec3(i, i, i))
-        def subdivide_spherical_triangle(a, b, c, levels):
-            if levels <= 0:
-                nonlocal gray_index
-                gray_index = (gray_index + 1) % len(Boid.grays)
-                Draw.add_triangle_single_color(a * radius + center,
-                                               b * radius + center,
-                                               c * radius + center,
-                                               Boid.grays[gray_index])
-            else:
-                ab = util.interpolate(0.5, a, b).normalize()
-                bc = util.interpolate(0.5, b, c).normalize()
-                ca = util.interpolate(0.5, c, a).normalize()
-                subdivide_spherical_triangle(a,  ab, ca, levels - 1)
-                subdivide_spherical_triangle(ab, b,  bc, levels - 1)
-                subdivide_spherical_triangle(ca, bc,  c, levels - 1)
-                subdivide_spherical_triangle(ab, bc, ca, levels - 1)
-
-        a = Vec3(0, 0, 1)
-        b = Vec3(0, 1, 0)
-        c = Vec3(1, 0, 0)
-        for i in range(8):
-            subdivide_spherical_triangle(a, b, c, 2)
-            if i == 3:
-                a = a.rotate_xz_about_y(math.pi)
-                b = b.rotate_xz_about_y(math.pi)
-                c = c.rotate_xz_about_y(math.pi)
-            else:
-                a = a.rotate_xy_about_z(math.pi / 2)
-                b = b.rotate_xy_about_z(math.pi / 2)
-                c = c.rotate_xy_about_z(math.pi / 2)
-
-
-    ############################################################################
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
     # other side of the world, just inside of its antipodal point.
@@ -424,6 +369,13 @@ class Boid(Agent):
         print('    Wheel button + drag        : Translate.')
         print('    Shift + left button + drag : Roll.')
         print('    Wheel                      : Zoom in/out.')
+        print()
+        print('  annotation (in camera tracking mode, “c” to toggle):')
+        print('    red:     separation force.')
+        print('    green:   alignment force.')
+        print('    blue:    cohesion force.')
+        print('    gray:    combined steering force.')
+        print('    magenta: ray for obstacle avoidance.')
         print()
 
 

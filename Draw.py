@@ -45,7 +45,6 @@ class Draw:
     @staticmethod
     def add_triangle_single_color(v1, v2, v3, color):
         for v in [v1, v2, v3]:
-#            v -= Draw.temp_camera_lookat
             v = v - Draw.temp_camera_lookat  # TODO 20230524 temp workaround
             Draw.mesh_vertices.append(v.asarray())
             Draw.mesh_vertex_colors.append(color.asarray())
@@ -116,6 +115,11 @@ class Draw:
         ball.paint_uniform_color([0.1, 0.1, 0.1])
         Draw.vis.add_geometry(ball, False)
 
+        # Create everted containment sphere and add it to scene
+        sphere_radius = 30  ## TODO 20230528 should not be inline constant
+        Draw.sphere_containment = Draw.make_everted_sphere(sphere_radius + 5)
+        Draw.vis.add_geometry(Draw.sphere_containment, False)
+
         # Keep track of time elapsed per frame.
         Draw.frame_start_time = time.time()
 
@@ -155,6 +159,7 @@ class Draw:
         Draw.triangle_mesh.triangles = Draw.mesh_triangles
         Draw.triangle_mesh.vertex_colors = Draw.mesh_vertex_colors
         Draw.vis.update_geometry(Draw.triangle_mesh)
+        Draw.move_everted_sphere()
         # Measure frame duration:
         if not Draw.simulation_paused:
             frame_end_time = time.time()
@@ -176,6 +181,66 @@ class Draw:
         Draw.single_step = False
         return ok_to_run
 
+    # Construct everted sphere as TriangleMesh to visualize the spherical
+    # containment for this flock simulation. It is based on a 1-to-4 triangle
+    # subdivision applied to an octahedron.
+    sphere_containment = None
+    grays = []
+    @staticmethod
+    def make_everted_sphere(radius=1, center=Vec3()):
+        gray_index = 0
+        if not Draw.grays:
+            for i in range(29):
+                i = util.frandom2(0.8, 0.90)
+                Draw.grays.append(Vec3(i, i, i))
+        # Create a mesh from the triangle vertices, indices, and colors.
+        tri_mesh = o3d.geometry.TriangleMesh()
+        def add_tri(v1, v2, v3, color, tri_mesh):
+            for v in [v1, v2, v3]:
+                tri_mesh.vertices.append(v.asarray())
+                tri_mesh.vertex_colors.append(color.asarray())
+            t = len(tri_mesh.triangles) * 3
+            tri_mesh.triangles.append([t, t + 1, t + 2])
+        def subdivide_spherical_triangle(a, b, c, levels):
+            if levels <= 0:
+                nonlocal gray_index
+                gray_index = (gray_index + 1) % len(Draw.grays)
+                add_tri(a * radius + center,
+                                               b * radius + center,
+                                               c * radius + center,
+                                               Draw.grays[gray_index],
+                                               tri_mesh)
+            else:
+                ab = util.interpolate(0.5, a, b).normalize()
+                bc = util.interpolate(0.5, b, c).normalize()
+                ca = util.interpolate(0.5, c, a).normalize()
+                subdivide_spherical_triangle(a,  ab, ca, levels - 1)
+                subdivide_spherical_triangle(ab, b,  bc, levels - 1)
+                subdivide_spherical_triangle(ca, bc,  c, levels - 1)
+                subdivide_spherical_triangle(ab, bc, ca, levels - 1)
+
+        a = Vec3(0, 0, 1)
+        b = Vec3(0, 1, 0)
+        c = Vec3(1, 0, 0)
+        for i in range(8):
+            subdivide_spherical_triangle(a, b, c, 4)
+            if i == 3:
+                a = a.rotate_xz_about_y(math.pi)
+                b = b.rotate_xz_about_y(math.pi)
+                c = c.rotate_xz_about_y(math.pi)
+            else:
+                a = a.rotate_xy_about_z(math.pi / 2)
+                b = b.rotate_xy_about_z(math.pi / 2)
+                c = c.rotate_xy_about_z(math.pi / 2)
+
+        return tri_mesh
+
+    # Translate everted sphere according to Draw.temp_camera_lookat.
+    @staticmethod
+    def move_everted_sphere():
+        t = -Draw.temp_camera_lookat
+        Draw.sphere_containment.translate(t.asarray(), relative=False)
+        Draw.vis.update_geometry(Draw.sphere_containment)
 
 
 ################################################################################

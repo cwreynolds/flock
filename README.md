@@ -35,6 +35,13 @@ You can control the view using Open3D's standard gestures. There are also severa
     Wheel button + drag        : Translate.
     Shift + left button + drag : Roll.
     Wheel                      : Zoom in/out.
+
+  annotation (in camera tracking mode, “c” to toggle):
+    red:     separation force.
+    green:   alignment force.
+    blue:    cohesion force.
+    gray:    combined steering force.
+    magenta: ray for obstacle avoidance.
 ```
 
 ### Known bugs (as of May 14, 2023)
