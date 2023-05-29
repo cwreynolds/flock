@@ -23,12 +23,7 @@ class Draw:
 
     # Initialize new instance.
     def __init__(self):
-        self.temp = 0
-
-    # Class properties to hold raw scene data for Open3D TriangleMesh.
-    mesh_vertices = o3d.utility.Vector3dVector()
-    mesh_triangles = o3d.utility.Vector3iVector()
-    mesh_vertex_colors = o3d.utility.Vector3dVector()
+        pass
     
     # class storage of current visualizer
     vis = None
@@ -37,19 +32,28 @@ class Draw:
     frame_counter = 0
     simulation_paused = False
     single_step = False
+    
+    # This TriangleMesh is refilled each frame with the moving "bodies" of boids
+    # and annotation lines.
+    dynamic_triangle_mesh = o3d.geometry.TriangleMesh()
+    clear_dynamic_mesh = True
 
     # TODO 20230524 since at the moment I cannot animate Open3D's camera, this
     # is a stopgap where all drawing is offset by the given "lookat" position.
     temp_camera_lookat = Vec3()
 
+    # Add a single color triangle to the scene by appending it to the given
+    # TriangleMesh which defaults to Draw.dynamic_triangle_mesh
     @staticmethod
-    def add_triangle_single_color(v1, v2, v3, color):
+    def add_colored_triangle(v1, v2, v3, color, tri_mesh=None):
+        if tri_mesh == None:
+            tri_mesh = Draw.dynamic_triangle_mesh
         for v in [v1, v2, v3]:
             v = v - Draw.temp_camera_lookat  # TODO 20230524 temp workaround
-            Draw.mesh_vertices.append(v.asarray())
-            Draw.mesh_vertex_colors.append(color.asarray())
-        t = len(Draw.mesh_triangles) * 3
-        Draw.mesh_triangles.append([t, t + 1, t + 2])
+            tri_mesh.vertices.append(v.asarray())
+            tri_mesh.vertex_colors.append(color.asarray())
+        t = len(tri_mesh.triangles) * 3
+        tri_mesh.triangles.append([t, t + 1, t + 2])
 
     # TODO 20230430 line drawing support for annotation
     # given all the problems getting LineSets to draw in bright unshaded colors,
@@ -82,18 +86,12 @@ class Draw:
     # Draw quadrilateral as 2 tris. Assumes planar and convex but does not care.
     @staticmethod
     def draw_quadrilateral(v1, v2, v3, v4, color=Vec3()):
-        Draw.add_triangle_single_color(v1, v2, v3, color)
-        Draw.add_triangle_single_color(v1, v3, v4, color)
+        Draw.add_colored_triangle(v1, v2, v3, color)
+        Draw.add_colored_triangle(v1, v3, v4, color)
 
     # Initialize visualizer for simulation run.
     @staticmethod
     def start_visualizer():
-        # Create a mesh from the triangle vertices and indices
-        Draw.triangle_mesh = o3d.geometry.TriangleMesh()
-        Draw.triangle_mesh.vertices = Draw.mesh_vertices
-        Draw.triangle_mesh.triangles = Draw.mesh_triangles
-        Draw.triangle_mesh.vertex_colors = Draw.mesh_vertex_colors
-                
         # Create Visualizer, register key command handlers, create window.
         Draw.vis = o3d.visualization.VisualizerWithKeyCallback()
         Draw.vis.register_key_callback(ord(' '), Draw.toggle_paused_mode)
@@ -105,9 +103,6 @@ class Draw:
         aim_ball = o3d.geometry.TriangleMesh.create_sphere(aim_radius, 10)
         Draw.vis.add_geometry(aim_ball)
         Draw.vis.remove_geometry(aim_ball, False)
-
-        # Add the flock's TriangleMesh to the scene.
-        Draw.vis.add_geometry(Draw.triangle_mesh, False)
         
         # TODO 23230411 temp ball for camera aim reference
         ball = o3d.geometry.TriangleMesh.create_sphere(0.1, 10)
@@ -119,6 +114,9 @@ class Draw:
         sphere_radius = 30  ## TODO 20230528 should not be inline constant
         Draw.sphere_containment = Draw.make_everted_sphere(sphere_radius + 5)
         Draw.vis.add_geometry(Draw.sphere_containment, False)
+
+        # Add to scene dynamic_triangle_mesh with boid "bodies" and annotation.
+        Draw.vis.add_geometry(Draw.dynamic_triangle_mesh, False)
 
         # Keep track of time elapsed per frame.
         Draw.frame_start_time = time.time()
@@ -146,19 +144,15 @@ class Draw:
     # Clear all flock geometry held in a TriangleMesh.
     @staticmethod
     def clear_scene():
-        Draw.mesh_vertices.clear()
-        Draw.mesh_triangles.clear()
-        Draw.mesh_vertex_colors.clear()
+        if Draw.clear_dynamic_mesh:
+            Draw.dynamic_triangle_mesh.clear()
 
     # Update scene geometry. Called once each simulation step (rendered frame).
     # In this application, all geometry is regenerated anew every frame.
     @staticmethod
     def update_scene():
-        # Copy new simulation data into TriangleMesh object.
-        Draw.triangle_mesh.vertices = Draw.mesh_vertices
-        Draw.triangle_mesh.triangles = Draw.mesh_triangles
-        Draw.triangle_mesh.vertex_colors = Draw.mesh_vertex_colors
-        Draw.vis.update_geometry(Draw.triangle_mesh)
+        # Update (GPU reload?) dynamic_triangle_mesh (boid "bodies", annotation)
+        Draw.vis.update_geometry(Draw.dynamic_triangle_mesh)
         Draw.move_everted_sphere()
         # Measure frame duration:
         if not Draw.simulation_paused:
@@ -191,25 +185,19 @@ class Draw:
         gray_index = 0
         if not Draw.grays:
             for i in range(29):
-                i = util.frandom2(0.8, 0.90)
+                i = util.frandom2(0.8, 0.9)
                 Draw.grays.append(Vec3(i, i, i))
         # Create a mesh from the triangle vertices, indices, and colors.
         tri_mesh = o3d.geometry.TriangleMesh()
-        def add_tri(v1, v2, v3, color, tri_mesh):
-            for v in [v1, v2, v3]:
-                tri_mesh.vertices.append(v.asarray())
-                tri_mesh.vertex_colors.append(color.asarray())
-            t = len(tri_mesh.triangles) * 3
-            tri_mesh.triangles.append([t, t + 1, t + 2])
         def subdivide_spherical_triangle(a, b, c, levels):
             if levels <= 0:
                 nonlocal gray_index
                 gray_index = (gray_index + 1) % len(Draw.grays)
-                add_tri(a * radius + center,
-                                               b * radius + center,
-                                               c * radius + center,
-                                               Draw.grays[gray_index],
-                                               tri_mesh)
+                Draw.add_colored_triangle(a * radius + center,
+                                          b * radius + center,
+                                          c * radius + center,
+                                          Draw.grays[gray_index],
+                                          tri_mesh)
             else:
                 ab = util.interpolate(0.5, a, b).normalize()
                 bc = util.interpolate(0.5, b, c).normalize()

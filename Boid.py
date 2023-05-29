@@ -189,7 +189,7 @@ class Boid(Agent):
         wingtip1 = tail - self.side * 0.3
         # Draw the 4 triangles of a boid's body.
         def draw_tri(a, b, c, color):
-            Draw.add_triangle_single_color(a, b, c, color)
+            Draw.add_colored_triangle(a, b, c, color)
         draw_tri(nose, apex,     wingtip1, self.color * 1.00)
         draw_tri(nose, wingtip0, apex,     self.color * 0.95)
         draw_tri(apex, wingtip0, wingtip1, self.color * 0.90)
@@ -213,10 +213,7 @@ class Boid(Agent):
         for i in range(count):
             boid = Boid()
             random_point = Vec3.random_point_in_unit_radius_sphere()
-            
-            # TODO 20230418 for testing, probably too much randomness for real.
             boid.ls.randomize_orientation()
-            
             boid.ls.p = center + (radius * random_point)
             Boid.flock.append(boid)
         # Initialize per-Boid cached_nearest_neighbors. Randomize time stamp.
@@ -235,6 +232,7 @@ class Boid(Agent):
         Draw.vis.register_key_callback(ord('A'), Boid.toggle_annotation)
         Draw.vis.register_key_callback(ord('C'), Boid.toggle_tracking_camera)
         Draw.vis.register_key_callback(ord('W'), Boid.toggle_wrap_vs_avoid)
+        Draw.vis.register_key_callback(ord('E'), Boid.toggle_dynamic_erase)
         Draw.vis.register_key_callback(ord('H'), Boid.print_help)
 
     # Apply steer_to_flock() to each boid in flock.
@@ -309,8 +307,7 @@ class Boid(Agent):
                   ', max_nn_dist=' + str(max_nn_dist)[0:5] +
                   ', sep_fail/boid=' + str(Boid.total_sep_fail  /
                                            len(Boid.flock)) +
-                  ', avoid_fail/boid=' + str(Boid.total_avoid_fail /
-                                             len(Boid.flock)))
+                  ', avoid_fail=' + str(Boid.total_avoid_fail))
 
     # Returns currently selected boid, the one tracked by visualizer's camera.
     @staticmethod
@@ -349,6 +346,15 @@ class Boid(Agent):
     def toggle_wrap_vs_avoid(vis = None):
         Boid.wrap_vs_avoid = not Boid.wrap_vs_avoid
 
+    # Toggle mode for erasing dynamic graphics.
+    @staticmethod
+    def toggle_dynamic_erase(vis = None):
+        Draw.clear_dynamic_mesh = not Draw.clear_dynamic_mesh
+        if Boid.tracking_camera and not Draw.clear_dynamic_mesh:
+            print('!!! "spacetime boid worms" do not work correctly with ' +
+                  'boid tracking camera mode ("C" key). Awaiting fix for ' +
+                  'Open3D bug 6009.')
+
     # Print mini-help on shell.
     @staticmethod
     def print_help(vis = None):
@@ -360,6 +366,7 @@ class Boid(Agent):
         print('    s:     select next boid for camera tracking')
         print('    a:     toggle drawing of steering annotation')
         print('    w:     toggle between sphere wrap-around or avoidance')
+        print('    e:     toggle erase mode (spacetime boid worms)')
         print('    h:     print this message')
         print('    esc:   exit simulation.')
         print()

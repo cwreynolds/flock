@@ -34,18 +34,19 @@ def draw_global_axes():
     Draw.add_line_segment(-z, z, black, radius, sides)
 
 # Flock top level.
-def run_flock(size, initial_diameter):
+def run_flock(size, diameter):
+    radius = diameter / 2
     setup()
     draw = Draw() ## ?? currently unused but should contain draw state
     Draw.start_visualizer()
-    Boid.add_boid_to_flock(size, initial_diameter)
+    Boid.add_boid_to_flock(size, radius)
     Boid.draw_flock()
     draw_global_axes()
     while Draw.still_running():
         if Draw.run_simulation_this_frame():
             Draw.clear_scene()
             Boid.steer_flock(Draw.frame_duration)
-            Boid.sphere_wrap_around_flock(sphere_diameter / 2) # takes radius
+            Boid.sphere_wrap_around_flock(radius)
             Boid.draw_flock()
             draw_global_axes()
             Draw.update_scene()

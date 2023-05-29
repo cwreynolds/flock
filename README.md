@@ -26,6 +26,7 @@ You can control the view using Open3D's standard gestures. There are also severa
     s:     select next boid for camera tracking
     a:     toggle drawing of steering annotation
     w:     toggle between sphere wrap-around or avoidance
+    e:     toggle erase mode (spacetime boid worms)
     h:     print this message
     esc:   exit simulation.
 
