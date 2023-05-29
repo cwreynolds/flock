@@ -64,7 +64,10 @@ class Draw:
     #               this is ever reimplemented using Open3D's LineSet that
     #               adjustment will need to be made explicit.
     @staticmethod
-    def add_line_segment(v1, v2, color=Vec3(), radius = 0.01, sides = 3):
+    def add_line_segment(v1, v2, color=Vec3(),
+                         radius=0.01, sides=3, tri_mesh=None):
+        if tri_mesh == None:
+            tri_mesh = Draw.dynamic_triangle_mesh
         # Vector along the segment, from v1 to v2
         offset = v2 - v1
         distance = offset.length()
@@ -81,13 +84,15 @@ class Draw:
                 b = ls.globalize(radial.rotate_xy_about_z(angle_step * (i+1)))
                 c = b + offset
                 d = a + offset
-                Draw.draw_quadrilateral(d, c, b, a, color)
+                Draw.draw_quadrilateral(d, c, b, a, color, tri_mesh)
 
     # Draw quadrilateral as 2 tris. Assumes planar and convex but does not care.
     @staticmethod
-    def draw_quadrilateral(v1, v2, v3, v4, color=Vec3()):
-        Draw.add_colored_triangle(v1, v2, v3, color)
-        Draw.add_colored_triangle(v1, v3, v4, color)
+    def draw_quadrilateral(v1, v2, v3, v4, color=Vec3(), tri_mesh=None):
+        if tri_mesh == None:
+            tri_mesh = Draw.dynamic_triangle_mesh
+        Draw.add_colored_triangle(v1, v2, v3, color, tri_mesh)
+        Draw.add_colored_triangle(v1, v3, v4, color, tri_mesh)
 
     # Initialize visualizer for simulation run.
     @staticmethod
@@ -110,7 +115,11 @@ class Draw:
         ball.paint_uniform_color([0.1, 0.1, 0.1])
         Draw.vis.add_geometry(ball, False)
 
-        # Create everted containment sphere and add it to scene
+        # Create axes "jack" and add to scene.
+        Draw.axes = Draw.make_global_axes()
+        Draw.vis.add_geometry(Draw.axes, False)
+
+        # Create everted containment sphere and add it to scene.
         sphere_radius = 30  ## TODO 20230528 should not be inline constant
         Draw.sphere_containment = Draw.make_everted_sphere(sphere_radius + 5)
         Draw.vis.add_geometry(Draw.sphere_containment, False)
@@ -153,7 +162,7 @@ class Draw:
     def update_scene():
         # Update (GPU reload?) dynamic_triangle_mesh (boid "bodies", annotation)
         Draw.vis.update_geometry(Draw.dynamic_triangle_mesh)
-        Draw.move_everted_sphere()
+        Draw.adjust_static_scene_objects() # move static objects for lookat hack
         # Measure frame duration:
         if not Draw.simulation_paused:
             frame_end_time = time.time()
@@ -174,6 +183,18 @@ class Draw:
         ok_to_run = Draw.single_step or not Draw.simulation_paused
         Draw.single_step = False
         return ok_to_run
+
+    # Constructs representation of global axes as a TriangleMesh.
+    @staticmethod
+    def make_global_axes(size=10, sides=8, radius=0.05, color=Vec3()):
+        tri_mesh = o3d.geometry.TriangleMesh()
+        x = Vec3(size, 0, 0)
+        y = Vec3(0, size, 0)
+        z = Vec3(0, 0, size)
+        Draw.add_line_segment(-x, x, color, radius, sides, tri_mesh)
+        Draw.add_line_segment(-y, y, color, radius, sides, tri_mesh)
+        Draw.add_line_segment(-z, z, color, radius, sides, tri_mesh)
+        return tri_mesh
 
     # Construct everted sphere as TriangleMesh to visualize the spherical
     # containment for this flock simulation. It is based on a 1-to-4 triangle
@@ -223,13 +244,12 @@ class Draw:
 
         return tri_mesh
 
-    # Translate everted sphere according to Draw.temp_camera_lookat.
+    # Translate "static" scene meshes according to Draw.temp_camera_lookat.
     @staticmethod
-    def move_everted_sphere():
-        t = -Draw.temp_camera_lookat
-        Draw.sphere_containment.translate(t.asarray(), relative=False)
-        Draw.vis.update_geometry(Draw.sphere_containment)
-
+    def adjust_static_scene_objects():
+        for m in [Draw.axes, Draw.sphere_containment]:
+            m.translate((-Draw.temp_camera_lookat).asarray(), relative=False)
+            Draw.vis.update_geometry(m)
 
 ################################################################################
 ##
