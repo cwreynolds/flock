@@ -20,16 +20,18 @@ from Vec3 import Vec3
 import Utilities as util
 import copy
 import math
-import itertools
-from statistics import mean
 
 class Boid(Agent):
 
-    def __init__(self):
+    def __init__(self, flock=None):
         super().__init__()
         self.max_speed = 0.3     # Speed upper limit (m/s)
         self.max_force = 0.6     # Acceleration upper limit (m/s²)
         self.speed = self.max_speed * 0.6
+        self.flock = flock
+        Boid.flock = flock # used for comunication by global GUI
+        self.sphere_radius = 0
+        self.sphere_center = Vec3()
         # Remember steering components for annotation.
         self.last_separation_force = Vec3()
         self.last_alignment_force = Vec3()
@@ -62,9 +64,13 @@ class Boid(Agent):
         # TODO 20230512 WIP
         # Steer to avoid collision with spherical containment (boids inside sphere).
         if not Boid.wrap_vs_avoid:
-            # TODO shouldn't this take `time_step` into account?
-            min_distance = self.max_speed * 50
-            avoidance = self.sphere_avoidance(min_distance)
+            avoidance = Vec3()
+            if time_step > 0:
+                min_time_to_collide = 1.5 # seconds
+                min_distance = self.speed * min_time_to_collide / time_step
+                avoidance = self.sphere_avoidance(min_distance,
+                                                  self.sphere_radius,
+                                                  self.sphere_center)
             # Very ad hoc (also bad for differentiation)
             if avoidance != Vec3():
                 c = Vec3()
@@ -151,7 +157,7 @@ class Boid(Agent):
     def recompute_nearest_neighbors(self, n=7):
         def distance_squared_from_me(boid):
             return (boid.position - self.position).length_squared()
-        neighbors = sorted(Boid.flock, key=distance_squared_from_me)
+        neighbors = sorted(self.flock.boids, key=distance_squared_from_me)
         self.cached_nearest_neighbors = neighbors[1:n+1]
         self.time_since_last_neighbor_refresh = 0
 
@@ -159,7 +165,7 @@ class Boid(Agent):
     def filter_boids_by_distance(self, max_distance, boids=None):
         result = []
         if boids == None:
-            boids = Boid.flock
+            boids = self.flock.boids
         if max_distance == math.inf:
             result = copy.copy(boids)
         else:
@@ -195,8 +201,8 @@ class Boid(Agent):
         draw_tri(apex, wingtip0, wingtip1, self.color * 0.90)
         draw_tri(nose, wingtip1, wingtip0, self.color * 0.70)
         # Annotation for steering forces
-        dist_select = (Boid.selected_boid().position - self.position).length()
-        if (Boid.enable_annotation and Boid.tracking_camera and dist_select < 3):
+        distance = (self.flock.selected_boid().position - self.position).length()
+        if (Boid.enable_annotation and Boid.tracking_camera and distance < 3):
             def relative_force_annotation(offset, color):
                 Draw.add_line_segment(center, center + offset, color)
             relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
@@ -204,26 +210,6 @@ class Boid(Agent):
             relative_force_annotation(self.last_cohesion_force, Vec3(0, 0, 1))
             relative_force_annotation(self.last_combined_steering,
                                       Vec3(0.5, 0.5, 0.5))
-
-    # Make a new Boid, add it to flock. Defaults to one Boid at origin. Can add
-    # "count" Boids, randomly placed within a sphere with "radius" and "center".
-    # TODO Maybe this should have a name more like create_flock() ?
-    @staticmethod
-    def add_boid_to_flock(count=1, radius=0, center=Vec3()):
-        for i in range(count):
-            boid = Boid()
-            random_point = Vec3.random_point_in_unit_radius_sphere()
-            boid.ls.randomize_orientation()
-            boid.ls.p = center + (radius * random_point)
-            Boid.flock.append(boid)
-        # Initialize per-Boid cached_nearest_neighbors. Randomize time stamp.
-        for b in Boid.flock:
-            b.recompute_nearest_neighbors()
-            t = util.frandom01() * b.neighbor_refresh_rate
-            b.time_since_last_neighbor_refresh = t
-        # TODO modularity issue: other key callbacks are in Draw which
-        #      does not import Boid. Maybe they should all be defined here?
-        Boid.register_single_key_commands()
 
     # Register single key commands with the Open3D visualizer GUI.
     @staticmethod
@@ -235,92 +221,12 @@ class Boid(Agent):
         Draw.vis.register_key_callback(ord('E'), Boid.toggle_dynamic_erase)
         Draw.vis.register_key_callback(ord('H'), Boid.print_help)
 
-    # Apply steer_to_flock() to each boid in flock.
-    @staticmethod
-    def steer_flock(time_step):
-        for boid in Boid.flock:
-            boid.steer_to_flock(time_step)
-
-    # Draw each boid in flock.
-    @staticmethod
-    def draw_flock():
-        # TODO 20230526 after meeting with Gilbert and Matt, take a few days
-        # to clean up. When this flag -- "Boid.handles_lookat" -- is true,
-        # things work as before, otherwise "Draw handles lookat"
-        Draw.temp_camera_lookat = (Boid.selected_boid().position
-                                   if Boid.tracking_camera
-                                   else Vec3())
-        for boid in Boid.flock:
-            boid.draw()
-
-    # When a Boid gets more than "radius" from the origin, teleport it to the
-    # other side of the world, just inside of its antipodal point.
-    @staticmethod
-    def sphere_wrap_around_flock(radius):
-        # TODO totally ad hoc, catch any escapees in avoidance mode.
-        if not Boid.wrap_vs_avoid:
-            radius += 5
-        for boid in Boid.flock:
-            bp = boid.position
-            distance_from_origin = bp.length()
-            if distance_from_origin > radius:
-                new_position = (-bp).normalize() * radius * 0.95
-                boid.ls.p = new_position
-                if not Boid.wrap_vs_avoid:
-                    Boid.total_avoid_fail += 1
-
-    # Counter for any boid tunneling through the spherical containment.
-    total_avoid_fail = 0
-    total_sep_fail = 0
-
-    # Calculate and log various statistics for flock.
-    @staticmethod
-    def log_stats_for_flock():
-        if Draw.frame_counter % 100 == 0 and not Draw.simulation_paused:
-            average_speed = mean([b.speed for b in Boid.flock])
-            # Loop over all unique pairs of distinct boids: ab==ba, not aa
-            min_sep = math.inf
-            ave_sep = 0
-            pair_count = 0
-            # Via https://stackoverflow.com/a/942551/1991373
-            for (p, q) in itertools.combinations(Boid.flock, 2):
-                dist = (p.position - q.position).length()
-                if min_sep > dist:
-                    min_sep = dist
-                ave_sep += dist
-                pair_count += 1
-                if dist < 2:
-                    Boid.total_sep_fail += 1
-            ave_sep /= pair_count
-            #
-            max_nn_dist = 0
-            for b in Boid.flock:
-                n = b.cached_nearest_neighbors[0]
-                dist = (b.position - n.position).length()
-                if max_nn_dist < dist:
-                    max_nn_dist = dist
-            print(str(Draw.frame_counter) +
-                  ' fps=' + str(int(1 / Draw.frame_duration)) +
-                  ', ave_speed=' + str(average_speed)[0:5] +
-                  ', min_sep=' + str(min_sep)[0:5] +
-                  ', ave_sep=' + str(ave_sep)[0:5] +
-                  ', max_nn_dist=' + str(max_nn_dist)[0:5] +
-                  ', sep_fail/boid=' + str(Boid.total_sep_fail  /
-                                           len(Boid.flock)) +
-                  ', avoid_fail=' + str(Boid.total_avoid_fail))
-
-    # Returns currently selected boid, the one tracked by visualizer's camera.
-    @staticmethod
-    def selected_boid():
-        return Boid.flock[Boid.selected_boid_index]
-    
     # Select the "next" boid. This gets bound to the "s" key in the interactive
     # visualizer (hence the ignored "vis" arg). So typing s s s can be used to
     # cycle through the boids of a flock.
     @staticmethod
     def select_next_boid(vis = None):
-        Boid.selected_boid_index += 1
-        Boid.selected_boid_index = Boid.selected_boid_index % len(Boid.flock)
+        Boid.flock.select_next_boid()
 
     # Global animation switch.
     enable_annotation = True
@@ -385,25 +291,11 @@ class Boid(Agent):
         print('    magenta: ray for obstacle avoidance.')
         print()
 
-
-    # List of Boids in a flock
-    # TODO 20230409 assumes there is only one flock. If more are
-    #               ever needed there should be a Flock class.
-    flock = []
-    
-    # The selected boid
-    selected_boid_index = 0
-
-    # TODO 20230512 WIP for prototyping, duplicate constants from flock.py
-    # For initial placement and wrap-around or avoidance.
-    sphere_diameter = 60
-    sphere_radius = sphere_diameter / 2
-
     # Steer to avoid collision with spherical containment (assumes boids are
     # inside sphere). Eventually it would be nice to provide avoidance for
     # arbitrary triangle meshes via ray tracing (eg see
     # https://github.com/isl-org/Open3D/issues/6149#issuecomment-1549407410)
-    def sphere_avoidance(self, min_dist, radius=sphere_radius, center=Vec3()):
+    def sphere_avoidance(self, min_dist, radius, center):
         avoidance = Vec3()
         path_intersection = Vec3.ray_sphere_intersection(self.position,
                                                          self.forward,
@@ -416,6 +308,6 @@ class Boid(Agent):
                 pure_steering = toward_center.perpendicular_component(self.forward)
                 avoidance = pure_steering.normalize()
                 if Boid.enable_annotation:
-                    c = Vec3(1, 0, 1) # magenta
+                    c = Vec3(0.9, 0.5, 0.9) # magenta
                     Draw.add_line_segment(self.position, path_intersection, c)
         return avoidance
