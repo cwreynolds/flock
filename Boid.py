@@ -4,11 +4,9 @@
 #
 # Boid class, specialization of Agent.
 #
-# Each boid in a flock is an instance of this class. The flock is represented as
-# a class level attribute, the list Boid.flock. This class also contains several
-# static methods related to the flock, such as Boid.draw_flock(). It might make
-# sense for "flock" to be its own class. Certainly so if we ever need more than
-# one.
+# A Flock is a collection of Boid instances. Boid.fly_with_flock() is its main
+# method. Boids are nromally created by a Flock. Each boid is given a link back
+# to its Flock, for finding neighbors, etc.
 #
 # MIT License -- Copyright © 2023 Craig Reynolds
 #
@@ -29,7 +27,6 @@ class Boid(Agent):
         self.max_force = 0.6     # Acceleration upper limit (m/s²)
         self.speed = self.max_speed * 0.6
         self.flock = flock
-        Boid.flock = flock # used for comunication by global GUI
         self.sphere_radius = 0
         self.sphere_center = Vec3()
         # Remember steering components for annotation.
@@ -48,12 +45,9 @@ class Boid(Agent):
         # Temp? Pick a random midrange boid color.
         self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
 
-    # Basic flocking behavior.
-    # TODO 20230427 Hmmm this steer_to_...() function has no return value but
-    # does have side effect. Whereas the other steer_to_...() functions DO have
-    # return values and no side effect. Maybe it should be called something else
-    # like fly() or fly_with_flock() ?
-    def steer_to_flock(self, time_step):
+    # Basic flocking behavior. Performs one simulation step (an animation frame)
+    # for one boid in a flock.
+    def fly_with_flock(self, time_step):
         neighbors = self.nearest_neighbors(time_step)
         f = self.forward * 0.1
         s = 0.8 * self.steer_to_separate(neighbors)
@@ -63,7 +57,7 @@ class Boid(Agent):
 
         # TODO 20230512 WIP
         # Steer to avoid collision with spherical containment (boids inside sphere).
-        if not Boid.wrap_vs_avoid:
+        if not self.flock.wrap_vs_avoid:
             avoidance = Vec3()
             if time_step > 0:
                 min_time_to_collide = 1.5 # seconds
@@ -201,8 +195,10 @@ class Boid(Agent):
         draw_tri(apex, wingtip0, wingtip1, self.color * 0.90)
         draw_tri(nose, wingtip1, wingtip0, self.color * 0.70)
         # Annotation for steering forces
-        distance = (self.flock.selected_boid().position - self.position).length()
-        if (Boid.enable_annotation and Boid.tracking_camera and distance < 3):
+        annote = (self.flock.enable_annotation and
+                  self.flock.tracking_camera and
+                  (self.flock.selected_boid().position - center).length() < 3)
+        if annote:
             def relative_force_annotation(offset, color):
                 Draw.add_line_segment(center, center + offset, color)
             relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
@@ -210,86 +206,6 @@ class Boid(Agent):
             relative_force_annotation(self.last_cohesion_force, Vec3(0, 0, 1))
             relative_force_annotation(self.last_combined_steering,
                                       Vec3(0.5, 0.5, 0.5))
-
-    # Register single key commands with the Open3D visualizer GUI.
-    @staticmethod
-    def register_single_key_commands():
-        Draw.vis.register_key_callback(ord('S'), Boid.select_next_boid)
-        Draw.vis.register_key_callback(ord('A'), Boid.toggle_annotation)
-        Draw.vis.register_key_callback(ord('C'), Boid.toggle_tracking_camera)
-        Draw.vis.register_key_callback(ord('W'), Boid.toggle_wrap_vs_avoid)
-        Draw.vis.register_key_callback(ord('E'), Boid.toggle_dynamic_erase)
-        Draw.vis.register_key_callback(ord('H'), Boid.print_help)
-
-    # Select the "next" boid. This gets bound to the "s" key in the interactive
-    # visualizer (hence the ignored "vis" arg). So typing s s s can be used to
-    # cycle through the boids of a flock.
-    @staticmethod
-    def select_next_boid(vis = None):
-        Boid.flock.select_next_boid()
-
-    # Global animation switch.
-    enable_annotation = True
-
-    # Toggle global animation switch.
-    @staticmethod
-    def toggle_annotation(vis = None):
-        Boid.enable_annotation = not Boid.enable_annotation
-    
-    # Global tracking camera mode.
-    tracking_camera = False
-
-    # Toggle global tracking camera mode.
-    @staticmethod
-    def toggle_tracking_camera(vis = None):
-        Boid.tracking_camera = not Boid.tracking_camera
-
-    # Global mode for sphere-wrap-around (True) versus sphere-avoidance (false).
-    wrap_vs_avoid = False
-
-    # Toggle mode for sphere-wrap-around versus sphere-avoidance.
-    @staticmethod
-    def toggle_wrap_vs_avoid(vis = None):
-        Boid.wrap_vs_avoid = not Boid.wrap_vs_avoid
-
-    # Toggle mode for erasing dynamic graphics.
-    @staticmethod
-    def toggle_dynamic_erase(vis = None):
-        Draw.clear_dynamic_mesh = not Draw.clear_dynamic_mesh
-        if Boid.tracking_camera and not Draw.clear_dynamic_mesh:
-            print('!!! "spacetime boid worms" do not work correctly with ' +
-                  'boid tracking camera mode ("C" key). Awaiting fix for ' +
-                  'Open3D bug 6009.')
-
-    # Print mini-help on shell.
-    @staticmethod
-    def print_help(vis = None):
-        print()
-        print('  flock single key commands:')
-        print('    space: toggle simulation run/pause')
-        print('    1:     single simulation step, then pause')
-        print('    c:     toggle camera between static and boid tracking')
-        print('    s:     select next boid for camera tracking')
-        print('    a:     toggle drawing of steering annotation')
-        print('    w:     toggle between sphere wrap-around or avoidance')
-        print('    e:     toggle erase mode (spacetime boid worms)')
-        print('    h:     print this message')
-        print('    esc:   exit simulation.')
-        print()
-        print('  mouse view controls:')
-        print('    Left button + drag         : Rotate.')
-        print('    Ctrl + left button + drag  : Translate.')
-        print('    Wheel button + drag        : Translate.')
-        print('    Shift + left button + drag : Roll.')
-        print('    Wheel                      : Zoom in/out.')
-        print()
-        print('  annotation (in camera tracking mode, “c” to toggle):')
-        print('    red:     separation force.')
-        print('    green:   alignment force.')
-        print('    blue:    cohesion force.')
-        print('    gray:    combined steering force.')
-        print('    magenta: ray for obstacle avoidance.')
-        print()
 
     # Steer to avoid collision with spherical containment (assumes boids are
     # inside sphere). Eventually it would be nice to provide avoidance for
@@ -307,7 +223,7 @@ class Boid(Agent):
                 toward_center = center - path_intersection
                 pure_steering = toward_center.perpendicular_component(self.forward)
                 avoidance = pure_steering.normalize()
-                if Boid.enable_annotation:
+                if self.flock.enable_annotation:
                     c = Vec3(0.9, 0.5, 0.9) # magenta
                     Draw.add_line_segment(self.position, path_intersection, c)
         return avoidance

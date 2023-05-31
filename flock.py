@@ -8,9 +8,9 @@
 # the flock model (Boid, Vec3, draw) defined as classes in other files. But the
 # Boid class started to accumulate "static" methods related to a flock of boids
 # (make_flock, run_flock, draw_flock). I decided to formalize that with a Flock
-# class, defined here.
+# class, defined here. This also handles mode settings from the Open3D GUI.
 #
-# This file continues to function as a top level script running:  Flock().run()
+# This file a]still functions as a top level script which does:  Flock().run()
 #
 # MIT License -- Copyright © 2023 Craig Reynolds
 #
@@ -38,18 +38,23 @@ class Flock:
         self.selected_boid_index = 0
         self.total_avoid_fail = 0  # count pass through spherical containment.
         self.total_sep_fail = 0    # separation fail: a pair of boids touch.
+        self.enable_annotation = True
+        self.tracking_camera = False
+        self.wrap_vs_avoid = False
+        Flock.most_recent = self  # used for handlers in global GUI.
         self.setup()
 
     # Run boids simulation. (Currently runs until stopped by user.)
     def run(self):
         draw = Draw() ## ?? currently unused but should contain draw state
         Draw.start_visualizer(self.sphere_radius, self.sphere_center)
+        self.register_single_key_commands() # For Open3D visualizer GUI.
         self.make_boids(self.boid_count, self.sphere_radius, self.sphere_center)
         self.draw()
         while Draw.still_running():
             if Draw.run_simulation_this_frame():
                 Draw.clear_scene()
-                self.steer_flock(Draw.frame_duration)
+                self.fly_flock(Draw.frame_duration)
                 self.sphere_wrap_around()
                 self.draw()
                 Draw.update_scene()
@@ -73,34 +78,19 @@ class Flock:
             b.recompute_nearest_neighbors()
             t = util.frandom01() * b.neighbor_refresh_rate
             b.time_since_last_neighbor_refresh = t
-        # TODO modularity issue: other key callbacks are in Draw which
-        #      does not import Boid. Maybe they should all be defined here?
-        Boid.register_single_key_commands()
-
-    # Returns currently selected boid, the one that the tracking camera
-    # tracks, for which steering force annotation is shown.
-    def selected_boid(self):
-        return self.boids[self.selected_boid_index]
-
-    # Select the "next" boid. This gets bound to the "s" key in the interactive
-    # visualizer (hence the ignored "vis" arg). So typing s s s can be used to
-    # cycle through the boids of a flock.
-    def select_next_boid(self):
-        self.selected_boid_index = ((self.selected_boid_index + 1) %
-                                    len(self.boids))
 
     # Draw each boid in flock.
     def draw(self):
         Draw.temp_camera_lookat = (self.selected_boid().position
-                                   if Boid.tracking_camera
+                                   if self.tracking_camera
                                    else Vec3())
         for boid in self.boids:
             boid.draw()
 
-    # Apply steer_to_flock() to each boid in flock.
-    def steer_flock(self, time_step):
+    # Apply fly_with_flock() to each boid in flock.
+    def fly_flock(self, time_step):
         for boid in self.boids:
-            boid.steer_to_flock(time_step)
+            boid.fly_with_flock(time_step)
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
     # other side of the world, just inside of its antipodal point.
@@ -108,7 +98,7 @@ class Flock:
         radius = self.sphere_radius
         center = self.sphere_center
         # TODO totally ad hoc, catch any escapees in avoidance mode.
-        if not Boid.wrap_vs_avoid:
+        if not self.wrap_vs_avoid:
             radius += 5
         for boid in self.boids:
             bp = boid.position
@@ -116,7 +106,7 @@ class Flock:
             if distance_from_center > radius:
                 new_position = (center - bp).normalize() * radius * 0.95
                 boid.ls.p = new_position
-                if not Boid.wrap_vs_avoid:
+                if not self.wrap_vs_avoid:
                     self.total_avoid_fail += 1
 
     # Calculate and log various statistics for flock.
@@ -153,6 +143,87 @@ class Flock:
                   ', sep_fail/boid=' + str(self.total_sep_fail  /
                                            len(self.boids)) +
                   ', avoid_fail=' + str(self.total_avoid_fail))
+
+    # Register single key commands with the Open3D visualizer GUI.
+    def register_single_key_commands(self):
+        Draw.vis.register_key_callback(ord('S'), Flock.select_next_boid)
+        Draw.vis.register_key_callback(ord('A'), Flock.toggle_annotation)
+        Draw.vis.register_key_callback(ord('C'), Flock.toggle_tracking_camera)
+        Draw.vis.register_key_callback(ord('W'), Flock.toggle_wrap_vs_avoid)
+        Draw.vis.register_key_callback(ord('E'), Flock.toggle_dynamic_erase)
+        Draw.vis.register_key_callback(ord('H'), Flock.print_help)
+
+    # Returns currently selected boid, the one that the tracking camera
+    # tracks, for which steering force annotation is shown.
+    def selected_boid(self):
+        return self.boids[self.selected_boid_index]
+
+    # Select the "next" boid. This gets bound to the "s" key in the interactive
+    # visualizer. So typing s s s will cycle through the boids of a flock.
+    def select_next_boid(self):
+        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self.selected_boid_index = ((self.selected_boid_index + 1) %
+                                    len(self.boids))
+
+    # Toggle drawing of annotation (lines to represent vectors) in the GUI.
+    def toggle_annotation(self):
+        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self.enable_annotation = not self.enable_annotation
+
+    # Toggle between static camera and boid-tracking camera mode.
+    def toggle_tracking_camera(self):
+        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self.tracking_camera = not self.tracking_camera
+
+    # Toggle mode for sphere-wrap-around versus sphere-avoidance.
+    def toggle_wrap_vs_avoid(self):
+        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self.wrap_vs_avoid = not self.wrap_vs_avoid
+
+    # Toggle mode for erasing dynamic graphics ("spacetime boid worms").
+    def toggle_dynamic_erase(self):
+        self = Flock.use_most_recent_instance_if_not_flock(self)
+        Draw.clear_dynamic_mesh = not Draw.clear_dynamic_mesh
+        if self.tracking_camera and not self.clear_dynamic_mesh:
+            print('!!! "spacetime boid worms" do not work correctly with ' +
+                  'boid tracking camera mode ("C" key). Awaiting fix for ' +
+                  'Open3D bug 6009.')
+
+    # Print mini-help on shell.
+    def print_help(self):
+        self = Flock.use_most_recent_instance_if_not_flock(self)
+        print()
+        print('  flock single key commands:')
+        print('    space: toggle simulation run/pause')
+        print('    1:     single simulation step, then pause')
+        print('    c:     toggle camera between static and boid tracking')
+        print('    s:     select next boid for camera tracking')
+        print('    a:     toggle drawing of steering annotation')
+        print('    w:     toggle between sphere wrap-around or avoidance')
+        print('    e:     toggle erase mode (spacetime boid worms)')
+        print('    h:     print this message')
+        print('    esc:   exit simulation.')
+        print()
+        print('  mouse view controls:')
+        print('    Left button + drag         : Rotate.')
+        print('    Ctrl + left button + drag  : Translate.')
+        print('    Wheel button + drag        : Translate.')
+        print('    Shift + left button + drag : Roll.')
+        print('    Wheel                      : Zoom in/out.')
+        print()
+        print('  annotation (in camera tracking mode, “c” to toggle):')
+        print('    red:     separation force.')
+        print('    green:   alignment force.')
+        print('    blue:    cohesion force.')
+        print('    gray:    combined steering force.')
+        print('    magenta: ray for obstacle avoidance.')
+        print()
+
+    # Allows writing global key command handlers as instance methods. If the
+    # "self" value is not a Flock instance, this substitutes the most recently
+    # created Flock instance.
+    def use_most_recent_instance_if_not_flock(self):
+        return self if isinstance(self, Flock) else Flock.most_recent
 
     # Perform "before simulation" tasks: log versions, run unit tests.
     def setup(self):
