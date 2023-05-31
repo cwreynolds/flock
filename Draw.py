@@ -96,7 +96,7 @@ class Draw:
 
     # Initialize visualizer for simulation run.
     @staticmethod
-    def start_visualizer():
+    def start_visualizer(containment_radius, containment_center):
         # Create Visualizer, register key command handlers, create window.
         Draw.vis = o3d.visualization.VisualizerWithKeyCallback()
         Draw.vis.register_key_callback(ord(' '), Draw.toggle_paused_mode)
@@ -120,8 +120,8 @@ class Draw:
         Draw.vis.add_geometry(Draw.axes, False)
 
         # Create everted containment sphere and add it to scene.
-        sphere_radius = 30  ## TODO 20230528 should not be inline constant
-        Draw.sphere_containment = Draw.make_everted_sphere(sphere_radius + 5)
+        Draw.sphere_containment = Draw.make_everted_sphere(containment_radius+5,
+                                                           containment_center)
         Draw.vis.add_geometry(Draw.sphere_containment, False)
 
         # Add to scene dynamic_triangle_mesh with boid "bodies" and annotation.

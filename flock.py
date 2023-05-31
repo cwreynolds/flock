@@ -37,36 +37,24 @@ class Flock:
         self.boids = []
         self.selected_boid_index = 0
         self.total_avoid_fail = 0  # count pass through spherical containment.
-        self.total_sep_fail = 0     # separation fail: pair of boids touch.
+        self.total_sep_fail = 0    # separation fail: a pair of boids touch.
         self.setup()
 
     # Run boids simulation. (Currently runs until stopped by user.)
     def run(self):
         draw = Draw() ## ?? currently unused but should contain draw state
-        Draw.start_visualizer()
+        Draw.start_visualizer(self.sphere_radius, self.sphere_center)
         self.make_boids(self.boid_count, self.sphere_radius, self.sphere_center)
         self.draw()
         while Draw.still_running():
             if Draw.run_simulation_this_frame():
                 Draw.clear_scene()
                 self.steer_flock(Draw.frame_duration)
-                self.sphere_wrap_around(self.sphere_radius)
+                self.sphere_wrap_around()
                 self.draw()
                 Draw.update_scene()
                 self.log_stats()
         Draw.close_visualizer()
-
-    # Perform "before simulation" tasks: log versions, run unit tests.
-    def setup(self):
-        # Log versions.
-        print('Python', sys.version)
-        print('Open3D', o3d.__version__)
-        # Run unit tests.
-        Vec3.unit_test()
-        LocalSpace.unit_test()
-        Agent.unit_test()
-        util.unit_test()
-        print('All unit tests OK.')
 
     # Populate this flock by creating "count" boids with a uniformly distributed
     # random positions inside a sphere with the given "radius" and "center".
@@ -116,15 +104,17 @@ class Flock:
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
     # other side of the world, just inside of its antipodal point.
-    def sphere_wrap_around(self, radius):
+    def sphere_wrap_around(self):
+        radius = self.sphere_radius
+        center = self.sphere_center
         # TODO totally ad hoc, catch any escapees in avoidance mode.
         if not Boid.wrap_vs_avoid:
             radius += 5
         for boid in self.boids:
             bp = boid.position
-            distance_from_origin = bp.length()
-            if distance_from_origin > radius:
-                new_position = (-bp).normalize() * radius * 0.95
+            distance_from_center = (bp - center).length()
+            if distance_from_center > radius:
+                new_position = (center - bp).normalize() * radius * 0.95
                 boid.ls.p = new_position
                 if not Boid.wrap_vs_avoid:
                     self.total_avoid_fail += 1
@@ -164,8 +154,24 @@ class Flock:
                                            len(self.boids)) +
                   ', avoid_fail=' + str(self.total_avoid_fail))
 
+    # Perform "before simulation" tasks: log versions, run unit tests.
+    def setup(self):
+        # Log versions.
+        print('Python', sys.version)
+        print('Open3D', o3d.__version__)
+        # Run unit tests.
+        Vec3.unit_test()
+        LocalSpace.unit_test()
+        Agent.unit_test()
+        util.unit_test()
+        print('All unit tests OK.')
+
 
 if __name__ == "__main__":
-    # TODO 20230530 runs OK (but slow) except containment sphere is still 60.
-#    Flock(400, 100).run()
+
+    # TODO 20230530 runs OK (if slow) but something wrong in center offset case
+#    Flock(400).run()                        # OK
+#    Flock(400, 100).run()                   # OK
+#    Flock(400, 100, Vec3(100, 0, 0)).run()  # containment sphere still at origin
+    
     Flock().run()
