@@ -31,13 +31,15 @@ from LocalSpace import LocalSpace
 class Flock:
 
     def __init__(self, boid_count=200, sphere_diameter=60, sphere_center=Vec3()):
-        self.boid_count = boid_count
-        self.sphere_radius = sphere_diameter / 2
-        self.sphere_center = sphere_center
-        self.boids = []
-        self.selected_boid_index = 0
-        self.total_avoid_fail = 0  # count pass through spherical containment.
-        self.total_sep_fail = 0    # separation fail: a pair of boids touch.
+        self.boid_count = boid_count              # Number of boids in Flock.
+        self.sphere_radius = sphere_diameter / 2  # Radius of boid containment.
+        self.sphere_center = sphere_center        # Center of boid containment.
+        self.boids = []                # List of boids in flock.
+        self.selected_boid_index = 0   # Index of boid tracked by camera.
+        self.total_avoid_fail = 0      # count pass through containment sphere.
+        self.total_sep_fail = 0        # separation fail: a pair of boids touch.
+        self.simulation_paused = False # Simulation stopped, display continues.
+        self.single_step = False       # perform one simulation step then pause.
         self.enable_annotation = True
         self.tracking_camera = False
         self.wrap_vs_avoid = False
@@ -52,7 +54,7 @@ class Flock:
         self.make_boids(self.boid_count, self.sphere_radius, self.sphere_center)
         self.draw()
         while Draw.still_running():
-            if Draw.run_simulation_this_frame():
+            if self.run_simulation_this_frame():
                 Draw.clear_scene()
                 self.fly_flock(Draw.frame_duration)
                 self.sphere_wrap_around()
@@ -61,7 +63,7 @@ class Flock:
                 self.log_stats()
         Draw.close_visualizer()
 
-    # Populate this flock by creating "count" boids with a uniformly distributed
+    # Populate this flock by creating "count" boids with uniformly distributed
     # random positions inside a sphere with the given "radius" and "center".
     # Each boid has a uniformly distributed random orientation.
     def make_boids(self, count, radius, center):
@@ -70,8 +72,8 @@ class Flock:
             boid.sphere_radius = radius
             boid.sphere_center = center
             boid.ls.randomize_orientation()
-            random_point = Vec3.random_point_in_unit_radius_sphere()
-            boid.ls.p = center + (radius * random_point)
+            boid.ls.p = (center + (radius *
+                                   Vec3.random_point_in_unit_radius_sphere()))
             self.boids.append(boid)
         # Initialize per-Boid cached_nearest_neighbors. Randomize time stamp.
         for b in self.boids:
@@ -111,41 +113,56 @@ class Flock:
 
     # Calculate and log various statistics for flock.
     def log_stats(self):
-        if Draw.frame_counter % 100 == 0 and not Draw.simulation_paused:
-            average_speed = mean([b.speed for b in self.boids])
-            # Loop over all unique pairs of distinct boids: ab==ba, not aa
-            min_sep = math.inf
-            ave_sep = 0
-            pair_count = 0
-            # Via https://stackoverflow.com/a/942551/1991373
-            for (p, q) in itertools.combinations(self.boids, 2):
-                dist = (p.position - q.position).length()
-                if min_sep > dist:
-                    min_sep = dist
-                ave_sep += dist
-                pair_count += 1
-                if dist < 2:
-                    self.total_sep_fail += 1
-            ave_sep /= pair_count
-            #
-            max_nn_dist = 0
-            for b in self.boids:
-                n = b.cached_nearest_neighbors[0]
-                dist = (b.position - n.position).length()
-                if max_nn_dist < dist:
-                    max_nn_dist = dist
-            print(str(Draw.frame_counter) +
-                  ' fps=' + str(int(1 / Draw.frame_duration)) +
-                  ', ave_speed=' + str(average_speed)[0:5] +
-                  ', min_sep=' + str(min_sep)[0:5] +
-                  ', ave_sep=' + str(ave_sep)[0:5] +
-                  ', max_nn_dist=' + str(max_nn_dist)[0:5] +
-                  ', sep_fail/boid=' + str(self.total_sep_fail  /
-                                           len(self.boids)) +
-                  ', avoid_fail=' + str(self.total_avoid_fail))
+        if not self.simulation_paused:
+            Draw.measure_frame_duration()
+            if Draw.frame_counter % 100 == 0:
+                average_speed = mean([b.speed for b in self.boids])
+                # Loop over all unique pairs of distinct boids: ab==ba, not aa
+                min_sep = math.inf
+                ave_sep = 0
+                pair_count = 0
+                # Via https://stackoverflow.com/a/942551/1991373
+                for (p, q) in itertools.combinations(self.boids, 2):
+                    dist = (p.position - q.position).length()
+                    if min_sep > dist:
+                        min_sep = dist
+                    ave_sep += dist
+                    pair_count += 1
+                    if dist < 2:
+                        self.total_sep_fail += 1
+                ave_sep /= pair_count
+                #
+                max_nn_dist = 0
+                for b in self.boids:
+                    n = b.cached_nearest_neighbors[0]
+                    dist = (b.position - n.position).length()
+                    if max_nn_dist < dist:
+                        max_nn_dist = dist
+                print(str(Draw.frame_counter) +
+                      ' fps=' + str(int(1 / Draw.frame_duration)) +
+                      ', ave_speed=' + str(average_speed)[0:5] +
+                      ', min_sep=' + str(min_sep)[0:5] +
+                      ', ave_sep=' + str(ave_sep)[0:5] +
+                      ', max_nn_dist=' + str(max_nn_dist)[0:5] +
+                      ', sep_fail/boid=' + (str(self.total_sep_fail /
+                                               len(self.boids)) + '00')[0:5] +
+                      ', avoid_fail=' + str(self.total_avoid_fail))
+
+    # Based on pause/play and single step. Called once per frame from main loop.
+    def run_simulation_this_frame(self):
+        ok_to_run = self.single_step or not self.simulation_paused
+        self.single_step = False
+        return ok_to_run
+
+    # Returns currently selected boid, the one that the tracking camera
+    # tracks, for which steering force annotation is shown.
+    def selected_boid(self):
+        return self.boids[self.selected_boid_index]
 
     # Register single key commands with the Open3D visualizer GUI.
     def register_single_key_commands(self):
+        Draw.vis.register_key_callback(ord(' '), Flock.toggle_paused_mode)
+        Draw.vis.register_key_callback(ord('1'), Flock.set_single_step_mode)
         Draw.vis.register_key_callback(ord('S'), Flock.select_next_boid)
         Draw.vis.register_key_callback(ord('A'), Flock.toggle_annotation)
         Draw.vis.register_key_callback(ord('C'), Flock.toggle_tracking_camera)
@@ -153,10 +170,16 @@ class Flock:
         Draw.vis.register_key_callback(ord('E'), Flock.toggle_dynamic_erase)
         Draw.vis.register_key_callback(ord('H'), Flock.print_help)
 
-    # Returns currently selected boid, the one that the tracking camera
-    # tracks, for which steering force annotation is shown.
-    def selected_boid(self):
-        return self.boids[self.selected_boid_index]
+    # Toggle simulation pause mode.
+    def toggle_paused_mode(self):
+        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self.simulation_paused = not self.simulation_paused
+
+    # Take single simulation step then enter pause mode.
+    def set_single_step_mode(self):
+        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self.single_step = True
+        self.simulation_paused = True
 
     # Select the "next" boid. This gets bound to the "s" key in the interactive
     # visualizer. So typing s s s will cycle through the boids of a flock.

@@ -30,8 +30,6 @@ class Draw:
     frame_start_time = 0
     frame_duration = 0
     frame_counter = 0
-    simulation_paused = False
-    single_step = False
     
     # This TriangleMesh is refilled each frame with the moving "bodies" of boids
     # and annotation lines.
@@ -99,8 +97,6 @@ class Draw:
     def start_visualizer(containment_radius, containment_center):
         # Create Visualizer, register key command handlers, create window.
         Draw.vis = o3d.visualization.VisualizerWithKeyCallback()
-        Draw.vis.register_key_callback(ord(' '), Draw.toggle_paused_mode)
-        Draw.vis.register_key_callback(ord('1'), Draw.set_single_step_mode)
         Draw.vis.create_window()
 
         # Init view: add (then remove) sphere, aim_radius controls distance.
@@ -130,17 +126,6 @@ class Draw:
         # Keep track of time elapsed per frame.
         Draw.frame_start_time = time.time()
 
-    # Modify global modes, used as handlers for single key commands.
-    @staticmethod
-    def toggle_paused_mode(vis):
-        Draw.simulation_paused = not Draw.simulation_paused
-        return False
-    @staticmethod
-    def set_single_step_mode(vis):
-        Draw.single_step = True
-        Draw.simulation_paused = True
-        return False
-
     # Close visualizer after simulation run.
     @staticmethod
     def close_visualizer():
@@ -157,18 +142,20 @@ class Draw:
             Draw.dynamic_triangle_mesh.clear()
 
     # Update scene geometry. Called once each simulation step (rendered frame).
-    # In this application, all geometry is regenerated anew every frame.
+    # In this application, most geometry is regenerated anew every frame.
     @staticmethod
     def update_scene():
         # Update (GPU reload?) dynamic_triangle_mesh (boid "bodies", annotation)
         Draw.vis.update_geometry(Draw.dynamic_triangle_mesh)
         Draw.adjust_static_scene_objects() # move static objects for lookat hack
-        # Measure frame duration:
-        if not Draw.simulation_paused:
-            frame_end_time = time.time()
-            Draw.frame_duration = frame_end_time - Draw.frame_start_time
-            Draw.frame_start_time = frame_end_time
-            Draw.frame_counter += 1
+
+    # Measure how much wall clock time has elapsed for this simulation step.
+    @staticmethod
+    def measure_frame_duration():
+        frame_end_time = time.time()
+        Draw.frame_duration = frame_end_time - Draw.frame_start_time
+        Draw.frame_start_time = frame_end_time
+        Draw.frame_counter += 1
 
     # TODO 20230419 but does not work because "Visualizer.get_view_control()
     #               gives a copy." https://github.com/isl-org/Open3D/issues/6009
@@ -176,13 +163,6 @@ class Draw:
     def update_camera(lookat):
         camera = Draw.vis.get_view_control()
         camera.set_lookat(lookat)
-
-    # Handle pause/play and singel step. Called once per frame from main loop.
-    @staticmethod
-    def run_simulation_this_frame():
-        ok_to_run = Draw.single_step or not Draw.simulation_paused
-        Draw.single_step = False
-        return ok_to_run
 
     # Constructs representation of global axes as a TriangleMesh.
     @staticmethod

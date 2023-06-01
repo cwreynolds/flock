@@ -5,8 +5,8 @@
 # Boid class, specialization of Agent.
 #
 # A Flock is a collection of Boid instances. Boid.fly_with_flock() is its main
-# method. Boids are nromally created by a Flock. Each boid is given a link back
-# to its Flock, for finding neighbors, etc.
+# entry point. Boids are normally created by a Flock. Each Boid is created with
+# a link back to its Flock, for finding neighbors, etc.
 #
 # MIT License -- Copyright © 2023 Craig Reynolds
 #
