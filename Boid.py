@@ -37,7 +37,7 @@ class Boid(Agent):
         # For wander_steer()
         self.wander_state = Vec3()
         # Low pass filter for steering vector.
-        self.smoothed_steering_state = Vec3()
+        self.steer_memory = Vec3()
         # Cache of nearest neighbors, updating "ocasionally".
         self.cached_nearest_neighbors = []
         self.neighbor_refresh_rate = 0.5  # seconds between neighbor refresh
@@ -45,38 +45,36 @@ class Boid(Agent):
         # Temp? Pick a random midrange boid color.
         self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
 
+    # Basic flocking behavior.
+    # Performs one simulation step (animation frame) for one boid in a flock.
+    def fly_with_flock(self, time_step):
+        self.steer(self.steer_to_flock(time_step), time_step)
+
     # Basic flocking behavior. Performs one simulation step (an animation frame)
     # for one boid in a flock.
-    def fly_with_flock(self, time_step):
+    def steer_to_flock(self, time_step):
         neighbors = self.nearest_neighbors(time_step)
-        f = self.forward * 0.1
-        s = 0.8 * self.steer_to_separate(neighbors)
-        a = 0.5 * self.steer_to_align(neighbors)
+        f = 0.1 * self.forward
+        s = 1.0 * self.steer_to_separate(neighbors)
+        a = 0.3 * self.steer_to_align(neighbors)
         c = 0.6 * self.steer_to_cohere(neighbors)
-        combined_steering = f + s + a + c
+        o = 1.0 * self.steer_to_avoid(time_step)
+        combined_steering = self.smoothed_steering(f + s + a + c + o)
+        self.annotation(s, a, c, o, combined_steering)
+        return combined_steering
 
-        # TODO 20230512 WIP
-        # Steer to avoid collision with spherical containment (boids inside sphere).
-        if not self.flock.wrap_vs_avoid:
-            avoidance = Vec3()
-            if time_step > 0:
-                min_time_to_collide = 1.5 # seconds
-                min_distance = self.speed * min_time_to_collide / time_step
-                avoidance = self.sphere_avoidance(min_distance,
-                                                  self.sphere_radius,
-                                                  self.sphere_center)
-            # Very ad hoc (also bad for differentiation)
-            if avoidance != Vec3():
-                c = Vec3()
-                combined_steering = f + s + a + avoidance
+    # Steering force component to avoid obstacles.
+    # (Currently the single obstacle is a spherical containment.)
+    def steer_to_avoid(self, time_step):
+        avoidance = Vec3()
+        if time_step > 0 and not self.flock.wrap_vs_avoid:
+            min_time_to_collide = 1.5 # seconds
+            min_distance = self.speed * min_time_to_collide / time_step
+            avoidance = self.sphere_avoidance(min_distance,
+                                              self.sphere_radius,
+                                              self.sphere_center)
+        return avoidance
 
-        combined_steering = self.smoothed_steering(combined_steering)
-        self.last_separation_force = s
-        self.last_alignment_force = a
-        self.last_cohesion_force = c
-        self.last_combined_steering = combined_steering
-        self.steer(combined_steering, time_step)
-        
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
         # TODO experimental, ignore neighbors more than 3 units away.
@@ -127,11 +125,11 @@ class Boid(Agent):
             direction = direction.normalize()
         return direction
 
-    # TODO 20230408 implement RandomSequence equvilent
-    def wander_steer(self, rs):
+    # Wander aimlessly via slowly varying steering force. Currently unused.
+    def steer_to_wander(self, rs):
         # Brownian-like motion of point on unit radius sphere
         rate = 0.4;
-        # self.wander_state += rs.randomUnitVector() * rate
+        # TODO 20230408 implement RandomSequence equivalent for determinism.
         self.wander_state += util.random_unit_vector() * rate
         self.wander_state.normalize()
         # wander_state moved 2 units forward, then normalized by 1/3, so forward
@@ -170,14 +168,13 @@ class Boid(Agent):
             result = list(filter(near_enough, boids))
         return result
 
-    # Ad hoc low-pass filtering of steering force. Blends this step's raw
-    # steering into a per-boid accumulator, then returns that smoothed value
-    # to use for steering the boid this simulation step.
-    def smoothed_steering(self, raw_steering):
-        # TODO completely ad hoc smoothing "rate".
-        s = util.interpolate(0.8, raw_steering, self.smoothed_steering_state)
-        self.smoothed_steering_state = s
-        return s
+    # Ad hoc low-pass filtering of steering force. Blends this step's newly
+    # determined "raw" steering into a per-boid accumulator, then returns that
+    # smoothed value to use for actually steering the boid this simulation step.
+    def smoothed_steering(self, steer):
+        rate = 0.85  # Completely ad hoc smoothing "rate".
+        self.steer_memory = util.interpolate(rate, steer, self.steer_memory)
+        return self.steer_memory
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
@@ -194,18 +191,19 @@ class Boid(Agent):
         draw_tri(nose, wingtip0, apex,     self.color * 0.95)
         draw_tri(apex, wingtip0, wingtip1, self.color * 0.90)
         draw_tri(nose, wingtip1, wingtip0, self.color * 0.70)
-        # Annotation for steering forces
-        annote = (self.flock.enable_annotation and
-                  self.flock.tracking_camera and
-                  (self.flock.selected_boid().position - center).length() < 3)
-        if annote:
-            def relative_force_annotation(offset, color):
-                Draw.add_line_segment(center, center + offset, color)
-            relative_force_annotation(self.last_separation_force, Vec3(1, 0, 0))
-            relative_force_annotation(self.last_alignment_force, Vec3(0, 1, 0))
-            relative_force_annotation(self.last_cohesion_force, Vec3(0, 0, 1))
-            relative_force_annotation(self.last_combined_steering,
-                                      Vec3(0.5, 0.5, 0.5))
+
+    # Draw optional annotation of this Boid's current steering forces
+    def annotation(self, separation, alignment, cohesion, avoidance, combined):
+        center = self.position
+        def relative_force_annotation(offset, color):
+            Draw.add_line_segment(center, center + offset, color)
+        if (self.flock.enable_annotation and self.flock.tracking_camera and
+                   (self.flock.selected_boid().position - center).length() < 3):
+            relative_force_annotation(separation, Vec3(1, 0, 0))
+            relative_force_annotation(alignment,  Vec3(0, 1, 0))
+            relative_force_annotation(cohesion,   Vec3(0, 0, 1))
+            relative_force_annotation(avoidance,  Vec3(1, 0, 1))
+            relative_force_annotation(combined,   Vec3(0.5, 0.5, 0.5))
 
     # Steer to avoid collision with spherical containment (assumes boids are
     # inside sphere). Eventually it would be nice to provide avoidance for
@@ -224,6 +222,6 @@ class Boid(Agent):
                 pure_steering = toward_center.perpendicular_component(self.forward)
                 avoidance = pure_steering.normalize()
                 if self.flock.enable_annotation:
-                    c = Vec3(0.9, 0.5, 0.9) # magenta
+                    c = Vec3(0.9, 0.7, 0.9) # magenta
                     Draw.add_line_segment(self.position, path_intersection, c)
         return avoidance
