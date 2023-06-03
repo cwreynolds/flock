@@ -29,11 +29,6 @@ class Boid(Agent):
         self.flock = flock
         self.sphere_radius = 0
         self.sphere_center = Vec3()
-        # Remember steering components for annotation.
-        self.last_separation_force = Vec3()
-        self.last_alignment_force = Vec3()
-        self.last_cohesion_force = Vec3()
-        self.last_combined_steering = Vec3()
         # For wander_steer()
         self.wander_state = Vec3()
         # Low pass filter for steering vector.
@@ -62,18 +57,6 @@ class Boid(Agent):
         combined_steering = self.smoothed_steering(f + s + a + c + o)
         self.annotation(s, a, c, o, combined_steering)
         return combined_steering
-
-    # Steering force component to avoid obstacles.
-    # (Currently the single obstacle is a spherical containment.)
-    def steer_to_avoid(self, time_step):
-        avoidance = Vec3()
-        if time_step > 0 and not self.flock.wrap_vs_avoid:
-            min_time_to_collide = 1.5 # seconds
-            min_distance = self.speed * min_time_to_collide / time_step
-            avoidance = self.sphere_avoidance(min_distance,
-                                              self.sphere_radius,
-                                              self.sphere_center)
-        return avoidance
 
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
@@ -124,6 +107,18 @@ class Boid(Agent):
             # "Pure" steering component: perpendicular to forward.
             direction = direction.normalize()
         return direction
+
+    # Steering force component to avoid obstacles.
+    # (Currently the single obstacle is a spherical containment.)
+    def steer_to_avoid(self, time_step):
+        avoidance = Vec3()
+        if time_step > 0 and not self.flock.wrap_vs_avoid:
+            min_time_to_collide = 1.5 # seconds
+            min_distance = self.speed * min_time_to_collide / time_step
+            avoidance = self.sphere_avoidance(min_distance,
+                                              self.sphere_radius,
+                                              self.sphere_center)
+        return avoidance
 
     # Wander aimlessly via slowly varying steering force. Currently unused.
     def steer_to_wander(self, rs):
@@ -215,7 +210,7 @@ class Boid(Agent):
                                                          self.forward,
                                                          radius, center)
         if path_intersection:
-            # Too far away to care?
+            # Near enough to require avoidance steering?
             dist_squared = (path_intersection - self.position).length_squared()
             if dist_squared < min_dist ** 2:
                 toward_center = center - path_intersection

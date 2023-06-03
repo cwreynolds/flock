@@ -187,6 +187,7 @@ class Flock:
         self = Flock.use_most_recent_instance_if_not_flock(self)
         self.selected_boid_index = ((self.selected_boid_index + 1) %
                                     len(self.boids))
+        self.single_step_if_paused()
 
     # Toggle drawing of annotation (lines to represent vectors) in the GUI.
     def toggle_annotation(self):
@@ -197,6 +198,7 @@ class Flock:
     def toggle_tracking_camera(self):
         self = Flock.use_most_recent_instance_if_not_flock(self)
         self.tracking_camera = not self.tracking_camera
+        self.single_step_if_paused()
 
     # Toggle mode for sphere-wrap-around versus sphere-avoidance.
     def toggle_wrap_vs_avoid(self):
@@ -247,6 +249,14 @@ class Flock:
     # created Flock instance.
     def use_most_recent_instance_if_not_flock(self):
         return self if isinstance(self, Flock) else Flock.most_recent
+
+    # Some mode-change key commands need a redraw to show their effect. Ideally
+    # it would do just a redraw without simulation, but that turned out to be a
+    # little more complicated (since Boid annotation state is not saved) so this
+    # is good enough.
+    def single_step_if_paused(self):
+        if self.simulation_paused:
+            self.set_single_step_mode()
 
     # Perform "before simulation" tasks: log versions, run unit tests.
     def setup(self):
