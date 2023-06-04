@@ -49,7 +49,7 @@ class Boid(Agent):
     # for one boid in a flock.
     def steer_to_flock(self, time_step):
         neighbors = self.nearest_neighbors(time_step)
-        f = 0.1 * self.forward
+        f = 0.2 * self.forward
         s = 1.0 * self.steer_to_separate(neighbors)
         a = 0.3 * self.steer_to_align(neighbors)
         c = 0.6 * self.steer_to_cohere(neighbors)
