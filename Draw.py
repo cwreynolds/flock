@@ -95,7 +95,7 @@ class Draw:
     # Initialize visualizer for simulation run.
     @staticmethod
     def start_visualizer(containment_radius, containment_center):
-        # Create Visualizer, register key command handlers, create window.
+        # Create Visualizer and a window for it.
         Draw.vis = o3d.visualization.VisualizerWithKeyCallback()
         Draw.vis.create_window()
 
@@ -130,10 +130,6 @@ class Draw:
     @staticmethod
     def close_visualizer():
         Draw.vis.destroy_window()
-
-    @staticmethod
-    def still_running():
-        return Draw.vis.poll_events()
 
     # Clear all flock geometry held in a TriangleMesh.
     @staticmethod

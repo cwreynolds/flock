@@ -30,10 +30,15 @@ from LocalSpace import LocalSpace
 
 class Flock:
 
-    def __init__(self, boid_count=200, sphere_diameter=60, sphere_center=Vec3()):
+    def __init__(self,
+                 boid_count=200,
+                 sphere_diameter=60,
+                 sphere_center=Vec3(),
+                 max_simulation_steps = math.inf):
         self.boid_count = boid_count              # Number of boids in Flock.
         self.sphere_radius = sphere_diameter / 2  # Radius of boid containment.
         self.sphere_center = sphere_center        # Center of boid containment.
+        self.max_simulation_steps = max_simulation_steps # exit after n frames.
         self.boids = []                # List of boids in flock.
         self.selected_boid_index = 0   # Index of boid tracked by camera.
         self.total_avoid_fail = 0      # count pass through containment sphere.
@@ -43,17 +48,17 @@ class Flock:
         self.enable_annotation = True
         self.tracking_camera = False
         self.wrap_vs_avoid = False
-        Flock.most_recent = self  # used for handlers in global GUI.
         self.setup()
 
     # Run boids simulation. (Currently runs until stopped by user.)
     def run(self):
         draw = Draw() ## ?? currently unused but should contain draw state
         Draw.start_visualizer(self.sphere_radius, self.sphere_center)
+        Flock.vis_to_flock_dict[Draw.vis] = self  # Store pairing (key handlers)
         self.register_single_key_commands() # For Open3D visualizer GUI.
         self.make_boids(self.boid_count, self.sphere_radius, self.sphere_center)
         self.draw()
-        while Draw.still_running():
+        while self.still_running():
             if self.run_simulation_this_frame():
                 Draw.clear_scene()
                 self.fly_flock(Draw.frame_duration)
@@ -62,6 +67,7 @@ class Flock:
                 Draw.update_scene()
                 self.log_stats()
         Draw.close_visualizer()
+        print('Exit at step:', Draw.frame_counter)
 
     # Populate this flock by creating "count" boids with uniformly distributed
     # random positions inside a sphere with the given "radius" and "center".
@@ -172,51 +178,51 @@ class Flock:
 
     # Toggle simulation pause mode.
     def toggle_paused_mode(self):
-        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self = Flock.convert_to_flock(self)
         self.simulation_paused = not self.simulation_paused
 
     # Take single simulation step then enter pause mode.
     def set_single_step_mode(self):
-        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self = Flock.convert_to_flock(self)
         self.single_step = True
         self.simulation_paused = True
 
     # Select the "next" boid. This gets bound to the "s" key in the interactive
     # visualizer. So typing s s s will cycle through the boids of a flock.
     def select_next_boid(self):
-        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self = Flock.convert_to_flock(self)
         self.selected_boid_index = ((self.selected_boid_index + 1) %
                                     len(self.boids))
         self.single_step_if_paused()
 
     # Toggle drawing of annotation (lines to represent vectors) in the GUI.
     def toggle_annotation(self):
-        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self = Flock.convert_to_flock(self)
         self.enable_annotation = not self.enable_annotation
 
     # Toggle between static camera and boid-tracking camera mode.
     def toggle_tracking_camera(self):
-        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self = Flock.convert_to_flock(self)
         self.tracking_camera = not self.tracking_camera
         self.single_step_if_paused()
 
     # Toggle mode for sphere-wrap-around versus sphere-avoidance.
     def toggle_wrap_vs_avoid(self):
-        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self = Flock.convert_to_flock(self)
         self.wrap_vs_avoid = not self.wrap_vs_avoid
 
     # Toggle mode for erasing dynamic graphics ("spacetime boid worms").
     def toggle_dynamic_erase(self):
-        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self = Flock.convert_to_flock(self)
         Draw.clear_dynamic_mesh = not Draw.clear_dynamic_mesh
-        if self.tracking_camera and not self.clear_dynamic_mesh:
+        if self.tracking_camera and not Draw.clear_dynamic_mesh:
             print('!!! "spacetime boid worms" do not work correctly with ' +
                   'boid tracking camera mode ("C" key). Awaiting fix for ' +
                   'Open3D bug 6009.')
 
     # Print mini-help on shell.
     def print_help(self):
-        self = Flock.use_most_recent_instance_if_not_flock(self)
+        self = Flock.convert_to_flock(self)
         print()
         print('  flock single key commands:')
         print('    space: toggle simulation run/pause')
@@ -244,11 +250,15 @@ class Flock:
         print('    magenta: ray for obstacle avoidance.')
         print()
 
-    # Allows writing global key command handlers as instance methods. If the
-    # "self" value is not a Flock instance, this substitutes the most recently
-    # created Flock instance.
-    def use_most_recent_instance_if_not_flock(self):
-        return self if isinstance(self, Flock) else Flock.most_recent
+    # Allows writing global key command handlers as methods on a Flock instance.
+    # If the given "self" value is not a Flock instance, this assumes it it a
+    # Visualizer instance (passed to key handlers) and looks up the Flock
+    # instance associated with that Vis. (Normally only one of each exists.)
+    vis_to_flock_dict = dict()
+    def convert_to_flock(self):
+        if not isinstance(self, Flock):
+            self = Flock.vis_to_flock_dict[self]
+        return self
 
     # Some mode-change key commands need a redraw to show their effect. Ideally
     # it would do just a redraw without simulation, but that turned out to be a
@@ -257,6 +267,11 @@ class Flock:
     def single_step_if_paused(self):
         if self.simulation_paused:
             self.set_single_step_mode()
+
+    # Simulation continues running until this returns False.
+    def still_running(self):
+        return (Draw.vis.poll_events() and
+                Draw.frame_counter < self.max_simulation_steps)
 
     # Perform "before simulation" tasks: log versions, run unit tests.
     def setup(self):
@@ -278,4 +293,5 @@ if __name__ == "__main__":
 #    Flock(400, 100).run()                   # OK
 #    Flock(400, 100, Vec3(100, 0, 0)).run()  # containment sphere still at origin
     
+#    Flock(200, 60, Vec3(), 200).run()  # Test max_simulation_steps
     Flock().run()
