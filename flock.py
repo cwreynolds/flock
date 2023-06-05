@@ -54,7 +54,7 @@ class Flock:
     def run(self):
         draw = Draw() ## ?? currently unused but should contain draw state
         Draw.start_visualizer(self.sphere_radius, self.sphere_center)
-        Flock.vis_to_flock_dict[Draw.vis] = self  # Store pairing (key handlers)
+        Flock.vis_pairs.add_pair(Draw.vis, self)  # Pairing for key handlers.
         self.register_single_key_commands() # For Open3D visualizer GUI.
         self.make_boids(self.boid_count, self.sphere_radius, self.sphere_center)
         self.draw()
@@ -254,10 +254,10 @@ class Flock:
     # If the given "self" value is not a Flock instance, this assumes it it a
     # Visualizer instance (passed to key handlers) and looks up the Flock
     # instance associated with that Vis. (Normally only one of each exists.)
-    vis_to_flock_dict = dict()
+    vis_pairs = util.Pairings()
     def convert_to_flock(self):
         if not isinstance(self, Flock):
-            self = Flock.vis_to_flock_dict[self]
+            self = Flock.vis_pairs.get_peer(self)
         return self
 
     # Some mode-change key commands need a redraw to show their effect. Ideally

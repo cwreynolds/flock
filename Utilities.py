@@ -65,6 +65,17 @@ def rehash32bits(int32):
     int32 = ones & ((int32 ^ 0xb55a4f09) ^ (int32 >> 16))
     return int32
 
+# Object to collect pairs, then to look up an item's counterpart. Used here to
+# associate instances of Flock and Visualizer (can't subclass: Open3D bug #572).
+class Pairings:
+    def __init__(self):
+        self.dict = {}
+    def add_pair(self, a, b):
+        self.dict[a] = b
+        self.dict[b] = a
+    def get_peer(self, x):
+        return self.dict[x]
+
 @staticmethod
 def unit_test():
     assert clip01(1.5) == 1
@@ -83,4 +94,11 @@ def unit_test():
     assert within_epsilon(-1.1, -1.2, 0.2)
     assert not within_epsilon(1.1, 1.2, 0.01)
     assert rehash32bits(2653567485) == 1574776808
+    p = Pairings()
+    p.add_pair(1.23, 'a')
+    p.add_pair('foo', (1,2))
+    assert p.get_peer(1.23) == 'a'
+    assert p.get_peer('a') == 1.23
+    assert p.get_peer('foo') == (1,2)
+    assert p.get_peer((1,2)) == 'foo'
     # TODO 20230409 test random-number utilities, later RandomSequence.
