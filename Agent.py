@@ -68,6 +68,9 @@ class Agent:
         return self.forward * self.speed
 
     # Advance Agent state forward by time_step while applying steering_force.
+    # (TODO the use of Vec3.truncate() below (like util.clip() in update_...())
+    # is likely a problem for automatic differentiation. Perhaps we need another
+    # way to accomplish that, like say velocity dependent wind resistance?)
     def steer(self, steering_force, time_step):
         assert isinstance(steering_force, Vec3), "steering_force must be Vec3."
         # Limit steering force by max force (simulates power or thrust limit).
@@ -77,6 +80,7 @@ class Agent:
         # Update dynamic and gerometric state...
         self.update_speed_and_local_space(acceleration * time_step);
 
+    # Applies given acceleration to Agent's dynamic and geometric state.
     def update_speed_and_local_space(self, acceleration):
         new_velocity = self.velocity + acceleration
         new_speed = new_velocity.length()
@@ -86,16 +90,21 @@ class Agent:
         self.speed = util.clip(new_speed, 0, self.max_speed)
         new_forward = new_velocity / new_speed;
         
-        # Update  geometric state when moving.
+        # Update geometric state when moving.
         if (self.speed > 0):
             # Reorthonormalize to corrospond to new_forward
-            new_side = self.up.cross(new_forward).normalize()
+            ref_up = self.up_reference(acceleration)
+            new_side = ref_up.cross(new_forward).normalize()
             new_up = new_forward.cross(new_side).normalize()
             new_position = self.position + (new_forward * self.speed)
             # Set new geometric state.
             self.ls.set_state_ijkp(new_side, new_up, new_forward, new_position)
             # Assert that the LocalSpace is rigid, unscaled, and orthogonal
             assert self.ls.is_orthonormal()
+
+    # Very basic roll control: use global UP as reference up
+    def up_reference(self, acceleration):
+        return Vec3(0, 1, 0)
 
     def __str__(self):
         return self.name + ': speed=' + str(self.speed) + str(self.ls)
