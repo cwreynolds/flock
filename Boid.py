@@ -33,6 +33,8 @@ class Boid(Agent):
         self.wander_state = Vec3()
         # Low pass filter for steering vector.
         self.steer_memory = Vec3()
+        # Low pass filter for roll control ("up" target).
+        self.up_memory = Vec3(0, 1, 0)
         # Cache of nearest neighbors, updating "ocasionally".
         self.cached_nearest_neighbors = []
         self.neighbor_refresh_rate = 0.5  # seconds between neighbor refresh
@@ -220,3 +222,13 @@ class Boid(Agent):
                     c = Vec3(0.9, 0.7, 0.9) # magenta
                     Draw.add_line_segment(self.position, path_intersection, c)
         return avoidance
+
+    # Bird-like roll control: blends vector toward path curvature center with
+    # global up. Overrides method in base class Agent
+    def up_reference(self, acceleration):
+        if acceleration.length_squared() > 0:
+            acceleration = acceleration.normalize()
+        new_up = util.interpolate(0.8, Vec3(0, 1, 0), acceleration)
+        self.up_memory = util.interpolate(0.98, new_up, self.up_memory)
+        self.up_memory = self.up_memory.normalize()
+        return self.up_memory

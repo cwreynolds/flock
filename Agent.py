@@ -92,15 +92,17 @@ class Agent:
         
         # Update geometric state when moving.
         if (self.speed > 0):
-            # Reorthonormalize to corrospond to new_forward
+            # Reorthonormalize to correspond to new_forward
             ref_up = self.up_reference(acceleration)
             new_side = ref_up.cross(new_forward).normalize()
             new_up = new_forward.cross(new_side).normalize()
             new_position = self.position + (new_forward * self.speed)
             # Set new geometric state.
-            self.ls.set_state_ijkp(new_side, new_up, new_forward, new_position)
-            # Assert that the LocalSpace is rigid, unscaled, and orthogonal
-            assert self.ls.is_orthonormal()
+            new_ls = LocalSpace(new_side, new_up, new_forward, new_position)
+            if new_ls.is_orthonormal():
+                self.ls = new_ls
+            else:
+                print('Ignore bad ls in Agent.update_speed_and_local_space')
 
     # Very basic roll control: use global UP as reference up
     def up_reference(self, acceleration):

@@ -289,9 +289,10 @@ class Flock:
 if __name__ == "__main__":
 
     # TODO 20230530 runs OK (if slow) but something wrong in center offset case
-#    Flock(400).run()                        # OK
-#    Flock(400, 100).run()                   # OK
-#    Flock(400, 100, Vec3(100, 0, 0)).run()  # containment sphere still at origin
-    
-#    Flock(200, 60, Vec3(), 200).run()  # Test max_simulation_steps
+#    Flock(400).run()                       # OK
+#    Flock(400, 100).run()                  # OK
+#    Flock(400, 100, Vec3(100, 0, 0)).run() # containment sphere still at origin
+#
+#    Flock(200, 60, Vec3(), 200).run()      # Test max_simulation_steps
+
     Flock().run()
