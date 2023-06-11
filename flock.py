@@ -53,6 +53,7 @@ class Flock:
     # Run boids simulation. (Currently runs until stopped by user.)
     def run(self):
         draw = Draw() ## ?? currently unused but should contain draw state
+        Draw.set_random_seeds()
         Draw.start_visualizer(self.sphere_radius, self.sphere_center)
         Flock.vis_pairs.add_pair(Draw.vis, self)  # Pairing for key handlers.
         self.register_single_key_commands() # For Open3D visualizer GUI.

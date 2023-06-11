@@ -227,6 +227,19 @@ class Draw:
             m.translate((-Draw.temp_camera_lookat).asarray(), relative=False)
             Draw.vis.update_geometry(m)
 
+    # Set random seeds for Python, Numpy, and Open3D, all to the same value.
+    # Note that, as a practical matter, while this will produce consistant
+    # starting positions/orientation, there is no long term determinism because
+    # each simulation time step is measured by "wallclock time." Were absolute
+    # repeatabilioty needed we need a mode to clock the simulation with a
+    # constant time step. (That was actually how it worked in the earliest
+    # versions, but I "fixed" it to adjust for variable computation time.)
+    def set_random_seeds(seed=1234567890):
+        random.seed(seed)
+        np.random.seed(seed)
+        o3d.utility.random.seed(seed)
+
+
 ################################################################################
 ##
 ## TODO 20230419 random test code, to be removed eventually.
