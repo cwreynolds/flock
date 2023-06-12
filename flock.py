@@ -10,7 +10,7 @@
 # (make_flock, run_flock, draw_flock). I decided to formalize that with a Flock
 # class, defined here. This also handles mode settings from the Open3D GUI.
 #
-# This file a]still functions as a top level script which does:  Flock().run()
+# This file still functions as a top level script which does:  Flock().run()
 #
 # MIT License -- Copyright © 2023 Craig Reynolds
 #
@@ -48,6 +48,7 @@ class Flock:
         self.enable_annotation = True
         self.tracking_camera = False
         self.wrap_vs_avoid = False
+        self.fixed_time_step = False   # as-fast-as-possible versus 60 Hz.
         self.setup()
 
     # Run boids simulation. (Currently runs until stopped by user.)
@@ -62,7 +63,8 @@ class Flock:
         while self.still_running():
             if self.run_simulation_this_frame():
                 Draw.clear_scene()
-                self.fly_flock(Draw.frame_duration)
+                self.fly_flock(1/60 if self.fixed_time_step
+                                    else Draw.frame_duration)
                 self.sphere_wrap_around()
                 self.draw()
                 Draw.update_scene()
@@ -146,7 +148,8 @@ class Flock:
                     if max_nn_dist < dist:
                         max_nn_dist = dist
                 print(str(Draw.frame_counter) +
-                      ' fps=' + str(int(1 / Draw.frame_duration)) +
+                      ' fps=' + str(60 if self.fixed_time_step
+                                       else int(1 / Draw.frame_duration)) +
                       ', ave_speed=' + str(average_speed)[0:5] +
                       ', min_sep=' + str(min_sep)[0:5] +
                       ', ave_sep=' + str(ave_sep)[0:5] +
@@ -175,6 +178,7 @@ class Flock:
         Draw.vis.register_key_callback(ord('C'), Flock.toggle_tracking_camera)
         Draw.vis.register_key_callback(ord('W'), Flock.toggle_wrap_vs_avoid)
         Draw.vis.register_key_callback(ord('E'), Flock.toggle_dynamic_erase)
+        Draw.vis.register_key_callback(ord('F'), Flock.toggle_fixed_time_step)
         Draw.vis.register_key_callback(ord('H'), Flock.print_help)
 
     # Toggle simulation pause mode.
@@ -221,6 +225,11 @@ class Flock:
                   'boid tracking camera mode ("C" key). Awaiting fix for ' +
                   'Open3D bug 6009.')
 
+    # Toggle between realtime/as-fast-as-possible versus fixed time step of 1/60
+    def toggle_fixed_time_step(self):
+        self = Flock.convert_to_flock(self)
+        self.fixed_time_step = not self.fixed_time_step
+
     # Print mini-help on shell.
     def print_help(self):
         self = Flock.convert_to_flock(self)
@@ -233,6 +242,7 @@ class Flock:
         print('    a:     toggle drawing of steering annotation')
         print('    w:     toggle between sphere wrap-around or avoidance')
         print('    e:     toggle erase mode (spacetime boid worms)')
+        print('    f:     toggle realtime versus fixed time step of 1/60sec')
         print('    h:     print this message')
         print('    esc:   exit simulation.')
         print()
