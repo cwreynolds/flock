@@ -49,6 +49,8 @@ class Flock:
         self.tracking_camera = False
         self.wrap_vs_avoid = False
         self.fixed_time_step = False   # as-fast-as-possible versus 60 Hz.
+        self.fixed_fps = 60
+        self.fps = util.Blender()
         self.setup()
 
     # Run boids simulation. (Currently runs until stopped by user.)
@@ -63,12 +65,13 @@ class Flock:
         while self.still_running():
             if self.run_simulation_this_frame():
                 Draw.clear_scene()
-                self.fly_flock(1/60 if self.fixed_time_step
-                                    else Draw.frame_duration)
+                self.fly_flock(1 / self.fixed_fps if self.fixed_time_step
+                               else Draw.frame_duration)
                 self.sphere_wrap_around()
                 self.draw()
                 Draw.update_scene()
                 self.log_stats()
+                self.update_fps()
         Draw.close_visualizer()
         print('Exit at step:', Draw.frame_counter)
 
@@ -148,8 +151,7 @@ class Flock:
                     if max_nn_dist < dist:
                         max_nn_dist = dist
                 print(str(Draw.frame_counter) +
-                      ' fps=' + str(60 if self.fixed_time_step
-                                       else int(1 / Draw.frame_duration)) +
+                      ' fps=' + str(round(self.fps.value)) +
                       ', ave_speed=' + str(average_speed)[0:5] +
                       ', min_sep=' + str(min_sep)[0:5] +
                       ', ave_sep=' + str(ave_sep)[0:5] +
@@ -157,6 +159,12 @@ class Flock:
                       ', sep_fail/boid=' + (str(self.total_sep_fail /
                                                len(self.boids)) + '00')[0:5] +
                       ', avoid_fail=' + str(self.total_avoid_fail))
+
+    # Keep track of a smoothed (LPF) version of frames per second metric.
+    def update_fps(self):
+        self.fps.blend(self.fixed_fps if self.fixed_time_step
+                                      else int(1 / Draw.frame_duration),
+                       0.95)
 
     # Based on pause/play and single step. Called once per frame from main loop.
     def run_simulation_this_frame(self):

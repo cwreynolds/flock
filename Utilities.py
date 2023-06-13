@@ -76,6 +76,16 @@ class Pairings:
     def get_peer(self, x):
         return self.dict[x]
 
+# Utility for blending per-step values into accumulators for low pass filtering.
+class Blender:
+    def __init__(self, initial_value=None):
+        self.value = initial_value
+    # Rate controls "how smooth". Typically around 0.8-0.9.
+    # Where 1 is infinite smoothing, 0 is no smoothing.
+    def blend(self, new_value, rate):
+        self.value = (new_value if self.value == None
+                                else interpolate(rate, new_value, self.value))
+
 @staticmethod
 def unit_test():
     assert clip01(1.5) == 1
