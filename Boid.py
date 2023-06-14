@@ -32,9 +32,9 @@ class Boid(Agent):
         # For wander_steer()
         self.wander_state = Vec3()
         # Low pass filter for steering vector.
-        self.steer_memory = Vec3()
+        self.steer_memory = util.Blender()
         # Low pass filter for roll control ("up" target).
-        self.up_memory = Vec3(0, 1, 0)
+        self.up_memory = util.Blender()
         # Cache of nearest neighbors, updating "ocasionally".
         self.cached_nearest_neighbors = []
         self.neighbor_refresh_rate = 0.5  # seconds between neighbor refresh
@@ -169,9 +169,7 @@ class Boid(Agent):
     # determined "raw" steering into a per-boid accumulator, then returns that
     # smoothed value to use for actually steering the boid this simulation step.
     def smoothed_steering(self, steer):
-        rate = 0.85  # Completely ad hoc smoothing "rate".
-        self.steer_memory = util.interpolate(rate, steer, self.steer_memory)
-        return self.steer_memory
+        return self.steer_memory.blend(steer, 0.85) # Ad hoc smoothness param.
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
@@ -226,9 +224,7 @@ class Boid(Agent):
     # Bird-like roll control: blends vector toward path curvature center with
     # global up. Overrides method in base class Agent
     def up_reference(self, acceleration):
-        if acceleration.length_squared() > 0:
-            acceleration = acceleration.normalize()
-        new_up = util.interpolate(0.8, Vec3(0, 1, 0), acceleration)
-        self.up_memory = util.interpolate(0.98, new_up, self.up_memory)
-        self.up_memory = self.up_memory.normalize()
-        return self.up_memory
+        new_up = acceleration + Vec3(0, 0.01, 0)  # slight bias toward global up
+        self.up_memory.blend(new_up, 0.999)
+        self.up_memory.value = self.up_memory.value.normalize()
+        return self.up_memory.value

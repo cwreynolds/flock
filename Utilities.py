@@ -80,11 +80,12 @@ class Pairings:
 class Blender:
     def __init__(self, initial_value=None):
         self.value = initial_value
-    # Rate controls "how smooth". Typically around 0.8-0.9.
-    # Where 1 is infinite smoothing, 0 is no smoothing.
-    def blend(self, new_value, rate):
+    # "smoothness" controls how much smoothing. Values around 0.8-0.9 seem most
+    # useful. smoothness=1 is infinite smoothing. smoothness=0 is no smoothing.
+    def blend(self, new_value, smoothness):
         self.value = (new_value if self.value == None
-                                else interpolate(rate, new_value, self.value))
+                      else interpolate(smoothness, new_value, self.value))
+        return self.value
 
 @staticmethod
 def unit_test():
