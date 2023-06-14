@@ -29,8 +29,8 @@ class Boid(Agent):
         self.flock = flock
         self.sphere_radius = 0
         self.sphere_center = Vec3()
-        # For wander_steer()
-        self.wander_state = Vec3()
+        # Set during sense/plan phase, saved for steer phase.
+        self.next_steer = Vec3()
         # Low pass filter for steering vector.
         self.steer_memory = util.Blender()
         # Low pass filter for roll control ("up" target).
@@ -39,13 +39,18 @@ class Boid(Agent):
         self.cached_nearest_neighbors = []
         self.neighbor_refresh_rate = 0.5  # seconds between neighbor refresh
         self.time_since_last_neighbor_refresh = 0
-        # Temp? Pick a random midrange boid color.
+        # For wander_steer()
+        self.wander_state = Vec3()
+       # Temp? Pick a random midrange boid color.
         self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
 
-    # Basic flocking behavior.
-    # Performs one simulation step (animation frame) for one boid in a flock.
-    def fly_with_flock(self, time_step):
-        self.steer(self.steer_to_flock(time_step), time_step)
+    # Determine and store desired steering for this simulation step
+    def plan_next_steer(self, time_step):
+        self.next_steer = self.steer_to_flock(time_step)
+
+    # Apply desired steering for this simulation step
+    def apply_next_steer(self, time_step):
+        self.steer(self.next_steer, time_step)
 
     # Basic flocking behavior. Performs one simulation step (an animation frame)
     # for one boid in a flock.

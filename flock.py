@@ -101,10 +101,15 @@ class Flock:
         for boid in self.boids:
             boid.draw()
 
-    # Apply fly_with_flock() to each boid in flock.
+    # Fly each boid in flock for one simulation step. Consists of two sequential
+    # steps to avoid artifacts from order of boids. First a "sense/plan" phase
+    # which computes the desired steering based on current state. Then an "act"
+    # phase which actually moves the boids.
     def fly_flock(self, time_step):
         for boid in self.boids:
-            boid.fly_with_flock(time_step)
+            boid.plan_next_steer(time_step)
+        for boid in self.boids:
+            boid.apply_next_steer(time_step)
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
     # other side of the world, just inside of its antipodal point.
