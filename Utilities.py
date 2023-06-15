@@ -105,6 +105,7 @@ def unit_test():
     assert within_epsilon(-1.1, -1.2, 0.2)
     assert not within_epsilon(1.1, 1.2, 0.01)
     assert rehash32bits(2653567485) == 1574776808
+
     p = Pairings()
     p.add_pair(1.23, 'a')
     p.add_pair('foo', (1,2))
@@ -112,4 +113,14 @@ def unit_test():
     assert p.get_peer('a') == 1.23
     assert p.get_peer('foo') == (1,2)
     assert p.get_peer((1,2)) == 'foo'
+
+    b = Blender()
+    assert b.value == None
+    b.blend(1.2, 'ignored')
+    assert b.value == 1.2
+    b.blend(3.4, 0.9)
+    assert b.value == 1.42
+    b.blend(5.6, 0.5)
+    assert b.value == 3.51
+    
     # TODO 20230409 test random-number utilities, later RandomSequence.
