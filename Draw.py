@@ -153,12 +153,14 @@ class Draw:
         Draw.frame_start_time = frame_end_time
         Draw.frame_counter += 1
 
-    # TODO 20230419 but does not work because "Visualizer.get_view_control()
-    #               gives a copy." https://github.com/isl-org/Open3D/issues/6009
+    # Update scene camera's "look at" position.
     @staticmethod
     def update_camera(lookat):
-        camera = Draw.vis.get_view_control()
-        camera.set_lookat(lookat)
+        # TODO 20230419 does not work because "Visualizer.get_view_control()
+        # gives a copy." https://github.com/isl-org/Open3D/issues/6009
+        # camera = Draw.vis.get_view_control()
+        # camera.set_lookat(lookat)
+        Draw.temp_camera_lookat = lookat
 
     # Constructs representation of global axes as a TriangleMesh.
     @staticmethod

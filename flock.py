@@ -95,9 +95,8 @@ class Flock:
 
     # Draw each boid in flock.
     def draw(self):
-        Draw.temp_camera_lookat = (self.selected_boid().position
-                                   if self.tracking_camera
-                                   else Vec3())
+        Draw.update_camera(self.selected_boid().position if
+                           self.tracking_camera else Vec3())
         for boid in self.boids:
             boid.draw()
 
