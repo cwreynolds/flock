@@ -31,14 +31,18 @@ from LocalSpace import LocalSpace
 class Flock:
 
     def __init__(self,
-                 boid_count=200,
-                 sphere_diameter=60,
-                 sphere_center=Vec3(),
-                 max_simulation_steps = math.inf):
+                 boid_count = 200,
+                 sphere_diameter = 60,
+                 sphere_center = Vec3(),
+                 max_simulation_steps = math.inf,
+                 fixed_time_step = False,
+                 fixed_fps = 60):
         self.boid_count = boid_count              # Number of boids in Flock.
         self.sphere_radius = sphere_diameter / 2  # Radius of boid containment.
         self.sphere_center = sphere_center        # Center of boid containment.
         self.max_simulation_steps = max_simulation_steps # exit after n frames.
+        self.fixed_time_step = fixed_time_step    # fixed time step vs realtime.
+        self.fixed_fps = fixed_fps                # frame rate for fixed fps.
         self.boids = []                # List of boids in flock.
         self.selected_boid_index = 0   # Index of boid tracked by camera.
         self.total_avoid_fail = 0      # count pass through containment sphere.
@@ -48,8 +52,6 @@ class Flock:
         self.enable_annotation = True
         self.tracking_camera = False
         self.wrap_vs_avoid = False
-        self.fixed_time_step = False   # as-fast-as-possible versus 60 Hz.
-        self.fixed_fps = 60
         self.fps = util.Blender()
         self.setup()
 
@@ -317,5 +319,6 @@ if __name__ == "__main__":
 #    Flock(400, 100, Vec3(100, 0, 0)).run() # containment sphere still at origin
 #
 #    Flock(200, 60, Vec3(), 200).run()      # Test max_simulation_steps
+#    Flock(max_simulation_steps=200, fixed_time_step=True, fixed_fps=30).run()
 
     Flock().run()
