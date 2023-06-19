@@ -36,7 +36,8 @@ class Flock:
                  sphere_center = Vec3(),
                  max_simulation_steps = math.inf,
                  fixed_time_step = False,
-                 fixed_fps = 60):
+                 fixed_fps = 60,
+                 seed = 1234567890):
         self.boid_count = boid_count              # Number of boids in Flock.
         self.sphere_radius = sphere_diameter / 2  # Radius of boid containment.
         self.sphere_center = sphere_center        # Center of boid containment.
@@ -53,12 +54,14 @@ class Flock:
         self.tracking_camera = False
         self.wrap_vs_avoid = False
         self.fps = util.Blender()
+        # If there is ever a need to have multiple Flock instances at the same
+        # time, these steps should be reconsidered:
+        Draw.set_random_seeds(seed)
         self.setup()
 
     # Run boids simulation. (Currently runs until stopped by user.)
     def run(self):
         draw = Draw() ## ?? currently unused but should contain draw state
-        Draw.set_random_seeds()
         Draw.start_visualizer(self.sphere_radius, self.sphere_center)
         Flock.vis_pairs.add_pair(Draw.vis, self)  # Pairing for key handlers.
         self.register_single_key_commands() # For Open3D visualizer GUI.
@@ -320,5 +323,6 @@ if __name__ == "__main__":
 #
 #    Flock(200, 60, Vec3(), 200).run()      # Test max_simulation_steps
 #    Flock(max_simulation_steps=200, fixed_time_step=True, fixed_fps=30).run()
+#    Flock(max_simulation_steps=200, fixed_time_step=True, seed=438538457).run()
 
     Flock().run()

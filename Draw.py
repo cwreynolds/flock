@@ -229,13 +229,9 @@ class Draw:
             m.translate((-Draw.temp_camera_lookat).asarray(), relative=False)
             Draw.vis.update_geometry(m)
 
-    # Set random seeds for Python, Numpy, and Open3D, all to the same value.
-    # Note that, as a practical matter, while this will produce consistant
-    # starting positions/orientation, there is no long term determinism because
-    # each simulation time step is measured by "wallclock time." Were absolute
-    # repeatabilioty needed we need a mode to clock the simulation with a
-    # constant time step. (That was actually how it worked in the earliest
-    # versions, but I "fixed" it to adjust for variable computation time.)
+    # Set random seeds for Python, Numpy, and Open3D, all to the given value.
+    # This will produce consistant starting positions/orientation. Longer term
+    # determinism requires running the simulation in fixed_time_step=True mode.
     def set_random_seeds(seed=1234567890):
         random.seed(seed)
         np.random.seed(seed)
