@@ -1,5 +1,7 @@
 # flock
 
+![Typical view of flock simulation running with 200 boids inside sphere](images/typical_flock.png)
+
 ### new flock experiments
 
 This is Yet Another implementation of the [boids](https://dl.acm.org/doi/10.1145/37402.37406) model of flocking and related group motions. It was meant just to be a workbench for thinking about new approaches to that old idea.
@@ -50,7 +52,7 @@ You can control the view using Open3D's standard gestures. There are also severa
 
 Lots, since it is so preliminary, but for example:
 
-- Similarly because they ignore global orientation, they are just as happy to move vertically as horizontally.
+- Because boids ignore global orientation, they are just as happy to move vertically as horizontally.
 - The boid's “bodies” sort of look like they are shaded, but it is just painted on. It ought to be rendered to provide more orientation cueing.
 - Often two boids will get too close, failing to maintain separation, while otherwise seeming to flock normally. Could be interference from Boid.sphere_avoidance().
 
