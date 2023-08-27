@@ -68,7 +68,7 @@ conda activate flock_open3d
 pip install open3d
 ```
 
-On my laptop (macOS 12.6.4 MacBook Pro M1) this complained that I was missing `libomp` so I did:
+On my laptop (macOS 12.6.4 MacBook Pro M1) the above complained I was missing `libomp` so I also did:
 
 ```
 brew install libomp
