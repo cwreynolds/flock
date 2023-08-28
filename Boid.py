@@ -233,3 +233,31 @@ class Boid(Agent):
         self.up_memory.blend(new_up, 0.999)
         self.up_memory.value = self.up_memory.value.normalize()
         return self.up_memory.value
+
+    ############################################################################
+    # 20230828 TODO new obstacle avoidance
+    
+    # Lets assume the flock will have a collection of obstacles that we want to
+    # steer around. Thus far it has been a single everted sphere.
+    
+    class Obstacle:
+        def __init__(self):
+            pass
+
+    class Collision:
+        def __init__(self,
+                     time_to_collision,
+                     dist_to_collision,
+                     point_of_impact,
+                     normal_at_poi):
+            self.time_to_collision = time_to_collision
+            self.dist_to_collision = dist_to_collision
+            self.point_of_impact = point_of_impact
+            self.normal_at_poi = normal_at_poi
+
+    
+    def predict_next_collision(self):
+        return Collision(0, 0, Vec3(), Vec3())
+
+    ############################################################################
+    
