@@ -255,9 +255,40 @@ class Boid(Agent):
             self.point_of_impact = point_of_impact
             self.normal_at_poi = normal_at_poi
 
+#    def predict_next_collision(self):
+#        return Collision(0, 0, Vec3(), Vec3())
+
+    # TODO 20230830 this should examine each of the Obstacles on the Flock's
+    # list of obstacles. but foir now we assume it is the one sphere.
     
     def predict_next_collision(self):
-        return Collision(0, 0, Vec3(), Vec3())
+            
+        path_intersection = Vec3.ray_sphere_intersection(self.position,
+                                                         self.forward,
+                                                         self.sphere_radius,
+                                                         self.sphere_center)
+        if path_intersection:
+#            # Near enough to require avoidance steering?
+#            dist_squared = (path_intersection - self.position).length_squared()
+            
+            dist_to_collision = (path_intersection - self.position).length()
+            time_to_collision = dist_to_collision / self.speed
+            
+#            if dist_squared < min_dist ** 2:
+#                toward_center = center - path_intersection
+#                pure_steering = toward_center.perpendicular_component(self.forward)
+#                avoidance = pure_steering.normalize()
+#                if self.flock.enable_annotation:
+#                    c = Vec3(0.9, 0.7, 0.9) # magenta
+#                    Draw.add_line_segment(self.position, path_intersection, c)
+            return Collision(time_to_collision,
+                             dist_to_collision,
+                             path_intersection,
+                             Vec3()) ###################### NEED TO COMPUTE THIS
+
+        else:
+            return Collision(math.inf, math.inf, Vec3(), Vec3())
+
 
     ############################################################################
     
