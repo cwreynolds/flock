@@ -18,6 +18,11 @@ from Vec3 import Vec3
 import Utilities as util
 import copy
 import math
+################################################################################
+# 20230831 TODO new obstacle avoidance
+from obstacle import Obstacle
+from obstacle import Collision
+################################################################################
 
 class Boid(Agent):
 
@@ -240,20 +245,20 @@ class Boid(Agent):
     # Lets assume the flock will have a collection of obstacles that we want to
     # steer around. Thus far it has been a single everted sphere.
     
-    class Obstacle:
-        def __init__(self):
-            pass
-
-    class Collision:
-        def __init__(self,
-                     time_to_collision,
-                     dist_to_collision,
-                     point_of_impact,
-                     normal_at_poi):
-            self.time_to_collision = time_to_collision
-            self.dist_to_collision = dist_to_collision
-            self.point_of_impact = point_of_impact
-            self.normal_at_poi = normal_at_poi
+#    class Obstacle:
+#        def __init__(self):
+#            pass
+#
+#    class Collision:
+#        def __init__(self,
+#                     time_to_collision,
+#                     dist_to_collision,
+#                     point_of_impact,
+#                     normal_at_poi):
+#            self.time_to_collision = time_to_collision
+#            self.dist_to_collision = dist_to_collision
+#            self.point_of_impact = point_of_impact
+#            self.normal_at_poi = normal_at_poi
 
 #    def predict_next_collision(self):
 #        return Collision(0, 0, Vec3(), Vec3())
@@ -261,34 +266,77 @@ class Boid(Agent):
     # TODO 20230830 this should examine each of the Obstacles on the Flock's
     # list of obstacles. but foir now we assume it is the one sphere.
     
+#        def predict_next_collision(self):
+#
+#            path_intersection = Vec3.ray_sphere_intersection(self.position,
+#                                                             self.forward,
+#                                                             self.sphere_radius,
+#                                                             self.sphere_center)
+#            if path_intersection:
+#    #            # Near enough to require avoidance steering?
+#    #            dist_squared = (path_intersection - self.position).length_squared()
+#
+#                dist_to_collision = (path_intersection - self.position).length()
+#                time_to_collision = dist_to_collision / self.speed
+#
+#    #            if dist_squared < min_dist ** 2:
+#    #                toward_center = center - path_intersection
+#    #                pure_steering = toward_center.perpendicular_component(self.forward)
+#    #                avoidance = pure_steering.normalize()
+#    #                if self.flock.enable_annotation:
+#    #                    c = Vec3(0.9, 0.7, 0.9) # magenta
+#    #                    Draw.add_line_segment(self.position, path_intersection, c)
+#                return Collision(time_to_collision,
+#                                 dist_to_collision,
+#                                 path_intersection,
+#                                 Vec3()) ###################### NEED TO COMPUTE THIS
+#
+#            else:
+#                return Collision(math.inf, math.inf, Vec3(), Vec3())
+
+#    def predict_next_collision(self):
+#
+#        time_to_collision = math.inf
+#        dist_to_collision = math.inf
+#        point_of_impact = Vec3()
+#        normal_at_poi = Vec3()
+#
+#        path_intersection = Vec3.ray_sphere_intersection(self.position,
+#                                                         self.forward,
+#                                                         self.sphere_radius,
+#                                                         self.sphere_center)
+#        if path_intersection:
+#            dist_to_collision = (path_intersection - self.position).length()
+#            time_to_collision = dist_to_collision / self.speed
+#            point_of_impact = path_intersection
+#            normal_at_poi = Vec3()   ######################### MUST COMPUTE THIS
+#
+#        return Collision(time_to_collision,
+#                         dist_to_collision,
+#                         point_of_impact,
+#                         normal_at_poi)
+
     def predict_next_collision(self):
-            
+        time_to_collision = math.inf
+        dist_to_collision = math.inf
+        point_of_impact = Vec3()
+        normal_at_poi = Vec3()
         path_intersection = Vec3.ray_sphere_intersection(self.position,
                                                          self.forward,
                                                          self.sphere_radius,
                                                          self.sphere_center)
         if path_intersection:
-#            # Near enough to require avoidance steering?
-#            dist_squared = (path_intersection - self.position).length_squared()
-            
             dist_to_collision = (path_intersection - self.position).length()
             time_to_collision = dist_to_collision / self.speed
-            
-#            if dist_squared < min_dist ** 2:
-#                toward_center = center - path_intersection
-#                pure_steering = toward_center.perpendicular_component(self.forward)
-#                avoidance = pure_steering.normalize()
-#                if self.flock.enable_annotation:
-#                    c = Vec3(0.9, 0.7, 0.9) # magenta
-#                    Draw.add_line_segment(self.position, path_intersection, c)
-            return Collision(time_to_collision,
-                             dist_to_collision,
-                             path_intersection,
-                             Vec3()) ###################### NEED TO COMPUTE THIS
+            point_of_impact = path_intersection
+#            normal_at_poi = Vec3()   ######################### MUST COMPUTE THIS
+            # TODO 20230831 assumes everted sphere:
+            normal_at_poi = (path_intersection - self.sphere_center).normalize()
 
-        else:
-            return Collision(math.inf, math.inf, Vec3(), Vec3())
-
+        return Collision(time_to_collision,
+                         dist_to_collision,
+                         point_of_impact,
+                         normal_at_poi)
 
     ############################################################################
     
