@@ -27,6 +27,10 @@ from Agent import Agent
 import Utilities as util
 from statistics import mean
 from LocalSpace import LocalSpace
+################################################################################
+# TODO 20230902 give Flock a default list of obstacles
+from obstacle import EvertedSphereObstacle
+################################################################################
 
 class Flock:
 
@@ -54,6 +58,11 @@ class Flock:
         self.tracking_camera = False
         self.wrap_vs_avoid = False
         self.fps = util.Blender()
+        ########################################################################
+        # TODO 20230902 give Flock a default list of obstacles
+        self.obstacles = [EvertedSphereObstacle(self.sphere_radius,
+                                                self.sphere_center)]
+        ########################################################################
         # If there is ever a need to have multiple Flock instances at the same
         # time, these steps should be reconsidered:
         Draw.set_random_seeds(seed)

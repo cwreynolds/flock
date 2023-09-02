@@ -317,34 +317,87 @@ class Boid(Agent):
 #                         point_of_impact,
 #                         normal_at_poi)
 
+#        def predict_next_collision(self):
+#            time_to_collision = math.inf
+#            dist_to_collision = math.inf
+#            point_of_impact = Vec3()
+#            normal_at_poi = Vec3()
+#
+#            # TODO 20230901 just for prototype, don't build a new one each time!!!!
+#            obstacle = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
+#
+#    #        path_intersection = Vec3.ray_sphere_intersection(self.position,
+#    #                                                         self.forward,
+#    #                                                         self.sphere_radius,
+#    #                                                         self.sphere_center)
+#
+#            path_intersection = obstacle.ray_intersection(self.position, self.forward)
+#
+#            if path_intersection:
+#                dist_to_collision = (path_intersection - self.position).length()
+#                time_to_collision = dist_to_collision / self.speed
+#                point_of_impact = path_intersection
+#    #            normal_at_poi = Vec3()   ######################### MUST COMPUTE THIS
+#                # TODO 20230831 assumes everted sphere:
+#                normal_at_poi = (path_intersection - self.sphere_center).normalize()
+#
+#            return Collision(time_to_collision,
+#                             dist_to_collision,
+#                             point_of_impact,
+#                             normal_at_poi)
+
+#        def predict_next_collision(self):
+#            time_to_collision = math.inf
+#            dist_to_collision = math.inf
+#            point_of_impact = Vec3()
+#            normal_at_poi = Vec3()
+#
+#            collisions = []
+#            for obstacle in flock.obstacles:
+#
+#    #            # TODO 20230901 just for prototype, don't build a new one each time!!!!
+#    #            obstacle = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
+#
+#                path_intersection = obstacle.ray_intersection(self.position, self.forward)
+#
+#                if path_intersection:
+#                    dist_to_collision = (path_intersection - self.position).length()
+#                    time_to_collision = dist_to_collision / self.speed
+#                    point_of_impact = path_intersection
+#                    # TODO 20230831 assumes everted sphere:
+#                    normal_at_poi = (path_intersection - self.sphere_center).normalize()
+#
+#    #            return Collision(time_to_collision,
+#    #                             dist_to_collision,
+#    #                             point_of_impact,
+#    #                             normal_at_poi)
+#
+#                collisions.append(Collision(time_to_collision,
+#                                            dist_to_collision,
+#                                            point_of_impact,
+#                                            normal_at_poi))
+#            if empty(collisions):
+#                return None
+#            else:
+#                return sorted(collisions, key=lambda x: x.time_to_collision)[1]
+
     def predict_next_collision(self):
-        time_to_collision = math.inf
-        dist_to_collision = math.inf
-        point_of_impact = Vec3()
-        normal_at_poi = Vec3()
-        
-        # TODO 20230901 just for prototype, don't build a new one each time!!!!
-        obstacle = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
-        
-#        path_intersection = Vec3.ray_sphere_intersection(self.position,
-#                                                         self.forward,
-#                                                         self.sphere_radius,
-#                                                         self.sphere_center)
-
-        path_intersection = obstacle.ray_intersection(self.position, self.forward)
-
-        if path_intersection:
-            dist_to_collision = (path_intersection - self.position).length()
-            time_to_collision = dist_to_collision / self.speed
-            point_of_impact = path_intersection
-#            normal_at_poi = Vec3()   ######################### MUST COMPUTE THIS
-            # TODO 20230831 assumes everted sphere:
-            normal_at_poi = (path_intersection - self.sphere_center).normalize()
-
-        return Collision(time_to_collision,
-                         dist_to_collision,
-                         point_of_impact,
-                         normal_at_poi)
+        collisions = []
+        for obstacle in flock.obstacles:
+            path_intersection = obstacle.ray_intersection(self.position, self.forward)
+            if path_intersection:
+                dist_to_collision = (path_intersection - self.position).length()
+                time_to_collision = dist_to_collision / self.speed
+                point_of_impact = path_intersection
+                # TODO 20230831 assumes everted sphere:
+                normal_at_poi = (point_of_impact - self.sphere_center).normalize()
+                collisions.append(Collision(time_to_collision,
+                                            dist_to_collision,
+                                            point_of_impact,
+                                            normal_at_poi))
+        return (None
+                if empty(collisions)
+                else sorted(collisions, key=lambda x: x.time_to_collision)[1])
 
     ############################################################################
     

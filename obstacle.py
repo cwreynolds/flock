@@ -17,12 +17,9 @@
 #               mesh type.
 #-------------------------------------------------------------------------------
 
-from Vec3 import Vec3
-#from Boid import Boid
-#from Agent import Agent # do we need this?
-#from flock import Flock
-import Utilities as util
 import math
+from Vec3 import Vec3
+import Utilities as util
 
 class Obstacle:
     def __init__(self):
