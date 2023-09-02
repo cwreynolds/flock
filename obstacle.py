@@ -27,6 +27,21 @@ import math
 class Obstacle:
     def __init__(self):
         pass
+    def ray_intersection(origin, tangent):
+        pass
+
+class EvertedSphereObstacle(Obstacle):
+
+    # TODO 20230901 very preliminary hard codes all the parameters that should
+    #               be passed in
+    def __init__(self, radius, center):
+        self.radius = radius
+        self.center = center
+    def ray_intersection(origin, tangent):
+        return Vec3.ray_sphere_intersection(origin,
+                                            tangent,
+                                            self.radius,
+                                            self.center)
 
 class Collision:
     def __init__(self,

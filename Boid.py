@@ -22,6 +22,7 @@ import math
 # 20230831 TODO new obstacle avoidance
 from obstacle import Obstacle
 from obstacle import Collision
+from obstacle import EvertedSphereObstacle
 ################################################################################
 
 class Boid(Agent):
@@ -321,10 +322,17 @@ class Boid(Agent):
         dist_to_collision = math.inf
         point_of_impact = Vec3()
         normal_at_poi = Vec3()
-        path_intersection = Vec3.ray_sphere_intersection(self.position,
-                                                         self.forward,
-                                                         self.sphere_radius,
-                                                         self.sphere_center)
+        
+        # TODO 20230901 just for prototype, don't build a new one each time!!!!
+        obstacle = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
+        
+#        path_intersection = Vec3.ray_sphere_intersection(self.position,
+#                                                         self.forward,
+#                                                         self.sphere_radius,
+#                                                         self.sphere_center)
+
+        path_intersection = obstacle.ray_intersection(self.position, self.forward)
+
         if path_intersection:
             dist_to_collision = (path_intersection - self.position).length()
             time_to_collision = dist_to_collision / self.speed
