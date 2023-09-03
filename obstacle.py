@@ -24,7 +24,7 @@ import Utilities as util
 class Obstacle:
     def __init__(self):
         pass
-    def ray_intersection(origin, tangent):
+    def ray_intersection(self, origin, tangent):
         pass
 
 class EvertedSphereObstacle(Obstacle):
@@ -34,7 +34,7 @@ class EvertedSphereObstacle(Obstacle):
     def __init__(self, radius, center):
         self.radius = radius
         self.center = center
-    def ray_intersection(origin, tangent):
+    def ray_intersection(self, origin, tangent):
         return Vec3.ray_sphere_intersection(origin,
                                             tangent,
                                             self.radius,

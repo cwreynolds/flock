@@ -121,9 +121,34 @@ class Boid(Agent):
             direction = direction.normalize()
         return direction
 
+    ############################################################################
+    # TODO 20230903 integrate Boid.predict_next_collision()
+
+#    # Steering force component to avoid obstacles.
+#    # (Currently the single obstacle is a spherical containment.)
+#    def steer_to_avoid(self, time_step):
+#        avoidance = Vec3()
+#        if time_step > 0 and not self.flock.wrap_vs_avoid:
+#            min_time_to_collide = 1.5 # seconds
+#            min_distance = self.speed * min_time_to_collide / time_step
+#            avoidance = self.sphere_avoidance(min_distance,
+#                                              self.sphere_radius,
+#                                              self.sphere_center)
+#        return avoidance
+
+
     # Steering force component to avoid obstacles.
     # (Currently the single obstacle is a spherical containment.)
     def steer_to_avoid(self, time_step):
+        
+        # ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+        # TODO 20230903 integrate Boid.predict_future_collisions() for testing
+        collisions = self.predict_future_collisions()
+        if collisions:
+            poi = collisions[0].point_of_impact
+            Draw.add_line_segment(self.position, poi, Vec3())
+        # ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
         avoidance = Vec3()
         if time_step > 0 and not self.flock.wrap_vs_avoid:
             min_time_to_collide = 1.5 # seconds
@@ -132,6 +157,8 @@ class Boid(Agent):
                                               self.sphere_radius,
                                               self.sphere_center)
         return avoidance
+
+    ############################################################################
 
     # Wander aimlessly via slowly varying steering force. Currently unused.
     def steer_to_wander(self, rs):
@@ -241,163 +268,27 @@ class Boid(Agent):
         return self.up_memory.value
 
     ############################################################################
-    # 20230828 TODO new obstacle avoidance
-    
-    # Lets assume the flock will have a collection of obstacles that we want to
-    # steer around. Thus far it has been a single everted sphere.
-    
-#    class Obstacle:
-#        def __init__(self):
-#            pass
-#
-#    class Collision:
-#        def __init__(self,
-#                     time_to_collision,
-#                     dist_to_collision,
-#                     point_of_impact,
-#                     normal_at_poi):
-#            self.time_to_collision = time_to_collision
-#            self.dist_to_collision = dist_to_collision
-#            self.point_of_impact = point_of_impact
-#            self.normal_at_poi = normal_at_poi
+    # TODO 20230828 new obstacle avoidance
 
-#    def predict_next_collision(self):
-#        return Collision(0, 0, Vec3(), Vec3())
-
-    # TODO 20230830 this should examine each of the Obstacles on the Flock's
-    # list of obstacles. but foir now we assume it is the one sphere.
-    
-#        def predict_next_collision(self):
-#
-#            path_intersection = Vec3.ray_sphere_intersection(self.position,
-#                                                             self.forward,
-#                                                             self.sphere_radius,
-#                                                             self.sphere_center)
-#            if path_intersection:
-#    #            # Near enough to require avoidance steering?
-#    #            dist_squared = (path_intersection - self.position).length_squared()
-#
-#                dist_to_collision = (path_intersection - self.position).length()
-#                time_to_collision = dist_to_collision / self.speed
-#
-#    #            if dist_squared < min_dist ** 2:
-#    #                toward_center = center - path_intersection
-#    #                pure_steering = toward_center.perpendicular_component(self.forward)
-#    #                avoidance = pure_steering.normalize()
-#    #                if self.flock.enable_annotation:
-#    #                    c = Vec3(0.9, 0.7, 0.9) # magenta
-#    #                    Draw.add_line_segment(self.position, path_intersection, c)
-#                return Collision(time_to_collision,
-#                                 dist_to_collision,
-#                                 path_intersection,
-#                                 Vec3()) ###################### NEED TO COMPUTE THIS
-#
-#            else:
-#                return Collision(math.inf, math.inf, Vec3(), Vec3())
-
-#    def predict_next_collision(self):
-#
-#        time_to_collision = math.inf
-#        dist_to_collision = math.inf
-#        point_of_impact = Vec3()
-#        normal_at_poi = Vec3()
-#
-#        path_intersection = Vec3.ray_sphere_intersection(self.position,
-#                                                         self.forward,
-#                                                         self.sphere_radius,
-#                                                         self.sphere_center)
-#        if path_intersection:
-#            dist_to_collision = (path_intersection - self.position).length()
-#            time_to_collision = dist_to_collision / self.speed
-#            point_of_impact = path_intersection
-#            normal_at_poi = Vec3()   ######################### MUST COMPUTE THIS
-#
-#        return Collision(time_to_collision,
-#                         dist_to_collision,
-#                         point_of_impact,
-#                         normal_at_poi)
-
-#        def predict_next_collision(self):
-#            time_to_collision = math.inf
-#            dist_to_collision = math.inf
-#            point_of_impact = Vec3()
-#            normal_at_poi = Vec3()
-#
-#            # TODO 20230901 just for prototype, don't build a new one each time!!!!
-#            obstacle = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
-#
-#    #        path_intersection = Vec3.ray_sphere_intersection(self.position,
-#    #                                                         self.forward,
-#    #                                                         self.sphere_radius,
-#    #                                                         self.sphere_center)
-#
-#            path_intersection = obstacle.ray_intersection(self.position, self.forward)
-#
-#            if path_intersection:
-#                dist_to_collision = (path_intersection - self.position).length()
-#                time_to_collision = dist_to_collision / self.speed
-#                point_of_impact = path_intersection
-#    #            normal_at_poi = Vec3()   ######################### MUST COMPUTE THIS
-#                # TODO 20230831 assumes everted sphere:
-#                normal_at_poi = (path_intersection - self.sphere_center).normalize()
-#
-#            return Collision(time_to_collision,
-#                             dist_to_collision,
-#                             point_of_impact,
-#                             normal_at_poi)
-
-#        def predict_next_collision(self):
-#            time_to_collision = math.inf
-#            dist_to_collision = math.inf
-#            point_of_impact = Vec3()
-#            normal_at_poi = Vec3()
-#
-#            collisions = []
-#            for obstacle in flock.obstacles:
-#
-#    #            # TODO 20230901 just for prototype, don't build a new one each time!!!!
-#    #            obstacle = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
-#
-#                path_intersection = obstacle.ray_intersection(self.position, self.forward)
-#
-#                if path_intersection:
-#                    dist_to_collision = (path_intersection - self.position).length()
-#                    time_to_collision = dist_to_collision / self.speed
-#                    point_of_impact = path_intersection
-#                    # TODO 20230831 assumes everted sphere:
-#                    normal_at_poi = (path_intersection - self.sphere_center).normalize()
-#
-#    #            return Collision(time_to_collision,
-#    #                             dist_to_collision,
-#    #                             point_of_impact,
-#    #                             normal_at_poi)
-#
-#                collisions.append(Collision(time_to_collision,
-#                                            dist_to_collision,
-#                                            point_of_impact,
-#                                            normal_at_poi))
-#            if empty(collisions):
-#                return None
-#            else:
-#                return sorted(collisions, key=lambda x: x.time_to_collision)[1]
-
-    def predict_next_collision(self):
+    # Returns a list of future collisions sorted by time, with soonest first.
+    def predict_future_collisions(self):
         collisions = []
-        for obstacle in flock.obstacles:
-            path_intersection = obstacle.ray_intersection(self.position, self.forward)
-            if path_intersection:
-                dist_to_collision = (path_intersection - self.position).length()
+        for obstacle in self.flock.obstacles:
+            point_of_impact = obstacle.ray_intersection(self.position, self.forward)
+            #
+            # TODO 20230903 Quite occisionally, this seems to return None.
+            #               Should figure out why.
+            #
+            if point_of_impact:
+                dist_to_collision = (point_of_impact - self.position).length()
                 time_to_collision = dist_to_collision / self.speed
-                point_of_impact = path_intersection
                 # TODO 20230831 assumes everted sphere:
                 normal_at_poi = (point_of_impact - self.sphere_center).normalize()
                 collisions.append(Collision(time_to_collision,
                                             dist_to_collision,
                                             point_of_impact,
                                             normal_at_poi))
-        return (None
-                if empty(collisions)
-                else sorted(collisions, key=lambda x: x.time_to_collision)[1])
+        return sorted(collisions, key=lambda x: x.time_to_collision)
 
     ############################################################################
     
