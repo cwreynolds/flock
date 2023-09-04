@@ -122,7 +122,7 @@ class Boid(Agent):
         return direction
 
     ############################################################################
-    # TODO 20230903 integrate Boid.predict_next_collision()
+    # TODO 20230903 integrate Boid.predict_future_collisions()
 
 #    # Steering force component to avoid obstacles.
 #    # (Currently the single obstacle is a spherical containment.)
@@ -136,26 +136,21 @@ class Boid(Agent):
 #                                              self.sphere_center)
 #        return avoidance
 
-
     # Steering force component to avoid obstacles.
-    # (Currently the single obstacle is a spherical containment.)
     def steer_to_avoid(self, time_step):
-        
-        # ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-        # TODO 20230903 integrate Boid.predict_future_collisions() for testing
-        collisions = self.predict_future_collisions()
-        if collisions:
-            poi = collisions[0].point_of_impact
-            Draw.add_line_segment(self.position, poi, Vec3())
-        # ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-
         avoidance = Vec3()
-        if time_step > 0 and not self.flock.wrap_vs_avoid:
+        collisions = self.predict_future_collisions()
+        if collisions and time_step > 0 and not self.flock.wrap_vs_avoid:
             min_time_to_collide = 1.5 # seconds
             min_distance = self.speed * min_time_to_collide / time_step
-            avoidance = self.sphere_avoidance(min_distance,
-                                              self.sphere_radius,
-                                              self.sphere_center)
+            # Near enough to require avoidance steering? ["hard switch" version]
+            if collisions[0].dist_to_collision < min_distance:
+                poi = collisions[0].point_of_impact
+                normal = collisions[0].normal_at_poi
+                magenta = Vec3(0.9, 0.7, 0.9)
+                Draw.add_line_segment(self.position, poi, magenta)
+                pure_steering = normal.perpendicular_component(self.forward)
+                avoidance = pure_steering.normalize()
         return avoidance
 
     ############################################################################
@@ -270,20 +265,43 @@ class Boid(Agent):
     ############################################################################
     # TODO 20230828 new obstacle avoidance
 
+#    # Returns a list of future collisions sorted by time, with soonest first.
+#    def predict_future_collisions(self):
+#        collisions = []
+#        for obstacle in self.flock.obstacles:
+#            point_of_impact = obstacle.ray_intersection(self.position, self.forward)
+#            #
+#            # TODO 20230903 Quite occasionally, this seems to return None.
+#            #               Should figure out why.
+#            #
+#            if point_of_impact:
+#                dist_to_collision = (point_of_impact - self.position).length()
+#                time_to_collision = dist_to_collision / self.speed
+#                ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+#                # TODO 20230831 this inline code assumes everted sphere,
+#                #               move this to method on EvertedSphereObstacle
+##                normal_at_poi = (point_of_impact - self.sphere_center).normalize()
+#                normal_at_poi = obstacle.normal_at_poi(point_of_impact)
+#                ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+#                collisions.append(Collision(time_to_collision,
+#                                            dist_to_collision,
+#                                            point_of_impact,
+#                                            normal_at_poi))
+#        return sorted(collisions, key=lambda x: x.time_to_collision)
+
     # Returns a list of future collisions sorted by time, with soonest first.
     def predict_future_collisions(self):
         collisions = []
         for obstacle in self.flock.obstacles:
             point_of_impact = obstacle.ray_intersection(self.position, self.forward)
             #
-            # TODO 20230903 Quite occisionally, this seems to return None.
-            #               Should figure out why.
+            # TODO 20230903 Quite occasionally, this seems to return None.
+            #               Need to figure out why.
             #
             if point_of_impact:
                 dist_to_collision = (point_of_impact - self.position).length()
                 time_to_collision = dist_to_collision / self.speed
-                # TODO 20230831 assumes everted sphere:
-                normal_at_poi = (point_of_impact - self.sphere_center).normalize()
+                normal_at_poi = obstacle.normal_at_poi(point_of_impact)
                 collisions.append(Collision(time_to_collision,
                                             dist_to_collision,
                                             point_of_impact,

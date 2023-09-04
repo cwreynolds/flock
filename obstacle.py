@@ -26,6 +26,8 @@ class Obstacle:
         pass
     def ray_intersection(self, origin, tangent):
         pass
+    def normal_at_poi(self, poi):
+        pass
 
 class EvertedSphereObstacle(Obstacle):
 
@@ -39,6 +41,8 @@ class EvertedSphereObstacle(Obstacle):
                                             tangent,
                                             self.radius,
                                             self.center)
+    def normal_at_poi(self, poi):
+        return (self.center - poi).normalize()
 
 class Collision:
     def __init__(self,
