@@ -52,14 +52,31 @@ def within_epsilon(a, b, e=epsilon):
     return abs(a - b) <= e
 
 # Taken from https://en.wikipedia.org/wiki/Logistic_function
+#def logistic(x, k, L, x0):
+#    return L / (1 + math.exp(-k * (x - x0)))
+# TODO 20230910 TEMP FOR DEBUGGING
 def logistic(x, k, L, x0):
+    x = max(x, -50)
     return L / (1 + math.exp(-k * (x - x0)))
 
-#def unit_sigmoid(x):
-#    return logistic(x / 10, 10, 1, 0)
-
+# Logistic sigmoid (s-curve) from ~(0,0) to ~(1,1), ~0 if x<0, ~1 if x>1
 def unit_sigmoid_on_01(x):
     return logistic(x, 12, 1, 0.5)
+
+# Remap a value specified relative to a pair of bounding values
+# to the corresponding value relative to another pair of bounds.
+# Inspired by (dyna:remap-interval y y0 y1 z0 z1) circa 1984.
+# (20220108 borrowed from TexSyn's c++ Utilities package)
+# (20230910 borrowed from PredatorEye's DiskFind.py)
+# TODO -- note similar API in numpy
+def remap_interval(x, in0, in1, out0, out1):
+    return interpolate((x - in0) / (in1 - in0), out0, out1)
+
+# Like remapInterval but the result is clipped to remain between out0 and out1
+# (20220108 borrowed from TexSyn's c++ Utilities package)
+# (20230910 borrowed from PredatorEye's DiskFind.py)
+def remap_interval_clip(x, in0, in1, out0, out1):
+    return clip(remap_interval(x, in0, in1, out0, out1), out0, out1)
 
 # Takes a 32 bit value and shuffles it around to produce a new 32 bit value.
 # "Robert Jenkins' 32 bit integer hash function" from "Integer Hash Function"

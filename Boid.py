@@ -18,12 +18,8 @@ from Vec3 import Vec3
 import Utilities as util
 import copy
 import math
-################################################################################
-# 20230831 TODO new obstacle avoidance
-from obstacle import Obstacle
 from obstacle import Collision
 from obstacle import EvertedSphereObstacle
-################################################################################
 
 class Boid(Agent):
 
@@ -121,45 +117,11 @@ class Boid(Agent):
             direction = direction.normalize()
         return direction
 
-    ############################################################################
-    # TODO 20230903 integrate Boid.predict_future_collisions()
-
-#    # Steering force component to avoid obstacles.
-#    # (Currently the single obstacle is a spherical containment.)
-#    def steer_to_avoid(self, time_step):
-#        avoidance = Vec3()
-#        if time_step > 0 and not self.flock.wrap_vs_avoid:
-#            min_time_to_collide = 1.5 # seconds
-#            min_distance = self.speed * min_time_to_collide / time_step
-#            avoidance = self.sphere_avoidance(min_distance,
-#                                              self.sphere_radius,
-#                                              self.sphere_center)
-#        return avoidance
-
-#    # Steering force component to avoid obstacles.
-#    def steer_to_avoid(self, time_step):
-#        avoidance = Vec3()
-#        collisions = self.predict_future_collisions()
-#        if collisions and time_step > 0 and not self.flock.wrap_vs_avoid:
-#            min_time_to_collide = 1.5 # seconds
-#            min_distance = self.speed * min_time_to_collide / time_step
-#            # Near enough to require avoidance steering? ["hard switch" version]
-#            if collisions[0].dist_to_collision < min_distance:
-#                poi = collisions[0].point_of_impact
-#                normal = collisions[0].normal_at_poi
-#                magenta = Vec3(0.9, 0.7, 0.9)
-#                Draw.add_line_segment(self.position, poi, magenta)
-#                pure_steering = normal.perpendicular_component(self.forward)
-#                avoidance = pure_steering.normalize()
-#        return avoidance
-
-
-    # TODO 20230909 add switch/blend conditional
-
     # Steering force component to avoid obstacles.
     def steer_to_avoid(self, time_step):
         weight = 0
         avoidance = Vec3()
+        min_time_to_collide = 1.5 # seconds
         collisions = self.predict_future_collisions()
         collision_found = (collisions and
                            time_step > 0 and
@@ -168,32 +130,34 @@ class Boid(Agent):
             first_collision = collisions[0]
             poi = first_collision.point_of_impact
             normal = first_collision.normal_at_poi
-#            magenta = Vec3(0.9, 0.7, 0.9)
-#            Draw.add_line_segment(self.position, poi, magenta)
             pure_steering = normal.perpendicular_component(self.forward)
             avoidance = pure_steering.normalize()
-            
-            min_time_to_collide = 1.5 # seconds
             min_distance = self.speed * min_time_to_collide / time_step
-            magenta = Vec3(0.9, 0.7, 0.9)
-
+            # Near enough to require avoidance steering? ["hard switch" version]
+            near = min_distance > first_collision.dist_to_collision
             if self.flock.avoid_blend_mode:
-#                q = first_collision.dist_to_collision / min_distance
-#                q = first_collision.dist_to_collision - (min_distance / 2)
-                q = first_collision.dist_to_collision + (min_distance / 2)
-                weight = util.unit_sigmoid_on_01(q)
-                print('q:', q, 'weight:', weight, 'dist:', first_collision.dist_to_collision, 'min_distance:', min_distance)
+                d = util.remap_interval(first_collision.dist_to_collision,
+                                        min_distance * 0.8,
+                                        min_distance * 1.2,
+                                        1, 0)
+                weight = util.unit_sigmoid_on_01(d)
+
             else:
                 min_time_to_collide = 1.5 # seconds
                 min_distance = self.speed * min_time_to_collide / time_step
-                # Near enough to require avoidance steering? ["hard switch" version]
-                near = first_collision.dist_to_collision < min_distance
                 weight = 1 if near else 0
-                if weight > 0:
-                    Draw.add_line_segment(self.position, poi, magenta)
+            self.avoid_obstacle_annotation(poi, near, weight)
         return avoidance * weight
 
-    ############################################################################
+    # Draw a ray from Boid to its point of impact. Magenta for strong avoidance,
+    # shades to background gray (85%) for gentle avoidance.
+    def avoid_obstacle_annotation(self, poi, near, weight):
+        # magenta = Vec3(0.9, 0.7, 0.9) # old color before 20230910
+        magenta = Vec3(1, 0, 1)
+        gray85 = Vec3(0.85, 0.85, 0.85)
+        color = util.interpolate(weight, magenta, gray85)
+        if near:
+            Draw.add_line_segment(self.position, poi, color)
 
     # Wander aimlessly via slowly varying steering force. Currently unused.
     def steer_to_wander(self, rs):
@@ -273,27 +237,6 @@ class Boid(Agent):
             relative_force_annotation(avoidance,  Vec3(1, 0, 1))
             relative_force_annotation(combined,   Vec3(0.5, 0.5, 0.5))
 
-    # Steer to avoid collision with spherical containment (assumes boids are
-    # inside sphere). Eventually it would be nice to provide avoidance for
-    # arbitrary triangle meshes via ray tracing (eg see
-    # https://github.com/isl-org/Open3D/issues/6149#issuecomment-1549407410)
-    def sphere_avoidance(self, min_dist, radius, center):
-        avoidance = Vec3()
-        path_intersection = Vec3.ray_sphere_intersection(self.position,
-                                                         self.forward,
-                                                         radius, center)
-        if path_intersection:
-            # Near enough to require avoidance steering?
-            dist_squared = (path_intersection - self.position).length_squared()
-            if dist_squared < min_dist ** 2:
-                toward_center = center - path_intersection
-                pure_steering = toward_center.perpendicular_component(self.forward)
-                avoidance = pure_steering.normalize()
-                if self.flock.enable_annotation:
-                    c = Vec3(0.9, 0.7, 0.9) # magenta
-                    Draw.add_line_segment(self.position, path_intersection, c)
-        return avoidance
-
     # Bird-like roll control: blends vector toward path curvature center with
     # global up. Overrides method in base class Agent
     def up_reference(self, acceleration):
@@ -301,33 +244,6 @@ class Boid(Agent):
         self.up_memory.blend(new_up, 0.999)
         self.up_memory.value = self.up_memory.value.normalize()
         return self.up_memory.value
-
-    ############################################################################
-    # TODO 20230828 new obstacle avoidance
-
-#    # Returns a list of future collisions sorted by time, with soonest first.
-#    def predict_future_collisions(self):
-#        collisions = []
-#        for obstacle in self.flock.obstacles:
-#            point_of_impact = obstacle.ray_intersection(self.position, self.forward)
-#            #
-#            # TODO 20230903 Quite occasionally, this seems to return None.
-#            #               Should figure out why.
-#            #
-#            if point_of_impact:
-#                dist_to_collision = (point_of_impact - self.position).length()
-#                time_to_collision = dist_to_collision / self.speed
-#                ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-#                # TODO 20230831 this inline code assumes everted sphere,
-#                #               move this to method on EvertedSphereObstacle
-##                normal_at_poi = (point_of_impact - self.sphere_center).normalize()
-#                normal_at_poi = obstacle.normal_at_poi(point_of_impact)
-#                ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-#                collisions.append(Collision(time_to_collision,
-#                                            dist_to_collision,
-#                                            point_of_impact,
-#                                            normal_at_poi))
-#        return sorted(collisions, key=lambda x: x.time_to_collision)
 
     # Returns a list of future collisions sorted by time, with soonest first.
     def predict_future_collisions(self):
@@ -347,6 +263,3 @@ class Boid(Agent):
                                             point_of_impact,
                                             normal_at_poi))
         return sorted(collisions, key=lambda x: x.time_to_collision)
-
-    ############################################################################
-    

@@ -27,10 +27,7 @@ from Agent import Agent
 import Utilities as util
 from statistics import mean
 from LocalSpace import LocalSpace
-################################################################################
-# TODO 20230902 give Flock a default list of obstacles
 from obstacle import EvertedSphereObstacle
-################################################################################
 
 class Flock:
 
@@ -57,16 +54,11 @@ class Flock:
         self.enable_annotation = True
         self.tracking_camera = False
         self.wrap_vs_avoid = False
-        ########################################################################
-        # TODO 20230909 put in 'B' key command to toggle avoidance blend mode.
-        self.avoid_blend_mode = False
-        ########################################################################
+        self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
         self.fps = util.Blender()
-        ########################################################################
-        # TODO 20230902 give Flock a default list of obstacles
+        # give Flock a default list of obstacles
         self.obstacles = [EvertedSphereObstacle(self.sphere_radius,
                                                 self.sphere_center)]
-        ########################################################################
         # If there is ever a need to have multiple Flock instances at the same
         # time, these steps should be reconsidered:
         Draw.set_random_seeds(seed)
@@ -209,10 +201,7 @@ class Flock:
         Draw.vis.register_key_callback(ord('W'), Flock.toggle_wrap_vs_avoid)
         Draw.vis.register_key_callback(ord('E'), Flock.toggle_dynamic_erase)
         Draw.vis.register_key_callback(ord('F'), Flock.toggle_fixed_time_step)
-        ########################################################################
-        # TODO 20230909 put in 'B' key command to toggle avoidance blend mode.
         Draw.vis.register_key_callback(ord('B'), Flock.toggle_avoid_blend_mode)
-        ########################################################################
         Draw.vis.register_key_callback(ord('H'), Flock.print_help)
 
     # Toggle simulation pause mode.
@@ -264,13 +253,11 @@ class Flock:
         self = Flock.convert_to_flock(self)
         self.fixed_time_step = not self.fixed_time_step
 
-    ########################################################################
-    # TODO 20230909 put in 'B' key command to toggle avoidance blend mode.
+    # Toggle between blend/hard-switch for obstacle avoidance.
     def toggle_avoid_blend_mode(self):
         self = Flock.convert_to_flock(self)
         self.avoid_blend_mode = not self.avoid_blend_mode
-        print('    self.avoid_blend_mode =', self.avoid_blend_mode)
-    ########################################################################
+        print('    Flock.avoid_blend_mode =', self.avoid_blend_mode)
 
     # Print mini-help on shell.
     def print_help(self):
@@ -285,6 +272,7 @@ class Flock:
         print('    w:     toggle between sphere wrap-around or avoidance')
         print('    e:     toggle erase mode (spacetime boid worms)')
         print('    f:     toggle realtime versus fixed time step of 1/60sec')
+        print('    b:     toggle blend vs hard switch for obstacle avoidance')
         print('    h:     print this message')
         print('    esc:   exit simulation.')
         print()
