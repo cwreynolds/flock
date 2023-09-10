@@ -30,9 +30,6 @@ class Obstacle:
         pass
 
 class EvertedSphereObstacle(Obstacle):
-
-    # TODO 20230901 very preliminary hard codes all the parameters that should
-    #               be passed in
     def __init__(self, radius, center):
         self.radius = radius
         self.center = center

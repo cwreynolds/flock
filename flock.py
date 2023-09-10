@@ -57,6 +57,10 @@ class Flock:
         self.enable_annotation = True
         self.tracking_camera = False
         self.wrap_vs_avoid = False
+        ########################################################################
+        # TODO 20230909 put in 'B' key command to toggle avoidance blend mode.
+        self.avoid_blend_mode = False
+        ########################################################################
         self.fps = util.Blender()
         ########################################################################
         # TODO 20230902 give Flock a default list of obstacles
@@ -205,6 +209,10 @@ class Flock:
         Draw.vis.register_key_callback(ord('W'), Flock.toggle_wrap_vs_avoid)
         Draw.vis.register_key_callback(ord('E'), Flock.toggle_dynamic_erase)
         Draw.vis.register_key_callback(ord('F'), Flock.toggle_fixed_time_step)
+        ########################################################################
+        # TODO 20230909 put in 'B' key command to toggle avoidance blend mode.
+        Draw.vis.register_key_callback(ord('B'), Flock.toggle_avoid_blend_mode)
+        ########################################################################
         Draw.vis.register_key_callback(ord('H'), Flock.print_help)
 
     # Toggle simulation pause mode.
@@ -255,6 +263,14 @@ class Flock:
     def toggle_fixed_time_step(self):
         self = Flock.convert_to_flock(self)
         self.fixed_time_step = not self.fixed_time_step
+
+    ########################################################################
+    # TODO 20230909 put in 'B' key command to toggle avoidance blend mode.
+    def toggle_avoid_blend_mode(self):
+        self = Flock.convert_to_flock(self)
+        self.avoid_blend_mode = not self.avoid_blend_mode
+        print('    self.avoid_blend_mode =', self.avoid_blend_mode)
+    ########################################################################
 
     # Print mini-help on shell.
     def print_help(self):
@@ -335,3 +351,4 @@ if __name__ == "__main__":
 #    Flock(max_simulation_steps=200, fixed_time_step=True, seed=438538457).run()
 
     Flock().run()
+#    Flock(2).run()

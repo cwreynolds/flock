@@ -136,22 +136,62 @@ class Boid(Agent):
 #                                              self.sphere_center)
 #        return avoidance
 
+#    # Steering force component to avoid obstacles.
+#    def steer_to_avoid(self, time_step):
+#        avoidance = Vec3()
+#        collisions = self.predict_future_collisions()
+#        if collisions and time_step > 0 and not self.flock.wrap_vs_avoid:
+#            min_time_to_collide = 1.5 # seconds
+#            min_distance = self.speed * min_time_to_collide / time_step
+#            # Near enough to require avoidance steering? ["hard switch" version]
+#            if collisions[0].dist_to_collision < min_distance:
+#                poi = collisions[0].point_of_impact
+#                normal = collisions[0].normal_at_poi
+#                magenta = Vec3(0.9, 0.7, 0.9)
+#                Draw.add_line_segment(self.position, poi, magenta)
+#                pure_steering = normal.perpendicular_component(self.forward)
+#                avoidance = pure_steering.normalize()
+#        return avoidance
+
+
+    # TODO 20230909 add switch/blend conditional
+
     # Steering force component to avoid obstacles.
     def steer_to_avoid(self, time_step):
+        weight = 0
         avoidance = Vec3()
         collisions = self.predict_future_collisions()
-        if collisions and time_step > 0 and not self.flock.wrap_vs_avoid:
+        collision_found = (collisions and
+                           time_step > 0 and
+                           not self.flock.wrap_vs_avoid)
+        if collision_found:
+            first_collision = collisions[0]
+            poi = first_collision.point_of_impact
+            normal = first_collision.normal_at_poi
+#            magenta = Vec3(0.9, 0.7, 0.9)
+#            Draw.add_line_segment(self.position, poi, magenta)
+            pure_steering = normal.perpendicular_component(self.forward)
+            avoidance = pure_steering.normalize()
+            
             min_time_to_collide = 1.5 # seconds
             min_distance = self.speed * min_time_to_collide / time_step
-            # Near enough to require avoidance steering? ["hard switch" version]
-            if collisions[0].dist_to_collision < min_distance:
-                poi = collisions[0].point_of_impact
-                normal = collisions[0].normal_at_poi
-                magenta = Vec3(0.9, 0.7, 0.9)
-                Draw.add_line_segment(self.position, poi, magenta)
-                pure_steering = normal.perpendicular_component(self.forward)
-                avoidance = pure_steering.normalize()
-        return avoidance
+            magenta = Vec3(0.9, 0.7, 0.9)
+
+            if self.flock.avoid_blend_mode:
+#                q = first_collision.dist_to_collision / min_distance
+#                q = first_collision.dist_to_collision - (min_distance / 2)
+                q = first_collision.dist_to_collision + (min_distance / 2)
+                weight = util.unit_sigmoid_on_01(q)
+                print('q:', q, 'weight:', weight, 'dist:', first_collision.dist_to_collision, 'min_distance:', min_distance)
+            else:
+                min_time_to_collide = 1.5 # seconds
+                min_distance = self.speed * min_time_to_collide / time_step
+                # Near enough to require avoidance steering? ["hard switch" version]
+                near = first_collision.dist_to_collision < min_distance
+                weight = 1 if near else 0
+                if weight > 0:
+                    Draw.add_line_segment(self.position, poi, magenta)
+        return avoidance * weight
 
     ############################################################################
 

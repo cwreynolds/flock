@@ -8,6 +8,7 @@
 #
 #------------------------------------------------------------------------------
 
+import math
 import numpy as np
 
 def interpolate(alpha, p, q):
@@ -49,6 +50,16 @@ epsilon = 0.00000000000001
 # True when a and b differ by no more than epsilon.
 def within_epsilon(a, b, e=epsilon):
     return abs(a - b) <= e
+
+# Taken from https://en.wikipedia.org/wiki/Logistic_function
+def logistic(x, k, L, x0):
+    return L / (1 + math.exp(-k * (x - x0)))
+
+#def unit_sigmoid(x):
+#    return logistic(x / 10, 10, 1, 0)
+
+def unit_sigmoid_on_01(x):
+    return logistic(x, 12, 1, 0.5)
 
 # Takes a 32 bit value and shuffles it around to produce a new 32 bit value.
 # "Robert Jenkins' 32 bit integer hash function" from "Integer Hash Function"
