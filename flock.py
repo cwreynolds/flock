@@ -48,7 +48,7 @@ class Flock:
         self.boids = []                # List of boids in flock.
         self.selected_boid_index = 0   # Index of boid tracked by camera.
         self.total_avoid_fail = 0      # count pass through containment sphere.
-        self.total_sep_fail = 0        # separation fail: a pair of boids touch.
+        self.cumulative_sep_fail = 0   # separation fail: a pair of boids touch.
         self.simulation_paused = False # Simulation stopped, display continues.
         self.single_step = False       # perform one simulation step then pause.
         self.enable_annotation = True
@@ -155,7 +155,7 @@ class Flock:
                     ave_sep += dist
                     pair_count += 1
                     if dist < 2:
-                        self.total_sep_fail += 1
+                        self.cumulative_sep_fail += 1
                 ave_sep /= pair_count
                 #
                 max_nn_dist = 0
@@ -170,8 +170,9 @@ class Flock:
                       ', min_sep=' + str(min_sep)[0:5] +
                       ', ave_sep=' + str(ave_sep)[0:5] +
                       ', max_nn_dist=' + str(max_nn_dist)[0:5] +
-                      ', sep_fail/boid=' + (str(self.total_sep_fail /
-                                               len(self.boids)) + '00')[0:5] +
+                      ', cumulative_sep_fail/boid=' +
+                          (str(self.cumulative_sep_fail / len(self.boids)) +
+                          '00')[0:5] +
                       ', avoid_fail=' + str(self.total_avoid_fail))
 
     # Keep track of a smoothed (LPF) version of frames per second metric.

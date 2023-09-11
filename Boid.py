@@ -122,31 +122,27 @@ class Boid(Agent):
         weight = 0
         avoidance = Vec3()
         min_time_to_collide = 1.5 # seconds
-        collisions = self.predict_future_collisions()
-        collision_found = (collisions and
-                           time_step > 0 and
-                           not self.flock.wrap_vs_avoid)
-        if collision_found:
-            first_collision = collisions[0]
-            poi = first_collision.point_of_impact
-            normal = first_collision.normal_at_poi
-            pure_steering = normal.perpendicular_component(self.forward)
-            avoidance = pure_steering.normalize()
-            min_distance = self.speed * min_time_to_collide / time_step
-            # Near enough to require avoidance steering? ["hard switch" version]
-            near = min_distance > first_collision.dist_to_collision
-            if self.flock.avoid_blend_mode:
-                d = util.remap_interval(first_collision.dist_to_collision,
-                                        min_distance * 0.8,
-                                        min_distance * 1.2,
-                                        1, 0)
-                weight = util.unit_sigmoid_on_01(d)
-
-            else:
-                min_time_to_collide = 1.5 # seconds
+        if not self.flock.wrap_vs_avoid:
+            collisions = self.predict_future_collisions()
+            if collisions and time_step > 0:
+                first_collision = collisions[0]
+                poi = first_collision.point_of_impact
+                normal = first_collision.normal_at_poi
+                pure_steering = normal.perpendicular_component(self.forward)
+                avoidance = pure_steering.normalize()
                 min_distance = self.speed * min_time_to_collide / time_step
-                weight = 1 if near else 0
-            self.avoid_obstacle_annotation(poi, near, weight)
+                # Near enough to require avoidance steering?
+                near = min_distance > first_collision.dist_to_collision
+                if self.flock.avoid_blend_mode:
+                    # Smooth weight transition from 80% to 120% of min dist.
+                    d = util.remap_interval(first_collision.dist_to_collision,
+                                            min_distance * 0.8,
+                                            min_distance * 1.2,
+                                            1, 0)
+                    weight = util.unit_sigmoid_on_01(d)
+                else:
+                    weight = 1 if near else 0
+                self.avoid_obstacle_annotation(poi, near, weight)
         return avoidance * weight
 
     # Draw a ray from Boid to its point of impact. Magenta for strong avoidance,
@@ -155,8 +151,8 @@ class Boid(Agent):
         # magenta = Vec3(0.9, 0.7, 0.9) # old color before 20230910
         magenta = Vec3(1, 0, 1)
         gray85 = Vec3(0.85, 0.85, 0.85)
-        color = util.interpolate(weight, magenta, gray85)
-        if near:
+        color = util.interpolate(weight, gray85, magenta)
+        if weight > 0.1:
             Draw.add_line_segment(self.position, poi, color)
 
     # Wander aimlessly via slowly varying steering force. Currently unused.
