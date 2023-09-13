@@ -60,6 +60,7 @@ def logistic(x, k, L, x0):
     return L / (1 + math.exp(-k * (x - x0)))
 
 # Logistic sigmoid (s-curve) from ~(0,0) to ~(1,1), ~0 if x<0, ~1 if x>1
+# (See a plot of this function via Wolfram|Alpha: https://bit.ly/3sUYbeJ)
 def unit_sigmoid_on_01(x):
     return logistic(x, 12, 1, 0.5)
 

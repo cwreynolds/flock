@@ -55,6 +55,7 @@ class Flock:
         self.tracking_camera = False
         self.wrap_vs_avoid = False
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
+        self.min_time_to_collide = 1.5 # react to predicted impact (seconds)
         self.fps = util.Blender()
         # give Flock a default list of obstacles
         self.obstacles = [EvertedSphereObstacle(self.sphere_radius,

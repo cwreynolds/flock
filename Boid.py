@@ -121,7 +121,6 @@ class Boid(Agent):
     def steer_to_avoid(self, time_step):
         weight = 0
         avoidance = Vec3()
-        min_time_to_collide = 1.5 # seconds
         if not self.flock.wrap_vs_avoid:
             collisions = self.predict_future_collisions()
             if collisions and time_step > 0:
@@ -130,15 +129,13 @@ class Boid(Agent):
                 normal = first_collision.normal_at_poi
                 pure_steering = normal.perpendicular_component(self.forward)
                 avoidance = pure_steering.normalize()
-                min_distance = self.speed * min_time_to_collide / time_step
+                min_dist = self.speed * self.flock.min_time_to_collide / time_step
                 # Near enough to require avoidance steering?
-                near = min_distance > first_collision.dist_to_collision
+                near = min_dist > first_collision.dist_to_collision
                 if self.flock.avoid_blend_mode:
                     # Smooth weight transition from 80% to 120% of min dist.
                     d = util.remap_interval(first_collision.dist_to_collision,
-                                            min_distance * 0.8,
-                                            min_distance * 1.2,
-                                            1, 0)
+                                            min_dist * 0.8, min_dist * 1.2, 1, 0)
                     weight = util.unit_sigmoid_on_01(d)
                 else:
                     weight = 1 if near else 0
