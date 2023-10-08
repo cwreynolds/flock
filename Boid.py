@@ -79,7 +79,7 @@ class Boid(Agent):
                 dist = offset.length()
                 if dist > 0:
                     weight = 1 / (dist ** 2)
-                    direction += (offset / (dist * weight))
+                    direction += offset * weight
             steer = direction.normalize()
         return steer
 
