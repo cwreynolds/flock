@@ -60,9 +60,9 @@ class Boid(Agent):
         neighbors = self.nearest_neighbors(time_step)
         f = 0.2 * self.forward
         s = 1.0 * self.steer_to_separate(neighbors)
-        a = 0.3 * self.steer_to_align(neighbors)
-        c = 0.6 * self.steer_to_cohere(neighbors)
-        o = 1.0 * self.steer_to_avoid(time_step)
+        a = 0.5 * self.steer_to_align(neighbors)
+        c = 0.3 * self.steer_to_cohere(neighbors)
+        o = 0.9 * self.steer_to_avoid(time_step)
         combined_steering = self.smoothed_steering(f + s + a + c + o)
         self.annotation(s, a, c, o, combined_steering)
         return combined_steering
