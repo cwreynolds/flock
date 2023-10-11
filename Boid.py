@@ -28,6 +28,7 @@ class Boid(Agent):
         self.max_speed = 0.3     # Speed upper limit (m/s)
         self.max_force = 0.6     # Acceleration upper limit (m/s²)
         self.speed = self.max_speed * 0.6
+        self.body_radius = 0.5   # "assume a spherical boid" -- unit diameter
         self.flock = flock
         self.sphere_radius = 0
         self.sphere_center = Vec3()
@@ -93,7 +94,7 @@ class Boid(Agent):
                 heading_offset = neighbor.forward - self.forward
                 if heading_offset.length_squared() > 0:
                     dist = (neighbor.position - self.position).length()
-                    weight = 1 / (dist ** 2) # TODO ?
+                    weight = 1 / (dist ** 2)
                     direction += heading_offset.normalize() * weight
             # Return "pure" steering component: perpendicular to forward.
             if direction.length_squared() > 0:
@@ -204,11 +205,12 @@ class Boid(Agent):
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
         center = self.position
-        nose = center + self.forward * 0.5
-        tail = center - self.forward * 0.5
-        apex = tail + self.up * 0.25 + self.forward * 0.1
-        wingtip0 = tail + self.side * 0.3
-        wingtip1 = tail - self.side * 0.3
+        nose = center + self.forward * self.body_radius
+        tail = center - self.forward * self.body_radius
+        bd = self.body_radius * 2  # body diameter (defaults to 1)
+        apex = tail + self.up * 0.25 * bd + self.forward * 0.1 * bd
+        wingtip0 = tail + self.side * 0.3 * bd
+        wingtip1 = tail - self.side * 0.3 * bd
         # Draw the 4 triangles of a boid's body.
         def draw_tri(a, b, c, color):
             Draw.add_colored_triangle(a, b, c, color)

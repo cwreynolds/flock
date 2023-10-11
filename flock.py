@@ -155,7 +155,7 @@ class Flock:
                         min_sep = dist
                     ave_sep += dist
                     pair_count += 1
-                    if dist < 2:
+                    if dist < 2 * p.body_radius:
                         self.cumulative_sep_fail += 1
                 ave_sep /= pair_count
                 #
