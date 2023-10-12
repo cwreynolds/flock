@@ -59,19 +59,17 @@ class Boid(Agent):
     # for one boid in a flock.
     def steer_to_flock(self, time_step):
         neighbors = self.nearest_neighbors(time_step)
-        f = 0.2 * self.forward
-        s = 1.0 * self.steer_to_separate(neighbors)
-        a = 0.5 * self.steer_to_align(neighbors)
-        c = 0.3 * self.steer_to_cohere(neighbors)
-        o = 0.9 * self.steer_to_avoid(time_step)
+        f = 0.20 * self.forward
+        s = 0.75 * self.steer_to_separate(neighbors)
+        a = 0.15 * self.steer_to_align(neighbors)
+        c = 0.65 * self.steer_to_cohere(neighbors)
+        o = 0.90 * self.steer_to_avoid(time_step)
         combined_steering = self.smoothed_steering(f + s + a + c + o)
         self.annotation(s, a, c, o, combined_steering)
         return combined_steering
 
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
-        # TODO experimental, ignore neighbors more than 3 units away.
-        neighbors = self.filter_boids_by_distance(3, neighbors)
         steer = Vec3()
         if len(neighbors) > 0:
             direction = Vec3()
@@ -86,8 +84,6 @@ class Boid(Agent):
 
     # Steering force component to align path with neighbors.
     def steer_to_align(self, neighbors):
-        # TODO experimental, ignore neighbors more than 10 units away.
-        neighbors = self.filter_boids_by_distance(10, neighbors)
         direction = Vec3()
         if len(neighbors) > 0:
             for neighbor in neighbors:
@@ -182,6 +178,7 @@ class Boid(Agent):
         self.time_since_last_neighbor_refresh = 0
 
     # Filter collection of boids by distance.
+    # (TODO 20231012 no longer used, could be removed.)
     def filter_boids_by_distance(self, max_distance, boids=None):
         result = []
         if boids == None:
@@ -200,7 +197,7 @@ class Boid(Agent):
     # determined "raw" steering into a per-boid accumulator, then returns that
     # smoothed value to use for actually steering the boid this simulation step.
     def smoothed_steering(self, steer):
-        return self.steer_memory.blend(steer, 0.85) # Ad hoc smoothness param.
+        return self.steer_memory.blend(steer, 0.6) # Ad hoc smoothness param.
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self):
