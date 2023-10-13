@@ -44,8 +44,19 @@ class Boid(Agent):
         self.time_since_last_neighbor_refresh = 0
         # For wander_steer()
         self.wander_state = Vec3()
-       # Temp? Pick a random midrange boid color.
+        # Temp? Pick a random midrange boid color.
         self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
+        # Tunable parameters
+        # (TODO maybe these should be on the class rather than instance?)
+        # (TODO Also add max_speed, max_force, and Flock.min_time_to_collide?)
+        self.weight_forward  = 0.20
+        self.weight_separate = 0.80
+        self.weight_align    = 0.20
+        self.weight_cohere   = 0.70
+        self.weight_avoid    = 0.90
+        self.exponent_separate = 2
+        self.exponent_align    = 3
+        self.exponent_cohere   = 1
 
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
@@ -59,11 +70,11 @@ class Boid(Agent):
     # for one boid in a flock.
     def steer_to_flock(self, time_step):
         neighbors = self.nearest_neighbors(time_step)
-        f = 0.20 * self.forward
-        s = 0.75 * self.steer_to_separate(neighbors)
-        a = 0.15 * self.steer_to_align(neighbors)
-        c = 0.65 * self.steer_to_cohere(neighbors)
-        o = 0.90 * self.steer_to_avoid(time_step)
+        f = self.weight_forward * self.forward
+        s = self.weight_separate * self.steer_to_separate(neighbors)
+        a = self.weight_align * self.steer_to_align(neighbors)
+        c = self.weight_cohere * self.steer_to_cohere(neighbors)
+        o = self.weight_avoid * self.steer_to_avoid(time_step)
         combined_steering = self.smoothed_steering(f + s + a + c + o)
         self.annotation(s, a, c, o, combined_steering)
         return combined_steering
@@ -77,7 +88,7 @@ class Boid(Agent):
                 offset = self.position - neighbor.position
                 dist = offset.length()
                 if dist > 0:
-                    weight = 1 / (dist ** 2)
+                    weight = 1 / (dist ** self.exponent_separate)
                     direction += offset * weight
             steer = direction.normalize()
         return steer
@@ -90,7 +101,7 @@ class Boid(Agent):
                 heading_offset = neighbor.forward - self.forward
                 if heading_offset.length_squared() > 0:
                     dist = (neighbor.position - self.position).length()
-                    weight = 1 / (dist ** 2)
+                    weight = 1 / (dist ** self.exponent_align)
                     direction += heading_offset.normalize() * weight
             # Return "pure" steering component: perpendicular to forward.
             if direction.length_squared() > 0:
@@ -105,7 +116,7 @@ class Boid(Agent):
             total_weight = 0
             for neighbor in neighbors:
                 dist = (neighbor.position - self.position).length()
-                weight = 1 / (dist ** 2)
+                weight = 1 / (dist ** self.exponent_cohere)
                 neighbor_center += neighbor.position * weight
                 total_weight += weight
             neighbor_center /= total_weight
