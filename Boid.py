@@ -50,10 +50,10 @@ class Boid(Agent):
         # (TODO maybe these should be on the class rather than instance?)
         # (TODO Also add max_speed, max_force, and Flock.min_time_to_collide?)
         self.weight_forward  = 0.20
-        self.weight_separate = 0.80
+        self.weight_separate = 1.00
         self.weight_align    = 0.20
-        self.weight_cohere   = 0.70
-        self.weight_avoid    = 0.90
+        self.weight_cohere   = 0.80
+        self.weight_avoid    = 0.70
         self.exponent_separate = 2
         self.exponent_align    = 3
         self.exponent_cohere   = 1
@@ -148,7 +148,29 @@ class Boid(Agent):
                 else:
                     weight = 1 if near else 0
                 self.avoid_obstacle_annotation(poi, near, weight)
+        if weight < 0.1:
+            avoidance = self.prototype_fly_away_from_obstacle()
+            weight = 1
         return avoidance * weight
+
+    # TODO 20231014 prototype_fly_away_from_obstacle
+    # Prototype of non-predictive "repulsion" from "large" obstacles like walls.
+    # Here the default EvertedSphereObstacle is assumed.
+    def prototype_fly_away_from_obstacle(self):
+        avoidance = Vec3()
+        p = self.position
+        r = self.flock.sphere_radius
+        c = self.flock.sphere_center
+        offset_to_sphere_center = c - p
+        distance_to_sphere_center = offset_to_sphere_center.length()
+        dist_from_wall = r - distance_to_sphere_center
+        if dist_from_wall < r * 0.7:  # outer 75% of sphere
+            normal = offset_to_sphere_center / distance_to_sphere_center
+            if normal.dot(self.forward) < 0.9:
+                weight = (distance_to_sphere_center / r) ** 3
+                avoidance = normal * weight
+                # Draw.add_line_segment(p, p + avoidance, Vec3(1, 1, 0))
+        return avoidance
 
     # Draw a ray from Boid to its point of impact. Magenta for strong avoidance,
     # shades to background gray (85%) for gentle avoidance.

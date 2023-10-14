@@ -55,7 +55,7 @@ class Flock:
         self.tracking_camera = False
         self.wrap_vs_avoid = False
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
-        self.min_time_to_collide = 1.5 # react to predicted impact (seconds)
+        self.min_time_to_collide = 0.6 # react to predicted impact (seconds)
         self.fps = util.Blender()
         # give Flock a default list of obstacles
         self.obstacles = [EvertedSphereObstacle(self.sphere_radius,
@@ -95,7 +95,7 @@ class Flock:
             boid.sphere_radius = radius
             boid.sphere_center = center
             boid.ls.randomize_orientation()
-            boid.ls.p = (center + (radius *
+            boid.ls.p = (center + (radius * 0.5 *
                                    Vec3.random_point_in_unit_radius_sphere()))
             self.boids.append(boid)
         # Initialize per-Boid cached_nearest_neighbors. Randomize time stamp.
