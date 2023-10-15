@@ -40,7 +40,8 @@ class Boid(Agent):
         self.up_memory = util.Blender()
         # Cache of nearest neighbors, updating "ocasionally".
         self.cached_nearest_neighbors = []
-        self.neighbor_refresh_rate = 0.5  # seconds between neighbor refresh
+        # Seconds between neighbor refresh (Set to zero to turn off caching.)
+        self.neighbor_refresh_rate = 0.5
         self.time_since_last_neighbor_refresh = 0
         # For wander_steer()
         self.wander_state = Vec3()
@@ -196,6 +197,7 @@ class Boid(Agent):
                 (self.max_force * 0.5))
 
     # Returns a list of the N Boids nearest this one.
+    # (n=3 increased frame rate from ~30 to ~50 fps. No other obvious changes.)
     def nearest_neighbors(self, time_step, n=7):
         self.time_since_last_neighbor_refresh += time_step
         if self.time_since_last_neighbor_refresh > self.neighbor_refresh_rate:
