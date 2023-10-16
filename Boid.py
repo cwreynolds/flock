@@ -82,49 +82,37 @@ class Boid(Agent):
 
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
-        steer = Vec3()
-        if len(neighbors) > 0:
-            direction = Vec3()
-            for neighbor in neighbors:
-                offset = self.position - neighbor.position
-                dist = offset.length()
-                if dist > 0:
-                    weight = 1 / (dist ** self.exponent_separate)
-                    direction += offset * weight
-            steer = direction.normalize()
-        return steer
+        direction = Vec3()
+        for neighbor in neighbors:
+            offset = self.position - neighbor.position
+            dist = offset.length()
+            weight = 1 / (dist ** self.exponent_separate)
+            direction += offset * weight
+        return direction.normalize()
 
     # Steering force component to align path with neighbors.
     def steer_to_align(self, neighbors):
         direction = Vec3()
-        if len(neighbors) > 0:
-            for neighbor in neighbors:
-                heading_offset = neighbor.forward - self.forward
-                if heading_offset.length_squared() > 0:
-                    dist = (neighbor.position - self.position).length()
-                    weight = 1 / (dist ** self.exponent_align)
-                    direction += heading_offset.normalize() * weight
-            # Return "pure" steering component: perpendicular to forward.
-            if direction.length_squared() > 0:
-                direction = direction.normalize()
-        return direction
+        for neighbor in neighbors:
+            heading_offset = neighbor.forward - self.forward
+            dist = (neighbor.position - self.position).length()
+            weight = 1 / (dist ** self.exponent_align)
+            direction += heading_offset.normalize() * weight
+        return direction.normalize()
 
     # Steering force component to cohere with neighbors: toward neighbor center.
     def steer_to_cohere(self, neighbors):
         direction = Vec3()
-        if len(neighbors) > 0:
-            neighbor_center  = Vec3()
-            total_weight = 0
-            for neighbor in neighbors:
-                dist = (neighbor.position - self.position).length()
-                weight = 1 / (dist ** self.exponent_cohere)
-                neighbor_center += neighbor.position * weight
-                total_weight += weight
-            neighbor_center /= total_weight
-            direction = neighbor_center - self.position
-            # "Pure" steering component: perpendicular to forward.
-            direction = direction.normalize()
-        return direction
+        neighbor_center = Vec3()
+        total_weight = 0
+        for neighbor in neighbors:
+            dist = (neighbor.position - self.position).length()
+            weight = 1 / (dist ** self.exponent_cohere)
+            neighbor_center += neighbor.position * weight
+            total_weight += weight
+        neighbor_center /= total_weight
+        direction = neighbor_center - self.position
+        return direction.normalize()
 
     # Steering force component to avoid obstacles.
     def steer_to_avoid(self, time_step):
@@ -149,9 +137,9 @@ class Boid(Agent):
                 else:
                     weight = 1 if near else 0
                 self.avoid_obstacle_annotation(poi, near, weight)
-        if weight < 0.1:
-            avoidance = self.prototype_fly_away_from_obstacle()
-            weight = 1
+            if weight < 0.1:
+                avoidance = self.prototype_fly_away_from_obstacle()
+                weight = 1
         return avoidance * weight
 
     # TODO 20231014 prototype_fly_away_from_obstacle
