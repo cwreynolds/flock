@@ -50,14 +50,31 @@ class Boid(Agent):
         # Tunable parameters
         # (TODO maybe these should be on the class rather than instance?)
         # (TODO Also add max_speed, max_force, and Flock.min_time_to_collide?)
+        ####################################################################
+        # todo 20231017 max_dist
+
+#        self.weight_forward  = 0.20
+#        self.weight_separate = 1.00
+#        self.weight_align    = 0.20
+#        self.weight_cohere   = 0.80
+#        self.weight_avoid    = 0.70
+#        self.exponent_separate = 2
+#        self.exponent_align    = 3
+#        self.exponent_cohere   = 1
+
         self.weight_forward  = 0.20
         self.weight_separate = 1.00
-        self.weight_align    = 0.20
-        self.weight_cohere   = 0.80
-        self.weight_avoid    = 0.70
-        self.exponent_separate = 2
-        self.exponent_align    = 3
+        self.weight_align    = 0.30
+        self.weight_cohere   = 0.60
+        self.weight_avoid    = 0.80
+        self.exponent_separate = 1
+        self.exponent_align    = 1
         self.exponent_cohere   = 1
+        self.max_dist_separate = 4
+        self.max_dist_align    = 6
+        self.max_dist_cohere   = 100  # should this be ∞ or
+                                      # should the behavior just ignore it?
+        ####################################################################
 
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
@@ -87,8 +104,16 @@ class Boid(Agent):
             offset = self.position - neighbor.position
             dist = offset.length()
             weight = 1 / (dist ** self.exponent_separate)
+            ####################################################################
+            # todo 20231017 max_dist
+            weight *= 1 - util.unit_sigmoid_on_01(dist / self.max_dist_separate)
+            ####################################################################
             direction += offset * weight
-        return direction.normalize()
+        ########################################################################
+        # todo 20231017 max_dist
+#        return direction.normalize()
+        return direction.normalize_or_0()
+        ########################################################################
 
     # Steering force component to align path with neighbors.
     def steer_to_align(self, neighbors):
@@ -97,8 +122,16 @@ class Boid(Agent):
             heading_offset = neighbor.forward - self.forward
             dist = (neighbor.position - self.position).length()
             weight = 1 / (dist ** self.exponent_align)
+            ####################################################################
+            # todo 20231017 max_dist
+            weight *= 1 - util.unit_sigmoid_on_01(dist / self.max_dist_align)
+            ####################################################################
             direction += heading_offset.normalize() * weight
-        return direction.normalize()
+        ########################################################################
+        # todo 20231017 max_dist
+#        return direction.normalize()
+        return direction.normalize_or_0()
+        ########################################################################
 
     # Steering force component to cohere with neighbors: toward neighbor center.
     def steer_to_cohere(self, neighbors):
@@ -108,6 +141,10 @@ class Boid(Agent):
         for neighbor in neighbors:
             dist = (neighbor.position - self.position).length()
             weight = 1 / (dist ** self.exponent_cohere)
+            ####################################################################
+            # todo 20231017 max_dist
+            weight *= 1 - util.unit_sigmoid_on_01(dist / self.max_dist_cohere)
+            ####################################################################
             neighbor_center += neighbor.position * weight
             total_weight += weight
         neighbor_center /= total_weight
