@@ -139,6 +139,7 @@ class Flock:
             if distance_from_center > radius:
                 new_position = (center - bp).normalize() * radius * 0.95
                 boid.ls.p = new_position
+                boid.recompute_nearest_neighbors()
                 if not self.wrap_vs_avoid:
                     self.total_avoid_fail += 1
 
