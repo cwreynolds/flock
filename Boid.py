@@ -64,6 +64,16 @@ class Boid(Agent):
         self.exponent_separate = 1
         self.exponent_align    = 1
         self.exponent_cohere   = 1
+        ########################################################################
+        # TODO 20231020 neighbor angle
+        # Cosine of threshold angle (max angle from forward to be seen)
+#        self.angle_separate = 0      # 90°
+#        self.angle_align    = 0.707  # 45°
+#        self.angle_cohere   = 0      # 90°
+        self.angle_separate = -1     # 180°
+        self.angle_align    = -1     # 180°
+        self.angle_cohere   = -1     # 180°
+        ########################################################################
 
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
@@ -86,6 +96,10 @@ class Boid(Agent):
         self.annotation(s, a, c, o, combined_steering)
         return combined_steering
 
+
+    ############################################################################
+    # TODO 20231020 neighbor angle
+
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
         direction = Vec3()
@@ -94,6 +108,9 @@ class Boid(Agent):
             dist = offset.length()
             weight = 1 / (dist ** self.exponent_separate)
             weight *= 1 - util.unit_sigmoid_on_01(dist / self.max_dist_separate)
+            
+            weight *= self.angle_weight(neighbor, self.angle_separate)
+            
             direction += offset * weight
         return direction.normalize_or_0()
 
@@ -105,6 +122,9 @@ class Boid(Agent):
             dist = (neighbor.position - self.position).length()
             weight = 1 / (dist ** self.exponent_align)
             weight *= 1 - util.unit_sigmoid_on_01(dist / self.max_dist_align)
+            
+            weight *= self.angle_weight(neighbor, self.angle_align)
+
             direction += heading_offset.normalize() * weight
         return direction.normalize_or_0()
 
@@ -117,11 +137,16 @@ class Boid(Agent):
             dist = (neighbor.position - self.position).length()
             weight = 1 / (dist ** self.exponent_cohere)
             weight *= 1 - util.unit_sigmoid_on_01(dist / self.max_dist_cohere)
+            
+            weight *= self.angle_weight(neighbor, self.angle_cohere)
+
             neighbor_center += neighbor.position * weight
             total_weight += weight
         neighbor_center /= total_weight
         direction = neighbor_center - self.position
         return direction.normalize()
+
+    ############################################################################
 
     # Steering force component to avoid obstacles.
     def steer_to_avoid(self, time_step):
@@ -192,6 +217,18 @@ class Boid(Agent):
         return ((self.wander_state + (self.forward * 2)) *
                 (1 / 3) *
                 (self.max_force * 0.5))
+
+    ############################################################################
+    # TODO 20231020 neighbor angle
+    
+    def angle_weight(self, neighbor, cos_angle_threshold):
+        offset = self.position - neighbor.position
+        projection = offset.normalize().dot(self.forward)
+        within_angle =  projection > self.angle_separate
+#        return 1 if within_angle else 0
+        return 1 if within_angle else 0.01
+
+    ############################################################################
 
     # Returns a list of the N Boids nearest this one.
     # (n=3 increased frame rate from ~30 to ~50 fps. No other obvious changes.)
