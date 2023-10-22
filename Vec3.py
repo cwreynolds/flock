@@ -236,6 +236,10 @@ class Vec3:
             # p2 = o + u * d2
             return p1
         else:
+            ####################################################################
+            # TODO 20231021 why no intersection with EvertedSphereObstacle?
+            # print('delta =', delta, ', (o - c).length() =', (o - c).length())
+            ####################################################################
             return None
 
     @staticmethod

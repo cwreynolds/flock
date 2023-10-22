@@ -315,6 +315,12 @@ class Boid(Agent):
             # TODO 20230903 Quite occasionally, this seems to return None.
             #               Need to figure out why.
             #
+            # TODO 20231021 why no intersection with EvertedSphereObstacle?
+            #    In Vec3.ray_sphere_intersection() boid positions are clearly
+            #    outside the default EvertedSphereObstacle in (see commented-out
+            #    print() in Vec3.ray_sphere_intersection()). Which seems at odds
+            #    with zero Boid.total_avoid_fail, see Flock.sphere_wrap_around()
+            #
             if point_of_impact:
                 dist_to_collision = (point_of_impact - self.position).length()
                 time_to_collision = dist_to_collision / self.speed
