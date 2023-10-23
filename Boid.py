@@ -194,7 +194,8 @@ class Boid(Agent):
             if normal.dot(self.forward) < 0.9:
                 weight = (distance_to_sphere_center / r) ** 3
                 avoidance = normal * weight
-                # Draw.add_line_segment(p, p + avoidance, Vec3(1, 1, 0))
+                if self.should_annotate():
+                    Draw.add_line_segment(p, p + avoidance, Vec3(1, 1, 0))
         return avoidance
 
     # Draw a ray from Boid to its point of impact. Magenta for strong avoidance,
