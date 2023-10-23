@@ -111,6 +111,12 @@ class Agent:
     def __str__(self):
         return self.name + ': speed=' + str(self.speed) + str(self.ls)
 
+    def __eq__(self, other):
+        if isinstance(other, Agent):
+            return self.name == other.name
+        else:
+            return NotImplemented
+
     @staticmethod
     def unit_test():
         a = Agent()

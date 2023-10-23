@@ -126,6 +126,9 @@ class Draw:
         # Keep track of time elapsed per frame.
         Draw.frame_start_time = time.time()
 
+        ctr = Draw.vis.get_view_control()
+        ctr.set_constant_z_far(containment_radius * 10)
+
     # Close visualizer after simulation run.
     @staticmethod
     def close_visualizer():
@@ -144,6 +147,10 @@ class Draw:
         # Update (GPU reload?) dynamic_triangle_mesh (boid "bodies", annotation)
         Draw.vis.update_geometry(Draw.dynamic_triangle_mesh)
         Draw.adjust_static_scene_objects() # move static objects for lookat hack
+
+    @staticmethod
+    def reset_timer():
+        Draw.frame_start_time = time.time()
 
     # Measure how much wall clock time has elapsed for this simulation step.
     @staticmethod
