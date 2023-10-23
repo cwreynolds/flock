@@ -160,7 +160,7 @@ class Boid(Agent):
                 normal = first_collision.normal_at_poi
                 pure_steering = normal.perpendicular_component(self.forward)
                 avoidance = pure_steering.normalize()
-                min_dist = self.speed * self.flock.min_time_to_collide / time_step
+                min_dist = self.speed * self.flock.min_time_to_collide
                 # Near enough to require avoidance steering?
                 near = min_dist > first_collision.dist_to_collision
                 if self.flock.avoid_blend_mode:
