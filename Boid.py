@@ -153,8 +153,7 @@ class Boid(Agent):
         weight = 0
         avoidance = Vec3()
         if not self.flock.wrap_vs_avoid:
-            collisions = self.predict_future_collisions()
-            if collisions and time_step > 0:
+            if time_step > 0 and (collisions := self.predict_future_collisions(time_step)):
                 first_collision = collisions[0]
                 poi = first_collision.point_of_impact
                 normal = first_collision.normal_at_poi
@@ -187,7 +186,7 @@ class Boid(Agent):
         offset_to_sphere_center = c - p
         distance_to_sphere_center = offset_to_sphere_center.length()
         dist_from_wall = r - distance_to_sphere_center
-        if dist_from_wall < r * 0.7:  # outer 75% of sphere
+        if dist_from_wall < r * 0.7:  # outer 70% of sphere
             normal = offset_to_sphere_center / distance_to_sphere_center
             if normal.dot(self.forward) < 0.9:
                 weight = (distance_to_sphere_center / r) ** 3
@@ -307,7 +306,7 @@ class Boid(Agent):
         return self.up_memory.value
 
     # Returns a list of future collisions sorted by time, with soonest first.
-    def predict_future_collisions(self):
+    def predict_future_collisions(self, time_step):
         collisions = []
         for obstacle in self.flock.obstacles:
             point_of_impact = obstacle.ray_intersection(self.position, self.forward)
@@ -323,7 +322,7 @@ class Boid(Agent):
             #
             if point_of_impact:
                 dist_to_collision = (point_of_impact - self.position).length()
-                time_to_collision = dist_to_collision / self.speed
+                time_to_collision = dist_to_collision / (self.speed / time_step)
                 normal_at_poi = obstacle.normal_at_poi(point_of_impact)
                 collisions.append(Collision(time_to_collision,
                                             dist_to_collision,
