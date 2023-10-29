@@ -169,7 +169,9 @@ class Boid(Agent):
                     weight = util.unit_sigmoid_on_01(d)
                 else:
                     weight = 1 if near else 0
-                self.avoid_obstacle_annotation(poi, near, weight)
+
+                if self.should_annotate():
+                    self.avoid_obstacle_annotation(poi, near, weight)
             if weight < 0.1:
                 avoidance = self.prototype_fly_away_from_obstacle()
                 weight = 1
@@ -191,7 +193,8 @@ class Boid(Agent):
             if normal.dot(self.forward) < 0.9:
                 weight = (distance_to_sphere_center / r) ** 3
                 avoidance = normal * weight
-                # Draw.add_line_segment(p, p + avoidance, Vec3(1, 1, 0))
+                if self.should_annotate():
+                    Draw.add_line_segment(p, p + avoidance, Vec3(1, 1, 0))
         return avoidance
 
     # Draw a ray from Boid to its point of impact. Magenta for strong avoidance,
@@ -268,7 +271,7 @@ class Boid(Agent):
         return self.steer_memory.blend(steer, 0.6) # Ad hoc smoothness param.
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
-    def draw(self):
+    def draw(self, color=None):
         center = self.position
         nose = center + self.forward * self.body_radius
         tail = center - self.forward * self.body_radius
@@ -279,18 +282,24 @@ class Boid(Agent):
         # Draw the 4 triangles of a boid's body.
         def draw_tri(a, b, c, color):
             Draw.add_colored_triangle(a, b, c, color)
-        draw_tri(nose, apex,     wingtip1, self.color * 1.00)
-        draw_tri(nose, wingtip0, apex,     self.color * 0.95)
-        draw_tri(apex, wingtip0, wingtip1, self.color * 0.90)
-        draw_tri(nose, wingtip1, wingtip0, self.color * 0.70)
+        if color is None:
+            color = self.color
+        draw_tri(nose, apex,     wingtip1, color * 1.00)
+        draw_tri(nose, wingtip0, apex,     color * 0.95)
+        draw_tri(apex, wingtip0, wingtip1, color * 0.90)
+        draw_tri(nose, wingtip1, wingtip0, color * 0.70)
+
+    def should_annotate(self):
+        return (self.flock.enable_annotation and
+                self.flock.tracking_camera and
+                (self.flock.selected_boid().position - self.position).length() < 3)
 
     # Draw optional annotation of this Boid's current steering forces
     def annotation(self, separation, alignment, cohesion, avoidance, combined):
         center = self.position
         def relative_force_annotation(offset, color):
             Draw.add_line_segment(center, center + offset, color)
-        if (self.flock.enable_annotation and self.flock.tracking_camera and
-                   (self.flock.selected_boid().position - center).length() < 3):
+        if self.should_annotate():
             relative_force_annotation(separation, Vec3(1, 0, 0))
             relative_force_annotation(alignment,  Vec3(0, 1, 0))
             relative_force_annotation(cohesion,   Vec3(0, 0, 1))

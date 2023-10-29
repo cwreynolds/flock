@@ -109,7 +109,11 @@ class Flock:
         Draw.update_camera(self.selected_boid().position if
                            self.tracking_camera else Vec3())
         for boid in self.boids:
-            boid.draw()
+            color = None
+            if self.enable_annotation and self.tracking_camera and \
+                    boid in self.selected_boid().cached_nearest_neighbors:
+                color = Vec3(0.0, 1.0, 0.0)
+            boid.draw(color=color)
 
     # Fly each boid in flock for one simulation step. Consists of two sequential
     # steps to avoid artifacts from order of boids. First a "sense/plan" phase
@@ -210,6 +214,8 @@ class Flock:
     # Toggle simulation pause mode.
     def toggle_paused_mode(self):
         self = Flock.convert_to_flock(self)
+        if self.simulation_paused:
+            Draw.reset_timer()
         self.simulation_paused = not self.simulation_paused
 
     # Take single simulation step then enter pause mode.
