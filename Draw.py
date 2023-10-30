@@ -116,7 +116,7 @@ class Draw:
         Draw.vis.add_geometry(Draw.axes, False)
 
         # Create everted containment sphere and add it to scene.
-        Draw.sphere_containment = Draw.make_everted_sphere(containment_radius+5,
+        Draw.sphere_containment = Draw.make_everted_sphere(containment_radius,
                                                            containment_center)
         Draw.vis.add_geometry(Draw.sphere_containment, False)
 

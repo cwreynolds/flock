@@ -54,7 +54,7 @@ class Boid(Agent):
         self.weight_separate = 1.00
         self.weight_align    = 0.30
         self.weight_cohere   = 0.60
-        self.weight_avoid    = 0.80
+        self.weight_avoid    = 0.90
         self.max_dist_separate = 4
         self.max_dist_align    = 6
         self.max_dist_cohere   = 100  # TODO 20231017 should this be ∞ or
@@ -171,7 +171,7 @@ class Boid(Agent):
                     weight = 1 if near else 0
 
                 if self.should_annotate():
-                    self.avoid_obstacle_annotation(poi, near, weight)
+                    self.avoid_obstacle_annotation(poi, weight)
             if weight < 0.1:
                 avoidance = self.prototype_fly_away_from_obstacle()
                 weight = 1
@@ -188,18 +188,19 @@ class Boid(Agent):
         offset_to_sphere_center = c - p
         distance_to_sphere_center = offset_to_sphere_center.length()
         dist_from_wall = r - distance_to_sphere_center
-        if dist_from_wall < r * 0.7:  # outer 70% of sphere
+        if dist_from_wall < self.body_radius * 12:  # six body diameters
             normal = offset_to_sphere_center / distance_to_sphere_center
             if normal.dot(self.forward) < 0.9:
-                weight = (distance_to_sphere_center / r) ** 3
+                weight = (distance_to_sphere_center / r) ** 2
                 avoidance = normal * weight
                 if self.should_annotate():
-                    Draw.add_line_segment(p, p + avoidance, Vec3(1, 1, 0))
+                    on_sphere = p - (normal * dist_from_wall)
+                    self.avoid_obstacle_annotation(on_sphere, weight)
         return avoidance
 
     # Draw a ray from Boid to its point of impact. Magenta for strong avoidance,
     # shades to background gray (85%) for gentle avoidance.
-    def avoid_obstacle_annotation(self, poi, near, weight):
+    def avoid_obstacle_annotation(self, poi, weight):
         # magenta = Vec3(0.9, 0.7, 0.9) # old color before 20230910
         magenta = Vec3(1, 0, 1)
         gray85 = Vec3(0.85, 0.85, 0.85)

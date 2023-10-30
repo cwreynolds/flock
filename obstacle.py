@@ -19,7 +19,7 @@
 
 import math
 from Vec3 import Vec3
-import Utilities as util
+#import Utilities as util
 
 class Obstacle:
     def __init__(self):
@@ -40,6 +40,12 @@ class EvertedSphereObstacle(Obstacle):
                                             self.center)
     def normal_at_poi(self, poi):
         return (self.center - poi).normalize()
+
+    ############################################################################
+    # TODO 20231030 WIP method to replace Boid.prototype_fly_away_from_obstacle
+    def fly_away(self, position, forward, should_annotate):
+        pass
+    ############################################################################
 
 class Collision:
     def __init__(self,
