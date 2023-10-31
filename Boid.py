@@ -188,10 +188,12 @@ class Boid(Agent):
         offset_to_sphere_center = c - p
         distance_to_sphere_center = offset_to_sphere_center.length()
         dist_from_wall = r - distance_to_sphere_center
-        if dist_from_wall < self.body_radius * 12:  # six body diameters
+        # This behavior is active from the sphere and inward for 10 body radii.
+        active_radius = self.body_radius * 10  # six body diameters
+        if dist_from_wall < active_radius:
             normal = offset_to_sphere_center / distance_to_sphere_center
             if normal.dot(self.forward) < 0.9:
-                weight = (distance_to_sphere_center / r) ** 2
+                weight = 1 - (dist_from_wall / active_radius)
                 avoidance = normal * weight
                 if self.should_annotate():
                     on_sphere = p - (normal * dist_from_wall)
@@ -320,16 +322,6 @@ class Boid(Agent):
         collisions = []
         for obstacle in self.flock.obstacles:
             point_of_impact = obstacle.ray_intersection(self.position, self.forward)
-            #
-            # TODO 20230903 Quite occasionally, this seems to return None.
-            #               Need to figure out why.
-            #
-            # TODO 20231021 why no intersection with EvertedSphereObstacle?
-            #    In Vec3.ray_sphere_intersection() boid positions are clearly
-            #    outside the default EvertedSphereObstacle in (see commented-out
-            #    print() in Vec3.ray_sphere_intersection()). Which seems at odds
-            #    with zero Boid.total_avoid_fail, see Flock.sphere_wrap_around()
-            #
             if point_of_impact:
                 dist_to_collision = (point_of_impact - self.position).length()
                 time_to_collision = dist_to_collision / (self.speed / time_step)

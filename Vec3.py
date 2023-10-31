@@ -211,7 +211,7 @@ class Vec3:
     #
     # Formulation from https://en.wikipedia.org/wiki/Line–sphere_intersection
     # particularly the two equations under the text "Note that in the specific
-    # case where is a unit vector..."
+    # case where U is a unit vector..."
     #
     # (Not certain where this should go. It is a "geometric utility" but
     # Utilities.py does not import Vec3. So it is here for now.)
@@ -236,10 +236,6 @@ class Vec3:
             # p2 = o + u * d2
             return p1
         else:
-            ####################################################################
-            # TODO 20231021 why no intersection with EvertedSphereObstacle?
-            # print('delta =', delta, ', (o - c).length() =', (o - c).length())
-            ####################################################################
             return None
 
     @staticmethod
