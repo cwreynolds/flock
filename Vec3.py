@@ -79,10 +79,12 @@ class Vec3:
         return math.sqrt(self.length_squared())
     def length_squared(self):
         return self.dot(self)
+    def length_is_0(self):
+        return self.length_squared() == 0
     def normalize(self):
         return self / self.length()
     def normalize_or_0(self):
-        return self if self.length_squared() == 0 else self.normalize()
+        return self if self.length_is_0() else self.normalize()
         
     # Returns vector parallel to "this" but no longer than "max_length"
     def truncate(self, max_length):

@@ -28,6 +28,12 @@ class Obstacle:
         pass
     def normal_at_poi(self, poi):
         pass
+    # Point on surface of obstacle nearest the given query_point
+    def nearest_point(self, query_point):
+        pass
+    # Compute direction for agent's static avoidance of (concave?) obstacles.
+    def fly_away(self, agent_position, agent_forward, max_distance):
+        pass
 
 class EvertedSphereObstacle(Obstacle):
     def __init__(self, radius, center):
@@ -41,11 +47,25 @@ class EvertedSphereObstacle(Obstacle):
     def normal_at_poi(self, poi):
         return (self.center - poi).normalize()
 
-    ############################################################################
-    # TODO 20231030 WIP method to replace Boid.prototype_fly_away_from_obstacle
-    def fly_away(self, position, forward, should_annotate):
-        pass
-    ############################################################################
+    # Point on surface of obstacle nearest the given query_point
+    def nearest_point(self, query_point):
+        return (query_point - self.center).normalize() * self.radius
+
+    # Compute direction for agent's static avoidance of (concave?) obstacles.
+    def fly_away(self, agent_position, agent_forward, max_distance):
+        avoidance = Vec3()
+        p = agent_position
+        r = self.radius
+        c = self.center
+        offset_to_sphere_center = c - p
+        distance_to_sphere_center = offset_to_sphere_center.length()
+        dist_from_wall = r - distance_to_sphere_center
+        if dist_from_wall < max_distance:
+            normal = offset_to_sphere_center / distance_to_sphere_center
+            if normal.dot(agent_forward) < 0.9:
+                weight = 1 - (dist_from_wall / max_distance)
+                avoidance = normal * weight
+        return avoidance
 
 class Collision:
     def __init__(self,

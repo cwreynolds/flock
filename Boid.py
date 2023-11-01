@@ -169,45 +169,32 @@ class Boid(Agent):
                     weight = util.unit_sigmoid_on_01(d)
                 else:
                     weight = 1 if near else 0
-
-                if self.should_annotate():
-                    self.avoid_obstacle_annotation(poi, weight)
+                self.avoid_obstacle_annotation(poi, weight)
             if weight < 0.1:
-                avoidance = self.prototype_fly_away_from_obstacle()
+                avoidance = self.fly_away_from_obstacles()
                 weight = 1
         return avoidance * weight
 
-    # TODO 20231014 prototype_fly_away_from_obstacle
-    # Prototype of non-predictive "repulsion" from "large" obstacles like walls.
-    # Here the default EvertedSphereObstacle is assumed.
-    def prototype_fly_away_from_obstacle(self):
-        avoidance = Vec3()
+    # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
+    # Non-predictive "repulsion" from "large" obstacles like walls.
+    # TODO currently assumes exactly one obstacle exists
+    def fly_away_from_obstacles(self):
         p = self.position
-        r = self.flock.sphere_radius
-        c = self.flock.sphere_center
-        offset_to_sphere_center = c - p
-        distance_to_sphere_center = offset_to_sphere_center.length()
-        dist_from_wall = r - distance_to_sphere_center
-        # This behavior is active from the sphere and inward for 10 body radii.
-        active_radius = self.body_radius * 10  # six body diameters
-        if dist_from_wall < active_radius:
-            normal = offset_to_sphere_center / distance_to_sphere_center
-            if normal.dot(self.forward) < 0.9:
-                weight = 1 - (dist_from_wall / active_radius)
-                avoidance = normal * weight
-                if self.should_annotate():
-                    on_sphere = p - (normal * dist_from_wall)
-                    self.avoid_obstacle_annotation(on_sphere, weight)
+        f = self.forward
+        max_distance = self.body_radius * 10  # six body diameters
+        obstacle = self.flock.obstacles[0] # TODO assumes only one
+        avoidance = obstacle.fly_away(p, f, max_distance)
+        weight = avoidance.length()
+        self.avoid_obstacle_annotation(obstacle.nearest_point(p), weight)
         return avoidance
 
     # Draw a ray from Boid to its point of impact. Magenta for strong avoidance,
     # shades to background gray (85%) for gentle avoidance.
     def avoid_obstacle_annotation(self, poi, weight):
-        # magenta = Vec3(0.9, 0.7, 0.9) # old color before 20230910
-        magenta = Vec3(1, 0, 1)
-        gray85 = Vec3(0.85, 0.85, 0.85)
-        color = util.interpolate(weight, gray85, magenta)
-        if weight > 0.1:
+        if self.should_annotate() and weight > 0.01:
+            magenta = Vec3(1, 0, 1)
+            gray85 = Vec3(0.85, 0.85, 0.85)
+            color = util.interpolate(weight, gray85, magenta)
             Draw.add_line_segment(self.position, poi, color)
 
     # Wander aimlessly via slowly varying steering force. Currently unused.
