@@ -240,6 +240,18 @@ class Vec3:
         else:
             return None
 
+    # Given any number of Vec3s, return the one with the max length.
+    @staticmethod
+    def max(*any_number_of_Vec3s):
+        longest = Vec3()
+        magnitude2 = 0
+        for v in any_number_of_Vec3s:
+            vm2 = v.length_squared()
+            if magnitude2 < vm2:
+                magnitude2 = vm2
+                longest = v
+        return longest
+
     @staticmethod
     def unit_test():
         assert str(Vec3(1, 2, 3)) == 'Vec3(1, 2, 3)'

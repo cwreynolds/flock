@@ -75,6 +75,9 @@ class Boid(Agent):
         self.angle_cohere   = -1     # 180°
         ########################################################################
 
+        self.annote_avoid_poi = Vec3()  # This might be too elaborate: two vals
+        self.annote_avoid_weight = 0    # per boid just for avoid annotation.
+
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
         self.next_steer = self.steer_to_flock(time_step)
@@ -153,13 +156,9 @@ class Boid(Agent):
     # "static" avoidance (I should move away from this obstacle, for everted
     # containment obstacles)
     def steer_to_avoid(self, time_step):
-        avoidance = Vec3()
-        if not self.flock.wrap_vs_avoid:
-            predictive = self.steer_for_predictive_avoidance(time_step)
-            static = self.fly_away_from_obstacles()
-            p_bigger = predictive.length() > static.length()
-            avoidance = predictive if p_bigger else static
-        return avoidance
+        return (Vec3() if self.flock.wrap_vs_avoid else
+                Vec3.max(self.steer_for_predictive_avoidance(time_step),
+                         self.fly_away_from_obstacles()))
 
     # Steering force component for predictive obstacles avoidance.
     def steer_for_predictive_avoidance(self, time_step):
@@ -181,7 +180,7 @@ class Boid(Agent):
                 weight = util.unit_sigmoid_on_01(d)
             else:
                 weight = 1 if near else 0
-            self.avoid_obstacle_annotation(poi, weight)
+            self.avoid_obstacle_annotation(0, poi, weight)
         return avoidance * weight
 
     # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
@@ -194,17 +193,29 @@ class Boid(Agent):
         obstacle = self.flock.obstacles[0] # TODO assumes only one
         avoidance = obstacle.fly_away(p, f, max_distance)
         weight = avoidance.length()
-        self.avoid_obstacle_annotation(obstacle.nearest_point(p), weight)
+        self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
         return avoidance
 
-    # Draw a ray from Boid to its point of impact. Magenta for strong avoidance,
-    # shades to background gray (85%) for gentle avoidance.
-    def avoid_obstacle_annotation(self, poi, weight):
+    # Draw a ray from Boid to point of impact, or nearest point for fly-away.
+    # Magenta for strong avoidance, shades to background gray (85%) for gentle
+    # avoidance. "Phase" used to show strongest avodiance: predictive vs static.
+    def avoid_obstacle_annotation(self, phase, poi, weight):
         if self.should_annotate() and weight > 0.01:
-            magenta = Vec3(1, 0, 1)
-            gray85 = Vec3(0.85, 0.85, 0.85)
-            color = util.interpolate(weight, gray85, magenta)
-            Draw.add_line_segment(self.position, poi, color)
+            # For predictive avoidance (phase 0) just store poi and weight.
+            if phase == 0:
+                self.annote_avoid_poi = poi
+                self.annote_avoid_weight = weight
+            # For static avoidance (phase 1) use values for max weight.
+            if phase == 1:
+                if weight < self.annote_avoid_weight:
+                    poi = self.annote_avoid_poi
+                    weight = self.annote_avoid_weight
+                Draw.add_line_segment(self.position, poi,
+                                      # Interp color between gray and magenta.
+                                      util.interpolate(weight,
+                                                       Vec3(0.85, 0.85, 0.85),
+                                                       Vec3(1, 0, 1)))
+
 
     # Wander aimlessly via slowly varying steering force. Currently unused.
     def steer_to_wander(self, rs):
