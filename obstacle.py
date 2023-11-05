@@ -24,27 +24,36 @@ from Vec3 import Vec3
 class Obstacle:
     def __init__(self):
         pass
+
+    # Where the ray representing an Agent's path will intersect the obstacle.
     def ray_intersection(self, origin, tangent):
         pass
-    def normal_at_poi(self, poi):
+
+    # Normal to the obstacle at a given point of interest.
+    def normal_at_poi(self, poi, agent_position=None):
         pass
+
     # Point on surface of obstacle nearest the given query_point
     def nearest_point(self, query_point):
         pass
+
     # Compute direction for agent's static avoidance of (concave?) obstacles.
     def fly_away(self, agent_position, agent_forward, max_distance):
         pass
+
 
 class EvertedSphereObstacle(Obstacle):
     def __init__(self, radius, center):
         self.radius = radius
         self.center = center
+
+    # Where the ray representing an Agent's path will intersect the obstacle.
     def ray_intersection(self, origin, tangent):
-        return Vec3.ray_sphere_intersection(origin,
-                                            tangent,
-                                            self.radius,
-                                            self.center)
-    def normal_at_poi(self, poi):
+        return Vec3.ray_sphere_intersection(origin, tangent,
+                                            self.radius, self.center)
+
+    # Normal to the obstacle at a given point of interest.
+    def normal_at_poi(self, poi, agent_position=None):
         return (self.center - poi).normalize()
 
     # Point on surface of obstacle nearest the given query_point
@@ -66,6 +75,62 @@ class EvertedSphereObstacle(Obstacle):
                 weight = 1 - (dist_from_wall / max_distance)
                 avoidance = normal * weight
         return avoidance
+
+
+################################################################################
+# TODO 20231105 PlaneObstacle
+    
+class PlaneObstacle(Obstacle):
+    def __init__(self, normal=Vec3(0, 1, 0), center=Vec3(0, 0, 0)):
+        self.normal = normal
+        self.center = center
+
+    # Where the ray representing an Agent's path will intersect the obstacle.
+    def ray_intersection(self, origin, tangent):
+        return Vec3.ray_plane_intersection(origin, tangent,
+                                           self.center, self.normal)
+
+    # Normal to the obstacle at a given point of interest.
+    def normal_at_poi(self, poi, agent_position=None):
+        normal = self.normal
+        # If a reference position is given.
+        if agent_position:
+            # Project it to obstacle surface.
+            on_obstacle = self.nearest_point(agent_position)
+            # Normalized vector FROM obstacle surface TOWARD agent.
+            normal = (agent_position - on_obstacle).normalize()
+        return normal
+
+    # Point on surface of obstacle nearest the given query_point
+    def nearest_point(self, query_point):
+        # Offset from center point (origin) of plane.
+        offset = query_point - self.center
+        # Signed distance from plane.
+        distance =  offset.dot(self.normal)
+        # Translate offset point onto plane (in plane's local space).
+        on_plane = offset - (self.normal * distance)
+        # Translate back to global space.
+        return on_plane + self.center
+
+    # Compute direction for agent's static avoidance of (concave?) obstacles.
+    def fly_away(self, agent_position, agent_forward, max_distance):
+        avoidance = Vec3()
+        
+        # Project agent_position to obstacle surface.
+        on_obstacle = self.nearest_point(agent_position)
+        
+        dist_from_obstacle = (on_obstacle - agent_position).length()
+        
+        if dist_from_obstacle < max_distance:
+            normal = self.normal_at_poi(on_obstacle, agent_position)
+            if normal.dot(agent_forward) < 0.9:
+                weight = 1 - (dist_from_obstacle / max_distance)
+                avoidance = normal * weight
+
+        return avoidance
+
+################################################################################
+
 
 class Collision:
     def __init__(self,

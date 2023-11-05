@@ -206,6 +206,18 @@ class Vec3:
                 break
         return v / m;
 
+    # Given any number of Vec3s, return the one with the max length.
+    @staticmethod
+    def max(*any_number_of_Vec3s):
+        longest = Vec3()
+        magnitude2 = 0
+        for v in any_number_of_Vec3s:
+            vm2 = v.length_squared()
+            if magnitude2 < vm2:
+                magnitude2 = vm2
+                longest = v
+        return longest
+
     # Returns the point of intersection of a ray (half-line) and sphere. Returns
     # None if there is no intersection. But currently assumes endpoint is inside
     # sphere. Used for finding intersection of an Agent's "forward" axis with a
@@ -240,17 +252,26 @@ class Vec3:
         else:
             return None
 
-    # Given any number of Vec3s, return the one with the max length.
+    ############################################################################
+    # TODO 20231105 PlaneObstacle
+    
+    # Returns the point of intersection of a ray (half-line) and a plane. Or it
+    # returns None if there is no intersection because the line and plane are
+    # parallel. A ray represents an Agent's position and forward axis. Based
+    # upon: https://en.wikipedia.org/wiki/Line–plane_intersection#Algebraic_form
+    # TODO 20231105 -- needs unit test
     @staticmethod
-    def max(*any_number_of_Vec3s):
-        longest = Vec3()
-        magnitude2 = 0
-        for v in any_number_of_Vec3s:
-            vm2 = v.length_squared()
-            if magnitude2 < vm2:
-                magnitude2 = vm2
-                longest = v
-        return longest
+    def ray_plane_intersection(ray_origin, ray_tangent, plane_origin, plane_normal):
+        intersection = None
+        numerator = (plane_origin - ray_origin).dot(plane_normal)
+        denominator = ray_tangent.dot(plane_normal)
+        if denominator != 0:
+            d = numerator / denominator
+            if d > 0:  # True if intersection is "forward" of the ray_origin
+                intersection = ray_origin + ray_tangent * d
+        return intersection
+
+    ############################################################################
 
     @staticmethod
     def unit_test():

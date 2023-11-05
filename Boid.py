@@ -332,7 +332,11 @@ class Boid(Agent):
             if point_of_impact:
                 dist_to_collision = (point_of_impact - self.position).length()
                 time_to_collision = dist_to_collision / (self.speed / time_step)
-                normal_at_poi = obstacle.normal_at_poi(point_of_impact)
+                ################################################################
+                # TODO 20231105 PlaneObstacle
+#                normal_at_poi = obstacle.normal_at_poi(point_of_impact)
+                normal_at_poi = obstacle.normal_at_poi(point_of_impact, self.position)
+                ################################################################
                 collisions.append(Collision(time_to_collision,
                                             dist_to_collision,
                                             point_of_impact,

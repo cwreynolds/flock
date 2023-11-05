@@ -28,6 +28,10 @@ import Utilities as util
 from statistics import mean
 from LocalSpace import LocalSpace
 from obstacle import EvertedSphereObstacle
+############################################################################
+# TODO 20231105 PlaneObstacle
+from obstacle import PlaneObstacle
+############################################################################
 
 class Flock:
 
@@ -57,9 +61,16 @@ class Flock:
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
         self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
         self.fps = util.Blender()
+        ########################################################################
+        # TODO 20231105 PlaneObstacle
+        
         # give Flock a default list of obstacles
         self.obstacles = [EvertedSphereObstacle(self.sphere_radius,
                                                 self.sphere_center)]
+#        self.obstacles = [PlaneObstacle()]
+        
+        ########################################################################
+
         # If there is ever a need to have multiple Flock instances at the same
         # time, these steps should be reconsidered:
         Draw.set_random_seeds(seed)
@@ -124,6 +135,22 @@ class Flock:
             boid.plan_next_steer(time_step)
         for boid in self.boids:
             boid.apply_next_steer(time_step)
+        ########################################################################
+        # TODO 20231105 PlaneObstacle
+        
+#        plane = PlaneObstacle()
+#        # plane = PlaneObstacle(normal=Vec3(1,0,0), center=Vec3(30,0,0))
+#        boid = self.selected_boid()
+#        nearest_point = plane.nearest_point(boid.position)
+#        i = plane.ray_intersection(boid.position, boid.forward)
+#        if i:
+#            Draw.add_line_segment(boid.position, i, Vec3(1, 1, 1))
+#        norm_poi = plane.normal_at_poi(nearest_point, boid.position)
+#        Draw.add_line_segment(nearest_point,
+#                              nearest_point + norm_poi * 5,
+#                              Vec3(1, 0, 0))
+
+        ########################################################################
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
     # other side of the world, just inside of its antipodal point.
