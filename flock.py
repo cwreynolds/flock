@@ -59,7 +59,13 @@ class Flock:
         self.tracking_camera = False
         self.wrap_vs_avoid = False
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
-        self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
+        ########################################################################
+        # TODO 20231105 PlaneObstacle
+        
+#        self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
+        self.min_time_to_collide = 1.8 # react to predicted impact (seconds)
+        
+        ########################################################################
         self.fps = util.Blender()
         ########################################################################
         # TODO 20231105 PlaneObstacle
@@ -160,15 +166,35 @@ class Flock:
 #                    self.plane_obstacle_fail += 1
 #                    print('Boid cross PlaneObstacle:', self.plane_obstacle_fail)
 
+#            def diff_sign(a, b):
+#                return (a > 0 and b < 0) or (a < 0 and b > 0)
+#            for boid in self.boids:
+#                before = boid.position.y
+#                boid.apply_next_steer(time_step)
+#    #            if boid.position.length() < self.sphere_radius * 0.8:
+#                if diff_sign(before, boid.position.y):
+#                    self.plane_obstacle_fail += 1
+#                    print('Boid cross PlaneObstacle:', self.plane_obstacle_fail)
+#
+
         def diff_sign(a, b):
             return (a > 0 and b < 0) or (a < 0 and b > 0)
         for boid in self.boids:
-            before = boid.position.y
+            before = boid.position
             boid.apply_next_steer(time_step)
-#            if boid.position.length() < self.sphere_radius * 0.8:
-            if diff_sign(before, boid.position.y):
+            if diff_sign(before.y, boid.position.y):
                 self.plane_obstacle_fail += 1
-                print('Boid cross PlaneObstacle:', self.plane_obstacle_fail)
+                ho = boid.position - before
+                ho.y = 0
+#                    print('Boid cross PlaneObstacle:', self.plane_obstacle_fail,
+#                          ', boid.position.length(): ', boid.position.length(),
+#    #                      ',  horizontal offset: ', ho.length(), ' (', ho, ')'
+#                          )
+                print(Draw.frame_counter,
+                      ' Boid cross PlaneObstacle:', self.plane_obstacle_fail,
+                      ', boid.position.length(): ', boid.position.length())
+
+
         ########################################################################
 
 
