@@ -171,7 +171,11 @@ class Draw:
 
     # Constructs representation of global axes as a TriangleMesh.
     @staticmethod
-    def make_global_axes(size=10, sides=8, radius=0.05, color=Vec3()):
+    ############################################################################
+    # TODO 20231106 flies through PlaneObstacle
+#    def make_global_axes(size=10, sides=8, radius=0.05, color=Vec3()):
+    def make_global_axes(size=40, sides=8, radius=0.05, color=Vec3()):
+    ############################################################################
         tri_mesh = o3d.geometry.TriangleMesh()
         x = Vec3(size, 0, 0)
         y = Vec3(0, size, 0)

@@ -64,11 +64,16 @@ class Flock:
         ########################################################################
         # TODO 20231105 PlaneObstacle
         
+#        # give Flock a default list of obstacles
+#        self.obstacles = [EvertedSphereObstacle(self.sphere_radius,
+#                                                self.sphere_center)]
+
         # give Flock a default list of obstacles
-        self.obstacles = [EvertedSphereObstacle(self.sphere_radius,
-                                                self.sphere_center)]
-#        self.obstacles = [PlaneObstacle()]
-        
+        eso = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
+        po = PlaneObstacle()
+#        self.obstacles = [eso]
+#        self.obstacles = [po]
+        self.obstacles = [po, eso]
         ########################################################################
 
         # If there is ever a need to have multiple Flock instances at the same
@@ -126,6 +131,11 @@ class Flock:
                 color = Vec3(0.0, 1.0, 0.0)
             boid.draw(color=color)
 
+    ########################################################################
+    # TODO 20231106 flies through PlaneObstacle
+    plane_obstacle_fail = 0
+    ########################################################################
+
     # Fly each boid in flock for one simulation step. Consists of two sequential
     # steps to avoid artifacts from order of boids. First a "sense/plan" phase
     # which computes the desired steering based on current state. Then an "act"
@@ -133,8 +143,35 @@ class Flock:
     def fly_flock(self, time_step):
         for boid in self.boids:
             boid.plan_next_steer(time_step)
+
+        ########################################################################
+        # TODO 20231106 flies through PlaneObstacle
+        
+#        for boid in self.boids:
+#            boid.apply_next_steer(time_step)
+
+#        def diff_sign(a, b):
+#            return (a > 0 and b < 0) or (a < 0 and b > 0)
+#        for boid in self.boids:
+#            before = boid.position.y
+#            boid.apply_next_steer(time_step)
+#            if boid.position.length() < self.sphere_radius * 0.8:
+#                if diff_sign(before, boid.position.y):
+#                    self.plane_obstacle_fail += 1
+#                    print('Boid cross PlaneObstacle:', self.plane_obstacle_fail)
+
+        def diff_sign(a, b):
+            return (a > 0 and b < 0) or (a < 0 and b > 0)
         for boid in self.boids:
+            before = boid.position.y
             boid.apply_next_steer(time_step)
+#            if boid.position.length() < self.sphere_radius * 0.8:
+            if diff_sign(before, boid.position.y):
+                self.plane_obstacle_fail += 1
+                print('Boid cross PlaneObstacle:', self.plane_obstacle_fail)
+        ########################################################################
+
+
         ########################################################################
         # TODO 20231105 PlaneObstacle
         

@@ -54,7 +54,12 @@ class Boid(Agent):
         self.weight_separate = 1.00
         self.weight_align    = 0.30
         self.weight_cohere   = 0.60
-        self.weight_avoid    = 0.90
+        ########################################################################
+        # TODO 20231106 flies through PlaneObstacle
+#        self.weight_avoid    = 0.90
+#        self.weight_avoid    = 1.10
+        self.weight_avoid    = 2
+        ########################################################################
         self.max_dist_separate = 4
         self.max_dist_align    = 6
         self.max_dist_cohere   = 100  # TODO 20231017 should this be ∞ or
@@ -151,6 +156,11 @@ class Boid(Agent):
 
     ############################################################################
 
+
+
+    ############################################################################
+    # TODO 20231106 flies through PlaneObstacle
+
     # Steering force to avoid obstacles. Combines "predictive" avoidance (I will
     # collide with an obstacle within Flock.min_time_to_collide seconds) with
     # "static" avoidance (I should move away from this obstacle, for everted
@@ -159,6 +169,24 @@ class Boid(Agent):
         return (Vec3() if self.flock.wrap_vs_avoid else
                 Vec3.max(self.steer_for_predictive_avoidance(time_step),
                          self.fly_away_from_obstacles()))
+
+
+#    # Steering force to avoid obstacles. Combines "predictive" avoidance (I will
+#    # collide with an obstacle within Flock.min_time_to_collide seconds) with
+#    # "static" avoidance (I should move away from this obstacle, for everted
+#    # containment obstacles)
+#    def steer_to_avoid(self, time_step):
+#        avoidance = Vec3()
+#        static = self.fly_away_from_obstacles()
+#        predictive = self.steer_for_predictive_avoidance(time_step)
+#        if not self.flock.wrap_vs_avoid:
+#            if predictive.length() > 0.1:
+#                avoidance = predictive
+#            else:
+#                avoidance = static
+#        return avoidance
+
+    ############################################################################
 
     # Steering force component for predictive obstacles avoidance.
     def steer_for_predictive_avoidance(self, time_step):
@@ -183,18 +211,44 @@ class Boid(Agent):
             self.avoid_obstacle_annotation(0, poi, weight)
         return avoidance * weight
 
+    ############################################################################
+    # TODO 20231106 flies through PlaneObstacle
+
+#    # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
+#    # Non-predictive "repulsion" from "large" obstacles like walls.
+#    # TODO currently assumes exactly one obstacle exists
+#    def fly_away_from_obstacles(self):
+#        p = self.position
+#        f = self.forward
+#        max_distance = self.body_radius * 10  # six body diameters
+#        obstacle = self.flock.obstacles[0] # TODO assumes only one
+#        avoidance = obstacle.fly_away(p, f, max_distance)
+#        weight = avoidance.length()
+#        self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
+#        return avoidance
+
     # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
     # Non-predictive "repulsion" from "large" obstacles like walls.
     # TODO currently assumes exactly one obstacle exists
     def fly_away_from_obstacles(self):
+        avoidance = Vec3()
+        
         p = self.position
         f = self.forward
         max_distance = self.body_radius * 10  # six body diameters
-        obstacle = self.flock.obstacles[0] # TODO assumes only one
-        avoidance = obstacle.fly_away(p, f, max_distance)
-        weight = avoidance.length()
-        self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
+        
+        for obstacle in self.flock.obstacles:
+#            obstacle = self.flock.obstacles[0] # TODO assumes only one
+#            avoidance = obstacle.fly_away(p, f, max_distance)
+            oa = obstacle.fly_away(p, f, max_distance)
+            weight = oa.length()
+            self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
+            avoidance += oa
+
+
         return avoidance
+
+    ############################################################################
 
     # Draw a ray from Boid to point of impact, or nearest point for fly-away.
     # Magenta for strong avoidance, shades to background gray (85%) for gentle
