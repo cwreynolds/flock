@@ -161,30 +161,24 @@ class Boid(Agent):
     ############################################################################
     # TODO 20231106 flies through PlaneObstacle
 
+#    # Steering force to avoid obstacles. Combines "predictive" avoidance (I will
+#    # collide with an obstacle within Flock.min_time_to_collide seconds) with
+#    # "static" avoidance (I should move away from this obstacle, for everted
+#    # containment obstacles)
+#    def steer_to_avoid(self, time_step):
+#        return (Vec3() if self.flock.wrap_vs_avoid else
+#                Vec3.max(self.steer_for_predictive_avoidance(time_step),
+#                         self.fly_away_from_obstacles()))
+
     # Steering force to avoid obstacles. Combines "predictive" avoidance (I will
     # collide with an obstacle within Flock.min_time_to_collide seconds) with
     # "static" avoidance (I should move away from this obstacle, for everted
     # containment obstacles)
     def steer_to_avoid(self, time_step):
         return (Vec3() if self.flock.wrap_vs_avoid else
-                Vec3.max(self.steer_for_predictive_avoidance(time_step),
-                         self.fly_away_from_obstacles()))
+                (self.fly_away_from_obstacles() +
+                 self.steer_for_predictive_avoidance(time_step)))
 
-
-#    # Steering force to avoid obstacles. Combines "predictive" avoidance (I will
-#    # collide with an obstacle within Flock.min_time_to_collide seconds) with
-#    # "static" avoidance (I should move away from this obstacle, for everted
-#    # containment obstacles)
-#    def steer_to_avoid(self, time_step):
-#        avoidance = Vec3()
-#        static = self.fly_away_from_obstacles()
-#        predictive = self.steer_for_predictive_avoidance(time_step)
-#        if not self.flock.wrap_vs_avoid:
-#            if predictive.length() > 0.1:
-#                avoidance = predictive
-#            else:
-#                avoidance = static
-#        return avoidance
 
     ############################################################################
 
