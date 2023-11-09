@@ -190,7 +190,10 @@ class Boid(Agent):
             first_collision = collisions[0]
             poi = first_collision.point_of_impact
             normal = first_collision.normal_at_poi
-            pure_steering = normal.perpendicular_component(self.forward)
+
+#            pure_steering = normal.perpendicular_component(self.forward)
+            pure_steering = self.pure_lateral_steering(normal)
+
             avoidance = pure_steering.normalize()
             min_dist = self.speed * self.flock.min_time_to_collide / time_step
             # Near enough to require avoidance steering?
@@ -221,25 +224,57 @@ class Boid(Agent):
 #        self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
 #        return avoidance
 
+#        # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
+#        # Non-predictive "repulsion" from "large" obstacles like walls.
+#        # TODO currently assumes exactly one obstacle exists
+#        def fly_away_from_obstacles(self):
+#            avoidance = Vec3()
+#
+#            p = self.position
+#            f = self.forward
+#            max_distance = self.body_radius * 10  # six body diameters
+#
+#            for obstacle in self.flock.obstacles:
+#    #            obstacle = self.flock.obstacles[0] # TODO assumes only one
+#    #            avoidance = obstacle.fly_away(p, f, max_distance)
+#                oa = obstacle.fly_away(p, f, max_distance)
+#                weight = oa.length()
+#                self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
+#                avoidance += oa
+#
+#
+#            return avoidance
+
+
+#    # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
+#    # Non-predictive "repulsion" from "large" obstacles like walls.
+#    # TODO currently assumes exactly one obstacle exists
+#    def fly_away_from_obstacles(self):
+#        avoidance = Vec3()
+#        p = self.position
+#        f = self.forward
+#        max_distance = self.body_radius * 10  # six body diameters
+#        for obstacle in self.flock.obstacles:
+#            oa = obstacle.fly_away(p, f, max_distance)
+#            weight = oa.length()
+#            self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
+#    #            avoidance += oa
+#            avoidance += self.pure_lateral_steering(oa)
+#        return avoidance
+
     # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
     # Non-predictive "repulsion" from "large" obstacles like walls.
     # TODO currently assumes exactly one obstacle exists
     def fly_away_from_obstacles(self):
         avoidance = Vec3()
-        
         p = self.position
         f = self.forward
         max_distance = self.body_radius * 10  # six body diameters
-        
         for obstacle in self.flock.obstacles:
-#            obstacle = self.flock.obstacles[0] # TODO assumes only one
-#            avoidance = obstacle.fly_away(p, f, max_distance)
             oa = obstacle.fly_away(p, f, max_distance)
             weight = oa.length()
             self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
             avoidance += oa
-
-
         return avoidance
 
     ############################################################################

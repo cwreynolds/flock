@@ -108,6 +108,12 @@ class Agent:
     def up_reference(self, acceleration):
         return Vec3(0, 1, 0)
 
+    # Given an arbitrary steering force, return the component purely lateral
+    # (perpendicular) to our forward basis. This is the part that steers/turns
+    # our heading but leaves speed unchanged.
+    def pure_lateral_steering(self, raw_steering):
+        return raw_steering.perpendicular_component(self.forward)
+
     def __str__(self):
         return self.name + ': speed=' + str(self.speed) + str(self.ls)
 
