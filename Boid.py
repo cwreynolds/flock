@@ -57,7 +57,6 @@ class Boid(Agent):
         ########################################################################
         # TODO 20231106 flies through PlaneObstacle
 #        self.weight_avoid    = 0.90
-#        self.weight_avoid    = 1.10
         self.weight_avoid    = 2
         ########################################################################
         self.max_dist_separate = 4
@@ -156,31 +155,14 @@ class Boid(Agent):
 
     ############################################################################
 
-
-
-    ############################################################################
-    # TODO 20231106 flies through PlaneObstacle
-
-#    # Steering force to avoid obstacles. Combines "predictive" avoidance (I will
-#    # collide with an obstacle within Flock.min_time_to_collide seconds) with
-#    # "static" avoidance (I should move away from this obstacle, for everted
-#    # containment obstacles)
-#    def steer_to_avoid(self, time_step):
-#        return (Vec3() if self.flock.wrap_vs_avoid else
-#                Vec3.max(self.steer_for_predictive_avoidance(time_step),
-#                         self.fly_away_from_obstacles()))
-
-    # Steering force to avoid obstacles. Combines "predictive" avoidance (I will
+    # Steering force to avoid obstacles. Adds "predictive" avoidance (I will
     # collide with an obstacle within Flock.min_time_to_collide seconds) with
     # "static" avoidance (I should move away from this obstacle, for everted
-    # containment obstacles)
+    # containment obstacles).
     def steer_to_avoid(self, time_step):
         return (Vec3() if self.flock.wrap_vs_avoid else
                 (self.fly_away_from_obstacles() +
                  self.steer_for_predictive_avoidance(time_step)))
-
-
-    ############################################################################
 
     # Steering force component for predictive obstacles avoidance.
     def steer_for_predictive_avoidance(self, time_step):
@@ -190,10 +172,7 @@ class Boid(Agent):
             first_collision = collisions[0]
             poi = first_collision.point_of_impact
             normal = first_collision.normal_at_poi
-
-#            pure_steering = normal.perpendicular_component(self.forward)
             pure_steering = self.pure_lateral_steering(normal)
-
             avoidance = pure_steering.normalize()
             min_dist = self.speed * self.flock.min_time_to_collide / time_step
             # Near enough to require avoidance steering?
@@ -207,60 +186,6 @@ class Boid(Agent):
                 weight = 1 if near else 0
             self.avoid_obstacle_annotation(0, poi, weight)
         return avoidance * weight
-
-    ############################################################################
-    # TODO 20231106 flies through PlaneObstacle
-
-#    # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
-#    # Non-predictive "repulsion" from "large" obstacles like walls.
-#    # TODO currently assumes exactly one obstacle exists
-#    def fly_away_from_obstacles(self):
-#        p = self.position
-#        f = self.forward
-#        max_distance = self.body_radius * 10  # six body diameters
-#        obstacle = self.flock.obstacles[0] # TODO assumes only one
-#        avoidance = obstacle.fly_away(p, f, max_distance)
-#        weight = avoidance.length()
-#        self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
-#        return avoidance
-
-#        # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
-#        # Non-predictive "repulsion" from "large" obstacles like walls.
-#        # TODO currently assumes exactly one obstacle exists
-#        def fly_away_from_obstacles(self):
-#            avoidance = Vec3()
-#
-#            p = self.position
-#            f = self.forward
-#            max_distance = self.body_radius * 10  # six body diameters
-#
-#            for obstacle in self.flock.obstacles:
-#    #            obstacle = self.flock.obstacles[0] # TODO assumes only one
-#    #            avoidance = obstacle.fly_away(p, f, max_distance)
-#                oa = obstacle.fly_away(p, f, max_distance)
-#                weight = oa.length()
-#                self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
-#                avoidance += oa
-#
-#
-#            return avoidance
-
-
-#    # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
-#    # Non-predictive "repulsion" from "large" obstacles like walls.
-#    # TODO currently assumes exactly one obstacle exists
-#    def fly_away_from_obstacles(self):
-#        avoidance = Vec3()
-#        p = self.position
-#        f = self.forward
-#        max_distance = self.body_radius * 10  # six body diameters
-#        for obstacle in self.flock.obstacles:
-#            oa = obstacle.fly_away(p, f, max_distance)
-#            weight = oa.length()
-#            self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
-#    #            avoidance += oa
-#            avoidance += self.pure_lateral_steering(oa)
-#        return avoidance
 
     # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
     # Non-predictive "repulsion" from "large" obstacles like walls.
@@ -276,8 +201,6 @@ class Boid(Agent):
             self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
             avoidance += oa
         return avoidance
-
-    ############################################################################
 
     # Draw a ray from Boid to point of impact, or nearest point for fly-away.
     # Magenta for strong avoidance, shades to background gray (85%) for gentle
@@ -415,11 +338,7 @@ class Boid(Agent):
             if point_of_impact:
                 dist_to_collision = (point_of_impact - self.position).length()
                 time_to_collision = dist_to_collision / (self.speed / time_step)
-                ################################################################
-                # TODO 20231105 PlaneObstacle
-#                normal_at_poi = obstacle.normal_at_poi(point_of_impact)
                 normal_at_poi = obstacle.normal_at_poi(point_of_impact, self.position)
-                ################################################################
                 collisions.append(Collision(time_to_collision,
                                             dist_to_collision,
                                             point_of_impact,

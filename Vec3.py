@@ -252,9 +252,6 @@ class Vec3:
         else:
             return None
 
-    ############################################################################
-    # TODO 20231105 PlaneObstacle
-    
     # Returns the point of intersection of a ray (half-line) and a plane. Or it
     # returns None if there is no intersection because the line and plane are
     # parallel. A ray represents an Agent's position and forward axis. Based
@@ -270,8 +267,6 @@ class Vec3:
             if d > 0:  # True if intersection is "forward" of the ray_origin
                 intersection = ray_origin + ray_tangent * d
         return intersection
-
-    ############################################################################
 
     @staticmethod
     def unit_test():

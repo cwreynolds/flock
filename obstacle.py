@@ -69,16 +69,15 @@ class EvertedSphereObstacle(Obstacle):
         offset_to_sphere_center = c - p
         distance_to_sphere_center = offset_to_sphere_center.length()
         dist_from_wall = r - distance_to_sphere_center
+        # Close enough to obstacle surface to use static replusion.
         if dist_from_wall < max_distance:
             normal = offset_to_sphere_center / distance_to_sphere_center
+            # Unless agent is already facing away from obstacle.
             if normal.dot(agent_forward) < 0.9:
+                # Weighting falls off further from obstacle surface
                 weight = 1 - (dist_from_wall / max_distance)
                 avoidance = normal * weight
         return avoidance
-
-
-################################################################################
-# TODO 20231105 PlaneObstacle
     
 class PlaneObstacle(Obstacle):
     def __init__(self, normal=Vec3(0, 1, 0), center=Vec3(0, 0, 0)):
@@ -115,22 +114,18 @@ class PlaneObstacle(Obstacle):
     # Compute direction for agent's static avoidance of (concave?) obstacles.
     def fly_away(self, agent_position, agent_forward, max_distance):
         avoidance = Vec3()
-        
         # Project agent_position to obstacle surface.
         on_obstacle = self.nearest_point(agent_position)
-        
         dist_from_obstacle = (on_obstacle - agent_position).length()
-        
+        # Close enough to obstacle surface to use static replusion.
         if dist_from_obstacle < max_distance:
             normal = self.normal_at_poi(on_obstacle, agent_position)
+            # Unless agent is already facing away from obstacle.
             if normal.dot(agent_forward) < 0.9:
+                # Weighting falls off further from obstacle surface
                 weight = 1 - (dist_from_obstacle / max_distance)
                 avoidance = normal * weight
-
         return avoidance
-
-################################################################################
-
 
 class Collision:
     def __init__(self,

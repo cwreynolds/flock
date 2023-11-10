@@ -28,10 +28,7 @@ import Utilities as util
 from statistics import mean
 from LocalSpace import LocalSpace
 from obstacle import EvertedSphereObstacle
-############################################################################
-# TODO 20231105 PlaneObstacle
 from obstacle import PlaneObstacle
-############################################################################
 
 class Flock:
 
@@ -61,27 +58,14 @@ class Flock:
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
         ########################################################################
         # TODO 20231105 PlaneObstacle
-        
 #        self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
         self.min_time_to_collide = 1.8 # react to predicted impact (seconds)
-        
         ########################################################################
         self.fps = util.Blender()
-        ########################################################################
-        # TODO 20231105 PlaneObstacle
-        
-#        # give Flock a default list of obstacles
-#        self.obstacles = [EvertedSphereObstacle(self.sphere_radius,
-#                                                self.sphere_center)]
-
         # give Flock a default list of obstacles
         eso = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
         po = PlaneObstacle()
-#        self.obstacles = [eso]
-#        self.obstacles = [po]
         self.obstacles = [po, eso]
-        ########################################################################
-
         # If there is ever a need to have multiple Flock instances at the same
         # time, these steps should be reconsidered:
         Draw.set_random_seeds(seed)
@@ -152,31 +136,6 @@ class Flock:
 
         ########################################################################
         # TODO 20231106 flies through PlaneObstacle
-        
-#        for boid in self.boids:
-#            boid.apply_next_steer(time_step)
-
-#        def diff_sign(a, b):
-#            return (a > 0 and b < 0) or (a < 0 and b > 0)
-#        for boid in self.boids:
-#            before = boid.position.y
-#            boid.apply_next_steer(time_step)
-#            if boid.position.length() < self.sphere_radius * 0.8:
-#                if diff_sign(before, boid.position.y):
-#                    self.plane_obstacle_fail += 1
-#                    print('Boid cross PlaneObstacle:', self.plane_obstacle_fail)
-
-#            def diff_sign(a, b):
-#                return (a > 0 and b < 0) or (a < 0 and b > 0)
-#            for boid in self.boids:
-#                before = boid.position.y
-#                boid.apply_next_steer(time_step)
-#    #            if boid.position.length() < self.sphere_radius * 0.8:
-#                if diff_sign(before, boid.position.y):
-#                    self.plane_obstacle_fail += 1
-#                    print('Boid cross PlaneObstacle:', self.plane_obstacle_fail)
-#
-
         def diff_sign(a, b):
             return (a > 0 and b < 0) or (a < 0 and b > 0)
         for boid in self.boids:
@@ -186,33 +145,9 @@ class Flock:
                 self.plane_obstacle_fail += 1
                 ho = boid.position - before
                 ho.y = 0
-#                    print('Boid cross PlaneObstacle:', self.plane_obstacle_fail,
-#                          ', boid.position.length(): ', boid.position.length(),
-#    #                      ',  horizontal offset: ', ho.length(), ' (', ho, ')'
-#                          )
                 print(Draw.frame_counter,
                       ' Boid cross PlaneObstacle:', self.plane_obstacle_fail,
                       ', boid.position.length(): ', boid.position.length())
-
-
-        ########################################################################
-
-
-        ########################################################################
-        # TODO 20231105 PlaneObstacle
-        
-#        plane = PlaneObstacle()
-#        # plane = PlaneObstacle(normal=Vec3(1,0,0), center=Vec3(30,0,0))
-#        boid = self.selected_boid()
-#        nearest_point = plane.nearest_point(boid.position)
-#        i = plane.ray_intersection(boid.position, boid.forward)
-#        if i:
-#            Draw.add_line_segment(boid.position, i, Vec3(1, 1, 1))
-#        norm_poi = plane.normal_at_poi(nearest_point, boid.position)
-#        Draw.add_line_segment(nearest_point,
-#                              nearest_point + norm_poi * 5,
-#                              Vec3(1, 0, 0))
-
         ########################################################################
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
