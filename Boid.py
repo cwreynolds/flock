@@ -50,15 +50,11 @@ class Boid(Agent):
         # Tunable parameters
         # (TODO maybe these should be on the class rather than instance?)
         # (TODO Also add max_speed, max_force, and Flock.min_time_to_collide?)
-        self.weight_forward  = 0.20
-        self.weight_separate = 1.00
-        self.weight_align    = 0.30
-        self.weight_cohere   = 0.60
-        ########################################################################
-        # TODO 20231106 flies through PlaneObstacle
-#        self.weight_avoid    = 0.90
-        self.weight_avoid    = 2
-        ########################################################################
+        self.weight_forward    = 0.20
+        self.weight_separate   = 1.00
+        self.weight_align      = 0.30
+        self.weight_cohere     = 0.60
+        self.weight_avoid      = 2
         self.max_dist_separate = 4
         self.max_dist_align    = 6
         self.max_dist_cohere   = 100  # TODO 20231017 should this be ∞ or

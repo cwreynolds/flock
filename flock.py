@@ -56,11 +56,7 @@ class Flock:
         self.tracking_camera = False
         self.wrap_vs_avoid = False
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
-        ########################################################################
-        # TODO 20231105 PlaneObstacle
-#        self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
         self.min_time_to_collide = 1.8 # react to predicted impact (seconds)
-        ########################################################################
         self.fps = util.Blender()
         # give Flock a default list of obstacles
         eso = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
@@ -123,6 +119,7 @@ class Flock:
 
     ########################################################################
     # TODO 20231106 flies through PlaneObstacle
+    # Very temporary code for debugging multiple obstacle avoidance.
     plane_obstacle_fail = 0
     ########################################################################
 
@@ -136,6 +133,12 @@ class Flock:
 
         ########################################################################
         # TODO 20231106 flies through PlaneObstacle
+        # Very temporary code for debugging multiple obstacle avoidance.
+        
+        # Should be reverted back to just:
+#        for boid in self.boids:
+#            boid.apply_next_steer(time_step)
+
         def diff_sign(a, b):
             return (a > 0 and b < 0) or (a < 0 and b > 0)
         for boid in self.boids:
