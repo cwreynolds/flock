@@ -55,7 +55,6 @@ Lots, since it is so preliminary, but for example:
 
 - Because boids ignore global orientation, they are just as happy to move vertically as horizontally.
 - The boid's “bodies” sort of look like they are shaded, but it is just painted on. It ought to be rendered to provide more orientation cueing.
-- Often two boids will get too close, failing to maintain separation, while otherwise seeming to flock normally. Could be interference from Boid.sphere_avoidance().
 
 ### Installation
 
