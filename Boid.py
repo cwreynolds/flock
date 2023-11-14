@@ -47,36 +47,25 @@ class Boid(Agent):
         self.wander_state = Vec3()
         # Temp? Pick a random midrange boid color.
         self.color = Vec3.from_array([util.frandom2(0.5, 0.8) for i in range(3)])
-        # Tunable parameters
-        # (TODO maybe these should be on the class rather than instance?)
-        # (TODO Also add max_speed, max_force, and Flock.min_time_to_collide?)
-        self.weight_forward    = 0.20
-        self.weight_separate   = 1.00
-        self.weight_align      = 0.30
-        self.weight_cohere     = 0.60
-        self.weight_avoid      = 2
-        self.max_dist_separate = 4
-        self.max_dist_align    = 6
-        self.max_dist_cohere   = 100  # TODO 20231017 should this be ∞ or
-                                      # should the behavior just ignore it?
-        # TODO 20231019 are these 3 useful? Or should it just assume 1/dist is
-        #               used to weight all neighbors in all three behaviors?
-        self.exponent_separate = 1
-        self.exponent_align    = 1
-        self.exponent_cohere   = 1
-        ########################################################################
-        # TODO 20231020 neighbor angle
-        # Cosine of threshold angle (max angle from forward to be seen)
-#        self.angle_separate = 0      # 90°
-#        self.angle_align    = 0.707  # 45°
-#        self.angle_cohere   = 0      # 90°
-        self.angle_separate = -1     # 180°
-        self.angle_align    = -1     # 180°
-        self.angle_cohere   = -1     # 180°
-        ########################################################################
-
         self.annote_avoid_poi = Vec3()  # This might be too elaborate: two vals
         self.annote_avoid_weight = 0    # per boid just for avoid annotation.
+
+        # Tuning parameters
+        self.weight_forward    = 0.15
+        self.weight_separate   = 0.55
+        self.weight_align      = 0.35
+        self.weight_cohere     = 0.30
+        self.weight_avoid      = 0.80
+        self.max_dist_separate = 10 * self.body_radius
+        self.max_dist_align    = 100  # TODO 20231017 should this be ∞ or
+        self.max_dist_cohere   = 100  # should the behavior just ignore it?
+        self.exponent_separate = 1  # TODO 20231019 are these useful? Or should
+        self.exponent_align    = 1  # it just assume 1/dist is used to weight
+        self.exponent_cohere   = 1  # all neighbors in all three behaviors?
+        # Cosine of threshold angle (max angle from forward to be seen)
+        self.angle_separate = -0.707  # 135°
+        self.angle_align    =  0.940  # 20°
+        self.angle_cohere   = -0.707  # 135°
 
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
@@ -98,10 +87,6 @@ class Boid(Agent):
         combined_steering = self.smoothed_steering(f + s + a + c + o)
         self.annotation(s, a, c, o, combined_steering)
         return combined_steering
-
-
-    ############################################################################
-    # TODO 20231020 neighbor angle
 
     # Steering force component to move away from neighbors.
     def steer_to_separate(self, neighbors):
@@ -136,7 +121,11 @@ class Boid(Agent):
         direction = Vec3()
         neighbor_center = Vec3()
         total_weight = 0
-        for neighbor in neighbors:
+        ########################################################################
+        # TODO 20231112 -- experiment: try a only the nearest 2 neighbors
+#        for neighbor in neighbors:
+        for neighbor in neighbors[2:]:
+        ########################################################################
             dist = (neighbor.position - self.position).length()
             weight = 1 / (dist ** self.exponent_cohere)
             weight *= 1 - util.unit_sigmoid_on_01(dist / self.max_dist_cohere)
@@ -148,8 +137,6 @@ class Boid(Agent):
         neighbor_center /= total_weight
         direction = neighbor_center - self.position
         return direction.normalize()
-
-    ############################################################################
 
     # Steering force to avoid obstacles. Adds "predictive" avoidance (I will
     # collide with an obstacle within Flock.min_time_to_collide seconds) with
