@@ -337,15 +337,32 @@ class Vec3:
         v /= 2
         assert v == Vec3(1, 2, 3), 'Vec3: test /='
 
-        # Unit tests for Vec3.ray_plane_intersection()
         zzz = Vec3()
         ooo = Vec3(1, 1, 1)
         ozz = Vec3(1, 0, 0)
+        zoz = Vec3(0, 1, 0)
         mzz = Vec3(-1, 0, 0)
         ddd = ooo.normalize()
-        i = Vec3.ray_plane_intersection(mzz, mzz, zzz, ozz)
-        assert i == None, 'test Vec3.ray_plane_intersection()'
-        i = Vec3.ray_plane_intersection(ozz * 2, ozz *-1, zzz, ozz)
-        assert i == Vec3(), 'test Vec3.ray_plane_intersection()'
-        i = Vec3.ray_plane_intersection(Vec3(), ozz, ooo, ddd * -1)
-        assert i == ozz * 3, 'test Vec3.ray_plane_intersection()'
+        
+        # Unit tests for Vec3.ray_plane_intersection()
+        def rpi(result, ro, rt, po, pn):
+            i = Vec3.ray_plane_intersection(ro, rt, po, pn)
+            assert i == result, 'test Vec3.ray_plane_intersection()'
+        rpi(None, mzz, mzz, zzz, ozz)
+        rpi(zzz, ozz * 2, ozz *-1, zzz, ozz)
+        rpi(ozz * 3, zzz, ozz, ooo, ddd * -1)
+        
+        # Unit tests for Vec3.ray_sphere_intersection()
+        def rsi(result, ao, at, sr, sc):
+            i = Vec3.ray_sphere_intersection(ao, at, sr, sc)
+            assert i == result, 'test Vec3.ray_sphere_intersection()'
+        rsi(None, mzz, zoz, 0.5, zzz)
+        rsi(ozz, ozz, zoz, 1, zzz)
+        rsi(ozz * 2, mzz, ozz, 2, zzz)
+        
+#        print(Vec3.ray_sphere_intersection(mzz, ozz, 2, zzz))
+#        # TODO 20231117 this returns Vec3(1,0,0) shouldn't it be None
+#        #               since the intersection is behind the agent?
+#        print(Vec3.ray_sphere_intersection(ozz * 5, ozz, 1, zzz))
+
+        rsi(ozz * math.sqrt(3), mzz, ozz, 2, zoz)
