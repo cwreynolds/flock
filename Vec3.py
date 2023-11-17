@@ -256,7 +256,6 @@ class Vec3:
     # returns None if there is no intersection because the line and plane are
     # parallel. A ray represents an Agent's position and forward axis. Based
     # upon: https://en.wikipedia.org/wiki/Line–plane_intersection#Algebraic_form
-    # TODO 20231105 -- needs unit test
     @staticmethod
     def ray_plane_intersection(ray_origin, ray_tangent, plane_origin, plane_normal):
         intersection = None
@@ -337,3 +336,16 @@ class Vec3:
         v = Vec3(2, 4, 6)
         v /= 2
         assert v == Vec3(1, 2, 3), 'Vec3: test /='
+
+        # Unit tests for Vec3.ray_plane_intersection()
+        zzz = Vec3()
+        ooo = Vec3(1, 1, 1)
+        ozz = Vec3(1, 0, 0)
+        mzz = Vec3(-1, 0, 0)
+        ddd = ooo.normalize()
+        i = Vec3.ray_plane_intersection(mzz, mzz, zzz, ozz)
+        assert i == None, 'test Vec3.ray_plane_intersection()'
+        i = Vec3.ray_plane_intersection(ozz * 2, ozz *-1, zzz, ozz)
+        assert i == Vec3(), 'test Vec3.ray_plane_intersection()'
+        i = Vec3.ray_plane_intersection(Vec3(), ozz, ooo, ddd * -1)
+        assert i == ozz * 3, 'test Vec3.ray_plane_intersection()'
