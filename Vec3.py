@@ -243,11 +243,31 @@ class Vec3:
         # Following derivation in Wikipedia.
         delta = (u.dot(o - c) ** 2) - (((o - c).length() ** 2) - r ** 2)
         if delta >= 0:
+            ####################################################################
+            # TODO 20231118 getting ray-sphere intersections when should be None
+            
             # Given asumptions (o inside sphere, u is "forward") we want p1:
             d1 = -(u.dot(o - c)) + math.sqrt(delta)
             # d2 = -(u.dot(o - c)) - math.sqrt(delta)
             p1 = o + u * d1
             # p2 = o + u * d2
+
+            # Given asumptions (o inside sphere, u is "forward") we want p1:
+            d1 = -(u.dot(o - c)) + math.sqrt(delta)
+#            d2 = -(u.dot(o - c)) - math.sqrt(delta)
+            p1 = o + u * d1
+#            p2 = o + u * d2
+            
+#            if d1 < 0 and d2 < 0:
+#                return None
+
+            if d1 < 0:
+#                print('d1 =', d1, '  d2 =', d2)
+#                print('p1 =', p1, '  p2 =', p2)
+                print('d1 =', d1, '  p1 =', p1)
+                return None
+
+            ####################################################################
             return p1
         else:
             return None
@@ -356,13 +376,33 @@ class Vec3:
         def rsi(result, ao, at, sr, sc):
             i = Vec3.ray_sphere_intersection(ao, at, sr, sc)
             assert i == result, 'test Vec3.ray_sphere_intersection()'
+
+        # Clean miss, agent outside on left of sphere poiting up
         rsi(None, mzz, zoz, 0.5, zzz)
+        # Intersect at point, ray origin on +x edge of sphere pointing up.
         rsi(ozz, ozz, zoz, 1, zzz)
+        # Typical case inside r=2 sphere at -1 on x axis pointing in +x direction
         rsi(ozz * 2, mzz, ozz, 2, zzz)
-        
+
 #        print(Vec3.ray_sphere_intersection(mzz, ozz, 2, zzz))
 #        # TODO 20231117 this returns Vec3(1,0,0) shouldn't it be None
 #        #               since the intersection is behind the agent?
 #        print(Vec3.ray_sphere_intersection(ozz * 5, ozz, 1, zzz))
+
+
+        # TODO 20231118 getting ray-sphere intersections when should be None
+
+        # Returns Vec2(1, 0, 0) -- but should be None
+        #
+        # p1 = Vec3(1.0, 0.0, 0.0) , p2 = Vec3(-1.0, 0.0, 0.0)
+        # Vec3(1.0, 0.0, 0.0)
+        #
+        print('------------------------------------------------------------')
+        print(Vec3.ray_sphere_intersection(ozz * 2, ozz, 1, zzz))
+        # Returns Vec2(-1, 0, 0) -- correct!
+        print(Vec3.ray_sphere_intersection(ozz * 2, mzz, 1, zzz))
+        print('------------------------------------------------------------')
+
+
 
         rsi(ozz * math.sqrt(3), mzz, ozz, 2, zoz)
