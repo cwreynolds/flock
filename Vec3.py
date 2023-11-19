@@ -234,6 +234,7 @@ class Vec3:
     #
     @staticmethod
     def ray_sphere_intersection(origin, tangent, radius, center):
+        intersection = None
         # Center and radius of sphere.
         c = center
         r = radius
@@ -242,35 +243,21 @@ class Vec3:
         u = tangent
         # Following derivation in Wikipedia.
         delta = (u.dot(o - c) ** 2) - (((o - c).length() ** 2) - r ** 2)
+        # When there is an intersection.
         if delta >= 0:
-            ####################################################################
-            # TODO 20231118 getting ray-sphere intersections when should be None
-            
-            # Given asumptions (o inside sphere, u is "forward") we want p1:
-            d1 = -(u.dot(o - c)) + math.sqrt(delta)
-            # d2 = -(u.dot(o - c)) - math.sqrt(delta)
+            # Find the 2 intersections of the line containing the ray.
+            sqrt_delta = math.sqrt(delta)
+            u_dot_oc = -(u.dot(o - c))
+            d1 = u_dot_oc + sqrt_delta
+            d2 = u_dot_oc - sqrt_delta
             p1 = o + u * d1
-            # p2 = o + u * d2
-
-            # Given asumptions (o inside sphere, u is "forward") we want p1:
-            d1 = -(u.dot(o - c)) + math.sqrt(delta)
-#            d2 = -(u.dot(o - c)) - math.sqrt(delta)
-            p1 = o + u * d1
-#            p2 = o + u * d2
-            
-#            if d1 < 0 and d2 < 0:
-#                return None
-
-            if d1 < 0:
-#                print('d1 =', d1, '  d2 =', d2)
-#                print('p1 =', p1, '  p2 =', p2)
-                print('d1 =', d1, '  p1 =', p1)
-                return None
-
-            ####################################################################
-            return p1
-        else:
-            return None
+            p2 = o + u * d2
+            # Select point which is on ("forward") ray and nearer the origin.
+            if d1 >= 0:
+                intersection = p1
+            if d2 >= 0 and d2 < d1:
+                intersection = p2
+        return intersection
 
     # Returns the point of intersection of a ray (half-line) and a plane. Or it
     # returns None if there is no intersection because the line and plane are
@@ -371,38 +358,22 @@ class Vec3:
         rpi(None, mzz, mzz, zzz, ozz)
         rpi(zzz, ozz * 2, ozz *-1, zzz, ozz)
         rpi(ozz * 3, zzz, ozz, ooo, ddd * -1)
-        
+
         # Unit tests for Vec3.ray_sphere_intersection()
-        def rsi(result, ao, at, sr, sc):
+        def rsi(result, ao, at, sr, sc, description):
             i = Vec3.ray_sphere_intersection(ao, at, sr, sc)
-            assert i == result, 'test Vec3.ray_sphere_intersection()'
-
-        # Clean miss, agent outside on left of sphere poiting up
-        rsi(None, mzz, zoz, 0.5, zzz)
-        # Intersect at point, ray origin on +x edge of sphere pointing up.
-        rsi(ozz, ozz, zoz, 1, zzz)
-        # Typical case inside r=2 sphere at -1 on x axis pointing in +x direction
-        rsi(ozz * 2, mzz, ozz, 2, zzz)
-
-#        print(Vec3.ray_sphere_intersection(mzz, ozz, 2, zzz))
-#        # TODO 20231117 this returns Vec3(1,0,0) shouldn't it be None
-#        #               since the intersection is behind the agent?
-#        print(Vec3.ray_sphere_intersection(ozz * 5, ozz, 1, zzz))
-
-
-        # TODO 20231118 getting ray-sphere intersections when should be None
-
-        # Returns Vec2(1, 0, 0) -- but should be None
-        #
-        # p1 = Vec3(1.0, 0.0, 0.0) , p2 = Vec3(-1.0, 0.0, 0.0)
-        # Vec3(1.0, 0.0, 0.0)
-        #
-        print('------------------------------------------------------------')
-        print(Vec3.ray_sphere_intersection(ozz * 2, ozz, 1, zzz))
-        # Returns Vec2(-1, 0, 0) -- correct!
-        print(Vec3.ray_sphere_intersection(ozz * 2, mzz, 1, zzz))
-        print('------------------------------------------------------------')
-
-
-
-        rsi(ozz * math.sqrt(3), mzz, ozz, 2, zoz)
+            assert i == result, ('Vec3.ray_sphere_intersection() unit test -- '
+                                 + description + ' -- expecting ' + str(result)
+                                 + ' but got ' + str(i))
+        rsi(ozz, ozz * 2, mzz, 1, zzz,
+            'ray endpoint outside sphere (+x), pointing toward sphere')
+        rsi(mzz, mzz * 2, ozz, 1, zzz,
+            'ray endpoint outside sphere (-x), pointing toward sphere')
+        rsi(None, mzz, zoz, 0.5, zzz,
+           'clean miss, agent outside, +x of sphere, pointing up')
+        rsi(ozz, ozz, zoz, 1, zzz,
+            'intersect at point, ray origin on +x edge of sphere pointing up')
+        rsi(ozz * 2, mzz, ozz, 2, zzz,
+           'typical case inside r=2 sphere, ray at -1 on x axis pointing +x')
+        rsi(ozz * math.sqrt(3), mzz, ozz, 2, zoz,
+            'radius 2 sphere at (0,1,0), ray at (-1,0,0) pointing +x')
