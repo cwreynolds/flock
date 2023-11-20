@@ -218,32 +218,31 @@ class Vec3:
                 longest = v
         return longest
 
-    # Returns the point of intersection of a ray (half-line) and sphere. Returns
-    # None if there is no intersection. But currently assumes endpoint is inside
-    # sphere. Used for finding intersection of an Agent's "forward" axis with a
-    # spherical containment.
+    # Returns the point of intersection of a ray (half-line) and sphere. Used
+    # for finding intersection of an Agent's "forward" axis with a spherical
+    # containment. Returns None if there is no intersection. Returns nearest
+    # intersection if there are two, eg Agent outside sphere flying toward it.
     #
     # Formulation from https://en.wikipedia.org/wiki/Line–sphere_intersection
     # particularly the two equations under the text "Note that in the specific
     # case where U is a unit vector..."
     #
-    # (Not certain where this should go. It is a "geometric utility" but
-    # Utilities.py does not import Vec3. So it is here for now.)
-    #
-    # TODO 20230527 -- needs unit test
+    # (TODO 20231120 Not certain where this should go. It is a "geometric
+    # utility" but Utilities.py does not import Vec3. So it is here for now.
+    # Used only by Obstacles, so maybe it could go there?)
     #
     @staticmethod
-    def ray_sphere_intersection(origin, tangent, radius, center):
+    def ray_sphere_intersection(ray_origin, ray_tangent, sphere_radius, sphere_center):
         intersection = None
         # Center and radius of sphere.
-        c = center
-        r = radius
-        # Origin and tangent (basis) of line.
-        o = origin
-        u = tangent
+        c = sphere_center
+        r = sphere_radius
+        # Origin/endpoint and tangent (basis) of ray.
+        o = ray_origin
+        u = ray_tangent
         # Following derivation in Wikipedia.
         delta = (u.dot(o - c) ** 2) - (((o - c).length() ** 2) - r ** 2)
-        # When there is an intersection.
+        # Does the line containing the ray intersect the sphere?
         if delta >= 0:
             # Find the 2 intersections of the line containing the ray.
             sqrt_delta = math.sqrt(delta)
@@ -252,7 +251,7 @@ class Vec3:
             d2 = u_dot_oc - sqrt_delta
             p1 = o + u * d1
             p2 = o + u * d2
-            # Select point which is on ("forward") ray and nearer the origin.
+            # Select point on ("forward") ray, if both, use one nearer origin.
             if d1 >= 0:
                 intersection = p1
             if d2 >= 0 and d2 < d1:
