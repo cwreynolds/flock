@@ -127,6 +127,32 @@ class PlaneObstacle(Obstacle):
                 avoidance = normal * weight
         return avoidance
 
+################################################################################
+# TODO 20231121 
+
+# A bounded cylinder (between two endpoints) with given radius
+class CylinderObstacle(Obstacle):
+#    def __init__(self, endpoint, tangent, radius, length):
+#        self.endpoint = endpoint
+#        self.tangent = tangent
+#        self.radius = radius
+#        self.length = length
+
+    def __init__(self, radius, endpoint0, endpoint1):
+        self.radius = radius
+        offset = endpoint1 - endpoint0
+        self.endpoint = endpoint0
+        self.tangent = offset.normal()
+        self.length = offset.length()
+
+    # Nearest point on the infinite line containing cylinder's axis.
+    def nearest_point_on_axis(self, query_point):
+        offset = query_point - self.endpoint
+        projection = offset.dot(tangent)
+        return self.endpoint + self.tangent * projection
+
+################################################################################
+
 class Collision:
     def __init__(self,
                  time_to_collision,
