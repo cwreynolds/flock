@@ -29,6 +29,7 @@ from statistics import mean
 from LocalSpace import LocalSpace
 from obstacle import EvertedSphereObstacle
 from obstacle import PlaneObstacle
+from obstacle import CylinderObstacle
 
 class Flock:
 
@@ -61,7 +62,15 @@ class Flock:
         # give Flock a default list of obstacles
         eso = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
         po = PlaneObstacle()
+        ########################################################################
+        # TODO 20231122
         self.obstacles = [po, eso]
+
+#        self.obstacles = [CylinderObstacle(5, Vec3(0, 40, 0), Vec3(0, -40, 0))]
+
+#        co = CylinderObstacle(5, Vec3(0, 40, 0), Vec3(0, -40, 0))
+#        self.obstacles = [eso, co]
+        ########################################################################
         # If there is ever a need to have multiple Flock instances at the same
         # time, these steps should be reconsidered:
         Draw.set_random_seeds(seed)
@@ -135,7 +144,7 @@ class Flock:
         # TODO 20231106 flies through PlaneObstacle
         # Very temporary code for debugging multiple obstacle avoidance.
         
-        # Should be reverted back to just:
+#        # Should be reverted back to just:
 #        for boid in self.boids:
 #            boid.apply_next_steer(time_step)
 

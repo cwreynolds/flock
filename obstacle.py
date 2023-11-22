@@ -128,7 +128,10 @@ class PlaneObstacle(Obstacle):
         return avoidance
 
 ################################################################################
-# TODO 20231121 
+# TODO 20231122
+#
+# for now lets ignore the endpoints and assume the cylinder is infinitely long.
+
 
 # A bounded cylinder (between two endpoints) with given radius
 class CylinderObstacle(Obstacle):
@@ -142,14 +145,39 @@ class CylinderObstacle(Obstacle):
         self.radius = radius
         offset = endpoint1 - endpoint0
         self.endpoint = endpoint0
-        self.tangent = offset.normal()
+        self.tangent = offset.normalize()
         self.length = offset.length()
 
     # Nearest point on the infinite line containing cylinder's axis.
     def nearest_point_on_axis(self, query_point):
         offset = query_point - self.endpoint
-        projection = offset.dot(tangent)
+        projection = offset.dot(self.tangent)
         return self.endpoint + self.tangent * projection
+
+    ### “pure virtual methods” of Obstacle to specialize
+    
+    # Where the ray representing an Agent's path will intersect the obstacle.
+    def ray_intersection(self, origin, tangent):
+        ########################################################################
+        # TODO mock implementation
+        return (self.nearest_point_on_axis(origin) +
+                self.normal_at_poi(origin)  * self.radius)
+        ########################################################################
+
+    # Normal to the obstacle at a given point of interest.
+    def normal_at_poi(self, poi, agent_position=None):
+        on_axis = self.nearest_point_on_axis(poi)
+        return (poi - on_axis).normalize()
+
+    # Point on surface of obstacle nearest the given query_point
+    def nearest_point(self, query_point):
+        pass
+
+    # Compute direction for agent's static avoidance of (concave?) obstacles.
+    def fly_away(self, agent_position, agent_forward, max_distance):
+        # does nothing for now?
+        return Vec3()
+
 
 ################################################################################
 
