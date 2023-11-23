@@ -59,17 +59,16 @@ class Flock:
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
         self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
         self.fps = util.Blender()
-        # give Flock a default list of obstacles
-        eso = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
-        po = PlaneObstacle()
         ########################################################################
-        # TODO 20231122
-        self.obstacles = [po, eso]
-
-#        self.obstacles = [CylinderObstacle(5, Vec3(0, 40, 0), Vec3(0, -40, 0))]
-
-#        co = CylinderObstacle(5, Vec3(0, 40, 0), Vec3(0, -40, 0))
-#        self.obstacles = [eso, co]
+        # TODO 20231123 add Obstacle selection command
+        # give Flock a default list of obstacles
+        self.sobs = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
+        self.pobs = PlaneObstacle()
+        self.cobs = CylinderObstacle(5, Vec3(0, 40, 0), Vec3(0, -40, 0))
+#        self.obstacles = [self.sobs]
+        self.obstacle_selection_counter = 0
+        
+        self.cycle_obstacle_selection()
         ########################################################################
         # If there is ever a need to have multiple Flock instances at the same
         # time, these steps should be reconsidered:
@@ -144,22 +143,22 @@ class Flock:
         # TODO 20231106 flies through PlaneObstacle
         # Very temporary code for debugging multiple obstacle avoidance.
         
-#        # Should be reverted back to just:
-#        for boid in self.boids:
-#            boid.apply_next_steer(time_step)
-
-        def diff_sign(a, b):
-            return (a > 0 and b < 0) or (a < 0 and b > 0)
+        # Should be reverted back to just:
         for boid in self.boids:
-            before = boid.position
             boid.apply_next_steer(time_step)
-            if diff_sign(before.y, boid.position.y):
-                self.plane_obstacle_fail += 1
-                ho = boid.position - before
-                ho.y = 0
-                print(Draw.frame_counter,
-                      ' Boid cross PlaneObstacle:', self.plane_obstacle_fail,
-                      ', boid.position.length(): ', boid.position.length())
+
+#        def diff_sign(a, b):
+#            return (a > 0 and b < 0) or (a < 0 and b > 0)
+#        for boid in self.boids:
+#            before = boid.position
+#            boid.apply_next_steer(time_step)
+#            if diff_sign(before.y, boid.position.y):
+#                self.plane_obstacle_fail += 1
+#                ho = boid.position - before
+#                ho.y = 0
+#                print(Draw.frame_counter,
+#                      ' Boid cross PlaneObstacle:', self.plane_obstacle_fail,
+#                      ', boid.position.length(): ', boid.position.length())
         ########################################################################
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
@@ -243,6 +242,10 @@ class Flock:
         Draw.vis.register_key_callback(ord('E'), Flock.toggle_dynamic_erase)
         Draw.vis.register_key_callback(ord('F'), Flock.toggle_fixed_time_step)
         Draw.vis.register_key_callback(ord('B'), Flock.toggle_avoid_blend_mode)
+        ########################################################################
+        # TODO 20231123 add Obstacle selection command
+        Draw.vis.register_key_callback(ord('O'), Flock.cycle_obstacle_selection)
+        ########################################################################
         Draw.vis.register_key_callback(ord('H'), Flock.print_help)
 
     # Toggle simulation pause mode.
@@ -302,6 +305,33 @@ class Flock:
         self.avoid_blend_mode = not self.avoid_blend_mode
         print('    Flock.avoid_blend_mode =', self.avoid_blend_mode)
 
+    ########################################################################
+    # TODO 20231123 add Obstacle selection command
+    def cycle_obstacle_selection(self):
+        self = Flock.convert_to_flock(self)
+        match self.obstacle_selection_counter % 5:
+            case 0:
+                self.obstacles = [self.sobs]
+            case 1:
+                self.obstacles = [self.sobs, self.pobs]
+            case 2:
+                self.obstacles = [self.sobs, self.cobs]
+            case 3:
+                self.obstacles = [self.sobs, self.pobs, self.cobs]
+            case 4:
+                self.obstacles = []
+        self.obstacle_selection_counter += 1
+        print()
+        print('    obstacles: ', end="")
+        sep = ''
+        for o in self.obstacles:
+            print(sep, end="")
+            print(o, end="")
+            sep = ', '
+        print()
+        print()
+    ########################################################################
+
     # Print mini-help on shell.
     def print_help(self):
         self = Flock.convert_to_flock(self)
@@ -316,6 +346,10 @@ class Flock:
         print('    e:     toggle erase mode (spacetime boid worms)')
         print('    f:     toggle realtime versus fixed time step of 1/60sec')
         print('    b:     toggle blend vs hard switch for obstacle avoidance')
+        ########################################################################
+        # TODO 20231123 add Obstacle selection command
+        print('    o:     cycle through obstacle selections')
+        ########################################################################
         print('    h:     print this message')
         print('    esc:   exit simulation.')
         print()

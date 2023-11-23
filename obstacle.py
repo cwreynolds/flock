@@ -41,6 +41,8 @@ class Obstacle:
     def fly_away(self, agent_position, agent_forward, max_distance):
         pass
 
+    def __str__(self):
+        return self.__class__.__name__
 
 class EvertedSphereObstacle(Obstacle):
     def __init__(self, radius, center):
