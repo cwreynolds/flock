@@ -31,6 +31,7 @@ You can control the view using Open3D's standard gestures. There are also severa
     e:     toggle erase mode (spacetime boid worms)
     f:     toggle realtime versus fixed time step of 1/60sec
     b:     toggle blend vs hard switch for obstacle avoidance
+    o:     cycle through obstacle selections
     h:     print this message
     esc:   exit simulation.
 
