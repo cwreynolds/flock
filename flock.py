@@ -64,8 +64,10 @@ class Flock:
         # give Flock a default list of obstacles
         self.sobs = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
         self.pobs = PlaneObstacle()
-        self.cobs = CylinderObstacle(5, Vec3(0, 40, 0), Vec3(0, -40, 0))
+        cep = Vec3(0, self.sphere_radius + 0.1, 0)
+        self.cobs = CylinderObstacle(5, cep, -cep)
 #        self.obstacles = [self.sobs]
+        self.obstacles = []
         self.obstacle_selection_counter = 0
         
         self.cycle_obstacle_selection()
@@ -124,6 +126,11 @@ class Flock:
                     boid in self.selected_boid().cached_nearest_neighbors:
                 color = Vec3(0.0, 1.0, 0.0)
             boid.draw(color=color)
+        ############################################################################
+        # TODO 20231125 draw cylinder
+        for o in self.obstacles:
+            o.draw()
+        ############################################################################
 
     ########################################################################
     # TODO 20231106 flies through PlaneObstacle
@@ -309,6 +316,11 @@ class Flock:
     # TODO 20231123 add Obstacle selection command
     def cycle_obstacle_selection(self):
         self = Flock.convert_to_flock(self)
+        
+        # TODO 20231125 draw cylinder
+        for o in self.obstacles:
+            o.draw_enable = False
+
         match self.obstacle_selection_counter % 5:
             case 0:
                 self.obstacles = [self.sobs]
@@ -320,6 +332,11 @@ class Flock:
                 self.obstacles = [self.sobs, self.pobs, self.cobs]
             case 4:
                 self.obstacles = []
+
+        # TODO 20231125 draw cylinder
+        for o in self.obstacles:
+            o.draw_enable = True
+
         self.obstacle_selection_counter += 1
         print()
         print('    obstacles: ', end="")

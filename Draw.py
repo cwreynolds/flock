@@ -229,12 +229,25 @@ class Draw:
 
         return tri_mesh
 
+    ########################################################################
+    # TODO 20231125 draw cylinder -- maybe this is "the way of the future"?
+
     # Translate "static" scene meshes according to Draw.temp_camera_lookat.
     @staticmethod
+#    def adjust_static_scene_objects():
+#        for m in [Draw.axes, Draw.sphere_containment]:
+#            m.translate((-Draw.temp_camera_lookat).asarray(), relative=False)
+#            Draw.vis.update_geometry(m)
     def adjust_static_scene_objects():
         for m in [Draw.axes, Draw.sphere_containment]:
-            m.translate((-Draw.temp_camera_lookat).asarray(), relative=False)
-            Draw.vis.update_geometry(m)
+            Draw.adjust_static_scene_object(m)
+
+    @staticmethod
+    def adjust_static_scene_object(scene_object):
+        translation = (-Draw.temp_camera_lookat).asarray()
+        scene_object.translate(translation, relative=False)
+        Draw.vis.update_geometry(scene_object)
+    ########################################################################
 
     # Set random seeds for Python, Numpy, and Open3D, all to the given value.
     # This will produce consistant starting positions/orientation. Longer term
@@ -244,6 +257,11 @@ class Draw:
         np.random.seed(seed)
         o3d.utility.random.seed(seed)
 
+    ########################################################################
+    # TODO 20231125 draw cylinder
+    def new_empty_tri_mesh():
+        return o3d.geometry.TriangleMesh()
+    ########################################################################
 
 ################################################################################
 ##

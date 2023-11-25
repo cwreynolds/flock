@@ -19,11 +19,20 @@
 
 import math
 from Vec3 import Vec3
+################################################################################
+# TODO 20231125 draw cylinder
+from Draw import Draw
+################################################################################
 #import Utilities as util
 
 class Obstacle:
     def __init__(self):
-        pass
+    ############################################################################
+    # TODO 20231125 draw cylinder
+#        pass
+        self.draw_enable = False
+    ############################################################################
+
 
     # Where the ray representing an Agent's path will intersect the obstacle.
     def ray_intersection(self, origin, tangent):
@@ -40,6 +49,12 @@ class Obstacle:
     # Compute direction for agent's static avoidance of (concave?) obstacles.
     def fly_away(self, agent_position, agent_forward, max_distance):
         pass
+
+    ############################################################################
+    # TODO 20231125 draw cylinder
+    def draw(self):
+        pass
+    ############################################################################
 
     def __str__(self):
         return self.__class__.__name__
@@ -137,18 +152,17 @@ class PlaneObstacle(Obstacle):
 
 # A bounded cylinder (between two endpoints) with given radius
 class CylinderObstacle(Obstacle):
-#    def __init__(self, endpoint, tangent, radius, length):
-#        self.endpoint = endpoint
-#        self.tangent = tangent
-#        self.radius = radius
-#        self.length = length
-
     def __init__(self, radius, endpoint0, endpoint1):
         self.radius = radius
         offset = endpoint1 - endpoint0
         self.endpoint = endpoint0
         self.tangent = offset.normalize()
         self.length = offset.length()
+        ########################################################################
+        # TODO 20231125 draw cylinder
+        self.tri_mesh = None
+        Obstacle.__init__(self)
+        ########################################################################
 
     # Nearest point on the infinite line containing cylinder's axis.
     def nearest_point_on_axis(self, query_point):
@@ -180,6 +194,29 @@ class CylinderObstacle(Obstacle):
         # does nothing for now?
         return Vec3()
 
+    ############################################################################
+    # TODO 20231125 draw cylinder
+    
+    def draw(self):
+        if not self.tri_mesh:
+            self.tri_mesh = Draw.new_empty_tri_mesh()
+            Draw.add_line_segment(self.endpoint,
+                                  self.endpoint + (self.tangent * self.length),
+                                  color = Vec3(1, 1, 1) * 0.98,
+                                  radius = self.radius,
+                                  sides = 10,
+                                  tri_mesh = self.tri_mesh)
+#            Draw.vis.add_geometry(self.tri_mesh, False)
+            
+        print('self.draw_enable =', self.draw_enable)
+        
+        if self.draw_enable:
+            Draw.vis.add_geometry(self.tri_mesh, False)
+        else:
+            Draw.vis.remove_geometry(self.tri_mesh, False)
+        Draw.adjust_static_scene_object(self.tri_mesh)
+
+    ############################################################################
 
 ################################################################################
 
