@@ -115,11 +115,6 @@ class Draw:
         Draw.axes = Draw.make_global_axes()
         Draw.vis.add_geometry(Draw.axes, False)
 
-        # Create everted containment sphere and add it to scene.
-        Draw.sphere_containment = Draw.make_everted_sphere(containment_radius,
-                                                           containment_center)
-        Draw.vis.add_geometry(Draw.sphere_containment, False)
-
         # Add to scene dynamic_triangle_mesh with boid "bodies" and annotation.
         Draw.vis.add_geometry(Draw.dynamic_triangle_mesh, False)
 
@@ -184,7 +179,6 @@ class Draw:
     # Construct everted sphere as TriangleMesh to visualize the spherical
     # containment for this flock simulation. It is based on a 1-to-4 triangle
     # subdivision applied to an octahedron.
-    sphere_containment = None
     grays = []
     @staticmethod
     def make_everted_sphere(radius=1, center=Vec3()):
@@ -231,15 +225,24 @@ class Draw:
 
     ########################################################################
     # TODO 20231125 draw cylinder -- maybe this is "the way of the future"?
+    #
+    # TODO 20231127 Now only the axes are handled here. Refactor?
 
     # Translate "static" scene meshes according to Draw.temp_camera_lookat.
-    @staticmethod
+#    @staticmethod
 #    def adjust_static_scene_objects():
 #        for m in [Draw.axes, Draw.sphere_containment]:
 #            m.translate((-Draw.temp_camera_lookat).asarray(), relative=False)
 #            Draw.vis.update_geometry(m)
+#
+#    @staticmethod
+#    def adjust_static_scene_objects():
+#        for m in [Draw.axes, Draw.sphere_containment]:
+#            Draw.adjust_static_scene_object(m)
+#
+    @staticmethod
     def adjust_static_scene_objects():
-        for m in [Draw.axes, Draw.sphere_containment]:
+        for m in [Draw.axes]:
             Draw.adjust_static_scene_object(m)
 
     @staticmethod
@@ -256,12 +259,10 @@ class Draw:
         random.seed(seed)
         np.random.seed(seed)
         o3d.utility.random.seed(seed)
-
-    ########################################################################
-    # TODO 20231125 draw cylinder
+    
+    # Create and return an empty Open3D TriangleMesh, for obstacle drawing.
     def new_empty_tri_mesh():
         return o3d.geometry.TriangleMesh()
-    ########################################################################
 
 ################################################################################
 ##

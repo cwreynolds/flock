@@ -19,10 +19,7 @@
 
 import math
 from Vec3 import Vec3
-################################################################################
-# TODO 20231125 draw cylinder
 from Draw import Draw
-################################################################################
 #import Utilities as util
 
 class Obstacle:
@@ -89,6 +86,11 @@ class EvertedSphereObstacle(Obstacle):
                 avoidance = normal * weight
         return avoidance
     
+    def draw(self):
+        if not self.tri_mesh:
+            self.tri_mesh = Draw.make_everted_sphere(self.radius, self.center)
+        Draw.adjust_static_scene_object(self.tri_mesh)
+
 class PlaneObstacle(Obstacle):
     def __init__(self, normal=Vec3(0, 1, 0), center=Vec3(0, 0, 0)):
         Obstacle.__init__(self)
@@ -148,10 +150,10 @@ class CylinderObstacle(Obstacle):
     def __init__(self, radius, endpoint0, endpoint1):
         Obstacle.__init__(self)
         self.radius = radius
-        offset = endpoint1 - endpoint0
         self.endpoint = endpoint0
-        self.tangent = offset.normalize()
+        offset = endpoint1 - endpoint0
         self.length = offset.length()
+        self.tangent = offset.normalize()
 
     # Nearest point on the infinite line containing cylinder's axis.
     def nearest_point_on_axis(self, query_point):
@@ -164,7 +166,7 @@ class CylinderObstacle(Obstacle):
     # Where the ray representing an Agent's path will intersect the obstacle.
     def ray_intersection(self, origin, tangent):
         ########################################################################
-        # TODO mock implementation
+        # TODO 20231122 mock implementation
         return (self.nearest_point_on_axis(origin) +
                 self.normal_at_poi(origin)  * self.radius)
         ########################################################################
@@ -183,9 +185,6 @@ class CylinderObstacle(Obstacle):
         # does nothing for now?
         return Vec3()
 
-    ############################################################################
-    # TODO 20231125 draw cylinder
-    
     def draw(self):
         if not self.tri_mesh:
             self.tri_mesh = Draw.new_empty_tri_mesh()
@@ -196,8 +195,6 @@ class CylinderObstacle(Obstacle):
                                   sides = 10,
                                   tri_mesh = self.tri_mesh)
         Draw.adjust_static_scene_object(self.tri_mesh)
-
-    ############################################################################
 
 ################################################################################
 
