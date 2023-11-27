@@ -27,12 +27,7 @@ from Draw import Draw
 
 class Obstacle:
     def __init__(self):
-    ############################################################################
-    # TODO 20231125 draw cylinder
-#        pass
-        self.draw_enable = False
-    ############################################################################
-
+        self.tri_mesh = None
 
     # Where the ray representing an Agent's path will intersect the obstacle.
     def ray_intersection(self, origin, tangent):
@@ -50,17 +45,15 @@ class Obstacle:
     def fly_away(self, agent_position, agent_forward, max_distance):
         pass
 
-    ############################################################################
-    # TODO 20231125 draw cylinder
     def draw(self):
         pass
-    ############################################################################
 
     def __str__(self):
         return self.__class__.__name__
 
 class EvertedSphereObstacle(Obstacle):
     def __init__(self, radius, center):
+        Obstacle.__init__(self)
         self.radius = radius
         self.center = center
 
@@ -98,6 +91,7 @@ class EvertedSphereObstacle(Obstacle):
     
 class PlaneObstacle(Obstacle):
     def __init__(self, normal=Vec3(0, 1, 0), center=Vec3(0, 0, 0)):
+        Obstacle.__init__(self)
         self.normal = normal
         self.center = center
 
@@ -145,24 +139,19 @@ class PlaneObstacle(Obstacle):
         return avoidance
 
 ################################################################################
-# TODO 20231122
+# TODO 20231122 WIP for CylinderObstacle: mock avoidance, endpoints ignored.
 #
 # for now lets ignore the endpoints and assume the cylinder is infinitely long.
-
 
 # A bounded cylinder (between two endpoints) with given radius
 class CylinderObstacle(Obstacle):
     def __init__(self, radius, endpoint0, endpoint1):
+        Obstacle.__init__(self)
         self.radius = radius
         offset = endpoint1 - endpoint0
         self.endpoint = endpoint0
         self.tangent = offset.normalize()
         self.length = offset.length()
-        ########################################################################
-        # TODO 20231125 draw cylinder
-        self.tri_mesh = None
-        Obstacle.__init__(self)
-        ########################################################################
 
     # Nearest point on the infinite line containing cylinder's axis.
     def nearest_point_on_axis(self, query_point):
@@ -206,14 +195,6 @@ class CylinderObstacle(Obstacle):
                                   radius = self.radius,
                                   sides = 10,
                                   tri_mesh = self.tri_mesh)
-#            Draw.vis.add_geometry(self.tri_mesh, False)
-            
-        print('self.draw_enable =', self.draw_enable)
-        
-        if self.draw_enable:
-            Draw.vis.add_geometry(self.tri_mesh, False)
-        else:
-            Draw.vis.remove_geometry(self.tri_mesh, False)
         Draw.adjust_static_scene_object(self.tri_mesh)
 
     ############################################################################

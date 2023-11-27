@@ -59,19 +59,13 @@ class Flock:
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
         self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
         self.fps = util.Blender()
-        ########################################################################
-        # TODO 20231123 add Obstacle selection command
         # give Flock a default list of obstacles
         self.sobs = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
         self.pobs = PlaneObstacle()
         cep = Vec3(0, self.sphere_radius + 0.1, 0)
         self.cobs = CylinderObstacle(5, cep, -cep)
-#        self.obstacles = [self.sobs]
         self.obstacles = []
         self.obstacle_selection_counter = 0
-        
-        self.cycle_obstacle_selection()
-        ########################################################################
         # If there is ever a need to have multiple Flock instances at the same
         # time, these steps should be reconsidered:
         Draw.set_random_seeds(seed)
@@ -85,6 +79,7 @@ class Flock:
         self.register_single_key_commands() # For Open3D visualizer GUI.
         self.make_boids(self.boid_count, self.sphere_radius, self.sphere_center)
         self.draw()
+        self.cycle_obstacle_selection()
         while self.still_running():
             if self.run_simulation_this_frame():
                 Draw.clear_scene()
@@ -126,11 +121,6 @@ class Flock:
                     boid in self.selected_boid().cached_nearest_neighbors:
                 color = Vec3(0.0, 1.0, 0.0)
             boid.draw(color=color)
-        ############################################################################
-        # TODO 20231125 draw cylinder
-        for o in self.obstacles:
-            o.draw()
-        ############################################################################
 
     ########################################################################
     # TODO 20231106 flies through PlaneObstacle
@@ -249,10 +239,7 @@ class Flock:
         Draw.vis.register_key_callback(ord('E'), Flock.toggle_dynamic_erase)
         Draw.vis.register_key_callback(ord('F'), Flock.toggle_fixed_time_step)
         Draw.vis.register_key_callback(ord('B'), Flock.toggle_avoid_blend_mode)
-        ########################################################################
-        # TODO 20231123 add Obstacle selection command
         Draw.vis.register_key_callback(ord('O'), Flock.cycle_obstacle_selection)
-        ########################################################################
         Draw.vis.register_key_callback(ord('H'), Flock.print_help)
 
     # Toggle simulation pause mode.
@@ -312,15 +299,13 @@ class Flock:
         self.avoid_blend_mode = not self.avoid_blend_mode
         print('    Flock.avoid_blend_mode =', self.avoid_blend_mode)
 
-    ########################################################################
-    # TODO 20231123 add Obstacle selection command
+    # Cycle through various pre-defined combinations of Obstacle types.
     def cycle_obstacle_selection(self):
         self = Flock.convert_to_flock(self)
-        
-        # TODO 20231125 draw cylinder
+        # Remove geometry of current Obstacles from Open3D scene.
         for o in self.obstacles:
-            o.draw_enable = False
-
+            Draw.vis.remove_geometry(o.tri_mesh, False)
+        # Set Obstacle list to next predefined set.
         match self.obstacle_selection_counter % 5:
             case 0:
                 self.obstacles = [self.sobs]
@@ -332,22 +317,23 @@ class Flock:
                 self.obstacles = [self.sobs, self.pobs, self.cobs]
             case 4:
                 self.obstacles = []
-
-        # TODO 20231125 draw cylinder
-        for o in self.obstacles:
-            o.draw_enable = True
-
+        # Increment counter for next call.
         self.obstacle_selection_counter += 1
-        print()
-        print('    obstacles: ', end="")
-        sep = ''
+        # Add geometry of current obstacles to Open3D scene.
         for o in self.obstacles:
-            print(sep, end="")
-            print(o, end="")
-            sep = ', '
-        print()
-        print()
-    ########################################################################
+            o.draw()
+            if o.tri_mesh: # TODO only need until all Obstacles draw themselves.
+                Draw.vis.add_geometry(o.tri_mesh, False)
+        # Print description of current Obstacle set.
+        description = '\n  obstacles: '
+        if self.obstacles:
+            seperator = ''
+            for o in self.obstacles:
+                description += seperator + str(o)
+                seperator = ', '
+        else:
+            description += 'none'
+        print(description + '\n')
 
     # Print mini-help on shell.
     def print_help(self):
@@ -363,10 +349,7 @@ class Flock:
         print('    e:     toggle erase mode (spacetime boid worms)')
         print('    f:     toggle realtime versus fixed time step of 1/60sec')
         print('    b:     toggle blend vs hard switch for obstacle avoidance')
-        ########################################################################
-        # TODO 20231123 add Obstacle selection command
         print('    o:     cycle through obstacle selections')
-        ########################################################################
         print('    h:     print this message')
         print('    esc:   exit simulation.')
         print()
