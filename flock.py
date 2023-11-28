@@ -115,6 +115,8 @@ class Flock:
     def draw(self):
         Draw.update_camera(self.selected_boid().position if
                            self.tracking_camera else Vec3())
+        for o in self.obstacles:
+            o.draw()
         for boid in self.boids:
             color = None
             if self.enable_annotation and self.tracking_camera and \

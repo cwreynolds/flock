@@ -145,6 +145,57 @@ class PlaneObstacle(Obstacle):
 #
 # for now lets ignore the endpoints and assume the cylinder is infinitely long.
 
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# TODO 20231127 WIP line/cylinder intersection
+
+# Based on: https://github.com/JohannesBuchner/intersection and specificially:
+# https://johannesbuchner.github.io/intersection/intersection_line_cylinder.html
+
+#@staticmethod
+def ray_cylinder_intersection(ray_endpoint, ray_tangent,
+                              cyl_endpoint, cyl_tangent,
+                              cyl_radius, cyl_length):
+    intersection = None
+    def sq(s):
+        return s * s
+
+    # Rename variables to match Johannes Buchner's derivation using SymPy.
+    
+    # Parametric equation for line.
+    x0 = ray_endpoint.x
+    y0 = ray_endpoint.y
+    z0 = ray_endpoint.x
+    k = ray_tangent.y / ray_tangent.x  # TODO what if ray_tangent.x = 0?
+    l = ray_tangent.z / ray_tangent.x  # TODO what if ray_tangent.x = 0?
+    
+    # Equation for cylinder (assume centered at origin, on Z axis)
+    a = cyl_radius
+    b = cyl_radius
+    
+    # Common subexpressions:
+    a2b2 = sq(a) * sq(b)
+    a2k2 = sq(a) * sq(k)
+    a2k2pb2 = a2k2 + sq(b)
+    k2x02 = sq(k) * sq(x0)
+    tkx0y0 = 2 * k * x0 * y0
+    
+    radicand = a2b2 * (a2k2pb2 - k2x02 + tkx0y0 - sq(y0))
+    
+    # If any (real valued) intersections exist (both same if radicand==0)
+    if radicand >= 0:
+        radical = math.sqrt(radicand)
+        a2ky0 = sq(a) * k * y0
+        b2x0 = sq(b) * x0
+        q1 = ( 1 / a2k2pb2) * (-a2ky0 - b2x0 + radical)
+        q2 = (-1 / a2k2pb2) * ( a2ky0 + b2x0 + radical)
+        intersection = [Vec3(x0 + q1, y0 + q1, z0 + q1),
+                        Vec3(x0 - q2, y0 - q2, z0 - q2)]
+    return intersection
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 # A bounded cylinder (between two endpoints) with given radius
 class CylinderObstacle(Obstacle):
     def __init__(self, radius, endpoint0, endpoint1):
@@ -165,6 +216,17 @@ class CylinderObstacle(Obstacle):
     
     # Where the ray representing an Agent's path will intersect the obstacle.
     def ray_intersection(self, origin, tangent):
+    
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # TODO 20231127 WIP line/cylinder intersection
+        intersections = ray_cylinder_intersection(origin, tangent,
+                                                  self.endpoint, self.tangent,
+                                                  self.radius, self.length)
+#        if intersections:
+#            Draw.add_line_segment(origin, intersections[0], Vec3(1,0,0))
+#            Draw.add_line_segment(origin, intersections[1], Vec3(1,0,0))
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
         ########################################################################
         # TODO 20231122 mock implementation
         return (self.nearest_point_on_axis(origin) +
