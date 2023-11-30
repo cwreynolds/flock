@@ -308,7 +308,7 @@ class Flock:
         for o in self.obstacles:
             Draw.vis.remove_geometry(o.tri_mesh, False)
         # Set Obstacle list to next predefined set.
-        match self.obstacle_selection_counter % 5:
+        match self.obstacle_selection_counter % 6:
             case 0:
                 self.obstacles = [self.sobs]
             case 1:
@@ -318,6 +318,8 @@ class Flock:
             case 3:
                 self.obstacles = [self.sobs, self.pobs, self.cobs]
             case 4:
+                self.obstacles = [self.cobs]
+            case 5:
                 self.obstacles = []
         # Increment counter for next call.
         self.obstacle_selection_counter += 1

@@ -152,6 +152,159 @@ class PlaneObstacle(Obstacle):
 # Based on: https://github.com/JohannesBuchner/intersection and specificially:
 # https://johannesbuchner.github.io/intersection/intersection_line_cylinder.html
 
+#    #@staticmethod
+#    def ray_cylinder_intersection(ray_endpoint, ray_tangent,
+#                                  cyl_endpoint, cyl_tangent,
+#                                  cyl_radius, cyl_length):
+#        intersection = None
+#        def sq(s):
+#            return s * s
+#
+#        # Rename variables to match Johannes Buchner's derivation using SymPy.
+#
+#
+#        # Parametric equation for line.
+#        x0 = ray_endpoint.x
+#        y0 = ray_endpoint.y
+#        z0 = ray_endpoint.x
+#        # Rather than fail assert, just log and ignore this case.
+#        if ray_tangent.x == 0:
+#            print("ray_cylinder_intersection: can't follow Buchner's derivation")
+#            return intersection
+#        k = ray_tangent.y / ray_tangent.x
+#        l = ray_tangent.z / ray_tangent.x
+#
+#        # Equation for cylinder (assume centered at origin, on Z axis)
+#        a = cyl_radius
+#        b = cyl_radius
+#
+#        # Common subexpressions:
+#        a2b2 = sq(a) * sq(b)
+#        a2k2 = sq(a) * sq(k)
+#        a2k2pb2 = a2k2 + sq(b)
+#        k2x02 = sq(k) * sq(x0)
+#        tkx0y0 = 2 * k * x0 * y0
+#
+#        radicand = a2b2 * (a2k2pb2 - k2x02 + tkx0y0 - sq(y0))
+#
+#        # If any (real valued) intersections exist (both same if radicand==0)
+#        if radicand >= 0:
+#            radical = math.sqrt(radicand)
+#            a2ky0 = sq(a) * k * y0
+#            b2x0 = sq(b) * x0
+#            q1 = ( 1 / a2k2pb2) * (-a2ky0 - b2x0 + radical)
+#            q2 = (-1 / a2k2pb2) * ( a2ky0 + b2x0 + radical)
+#            intersection = [Vec3(x0 + q1, y0 + q1, z0 + q1),
+#                            Vec3(x0 - q2, y0 - q2, z0 - q2)]
+#        return intersection
+
+#    #@staticmethod
+#    def ray_cylinder_intersection(ray_endpoint, ray_tangent,
+#                                  cyl_endpoint, cyl_tangent,
+#                                  cyl_radius, cyl_length):
+#        intersection = None
+#    #    def sq(s):
+#    #        return s * s
+#        if ray_tangent.x == 0:
+#            # Rather than fail assert, just log and ignore this case.
+#            print("ray_cylinder_intersection: can't follow Buchner's derivation")
+#        else:
+#            # Rename variables to match Johannes Buchner's derivation using SymPy.
+#            # Parametric equation for line.
+#            x0 = ray_endpoint.x
+#            y0 = ray_endpoint.y
+#            z0 = ray_endpoint.x
+#            k = ray_tangent.y / ray_tangent.x
+#            l = ray_tangent.z / ray_tangent.x
+#
+#            # Equation for cylinder (assume centered at origin, on Z axis)
+#            a = cyl_radius
+#            b = cyl_radius
+#
+#            # Common subexpressions:
+#            a2 = a * a
+#            b2 = b * b
+#            k2 = k * k
+#            x02 = x0 * x0
+#            y02 = y0 * y0
+#
+#    #        a2b2 = sq(a) * sq(b)
+#    #        a2k2 = sq(a) * sq(k)
+#    #        a2k2pb2 = a2k2 + sq(b)
+#    #        k2x02 = sq(k) * sq(x0)
+#    #        tkx0y0 = 2 * k * x0 * y0
+#            a2b2 = a2 * b2
+#            a2k2 = a2 * k2
+#            a2k2pb2 = a2k2 + b2
+#            k2x02 = k2 * x02
+#            tkx0y0 = 2 * k * x0 * y0
+#
+#            radicand = a2b2 * (a2k2pb2 - k2x02 + tkx0y0 - y02)
+#
+#            # If any (real valued) intersections exist (both same if radicand==0)
+#            if radicand >= 0:
+#                radical = math.sqrt(radicand)
+#                a2ky0 = a2 * k * y0
+#                b2x0 = b2 * x0
+#                q1 = ( 1 / a2k2pb2) * (-a2ky0 - b2x0 + radical)
+#                q2 = (-1 / a2k2pb2) * ( a2ky0 + b2x0 + radical)
+#                intersection = [Vec3(x0 + q1, y0 + q1, z0 + q1),
+#                                Vec3(x0 - q2, y0 - q2, z0 - q2)]
+#        return intersection
+
+#    #@staticmethod
+#    def ray_cylinder_intersection(ray_endpoint, ray_tangent,
+#                                  cyl_endpoint, cyl_tangent,
+#                                  cyl_radius, cyl_length):
+#        intersection = None
+#        if ray_tangent.x == 0:
+#            # Rather than fail assert, just log and ignore this case.
+#            print("ray_cylinder_intersection: can't follow Buchner's derivation")
+#        else:
+#            # Rename variables to match Johannes Buchner's derivation using SymPy.
+#
+#            # Parametric equation for line.
+#            x0 = ray_endpoint.x
+#            y0 = ray_endpoint.y
+#            z0 = ray_endpoint.x
+#            k = ray_tangent.y / ray_tangent.x
+#            l = ray_tangent.z / ray_tangent.x
+#
+#            # Equation for cylinder (assume centered at origin, on Z axis)
+#            a = cyl_radius
+#            b = cyl_radius
+#
+#            # Common subexpressions:
+#            a2 = a * a
+#            b2 = b * b
+#            k2 = k * k
+#            x02 = x0 * x0
+#            y02 = y0 * y0
+#            a2b2 = a2 * b2
+#            a2k2 = a2 * k2
+#            a2k2pb2 = a2k2 + b2
+#            k2x02 = k2 * x02
+#            tkx0y0 = 2 * k * x0 * y0
+#
+#            radicand = a2b2 * (a2k2pb2 - k2x02 + tkx0y0 - y02)
+#
+#            # If any (real valued) intersections exist (both same if radicand==0)
+#            if radicand >= 0:
+#                radical = math.sqrt(radicand)
+#                a2ky0 = a2 * k * y0
+#                b2x0 = b2 * x0
+#                q1 = ( 1 / a2k2pb2) * (-a2ky0 - b2x0 + radical)
+#                q2 = (-1 / a2k2pb2) * ( a2ky0 + b2x0 + radical)
+#                intersection = [Vec3(x0 + q1, y0 + q1, z0 + q1),
+#                                Vec3(x0 - q2, y0 - q2, z0 - q2)]
+#        return intersection
+
+
+# TODO 20231128 switching now to the derivation of Nominal Animal:
+#               https://en.wikipedia.org/wiki/User:Nominal_animal
+#               https://math.stackexchange.com/a/1732445/516283
+#               https://www.nominal-animal.net
+
 #@staticmethod
 def ray_cylinder_intersection(ray_endpoint, ray_tangent,
                               cyl_endpoint, cyl_tangent,
@@ -160,37 +313,36 @@ def ray_cylinder_intersection(ray_endpoint, ray_tangent,
     def sq(s):
         return s * s
 
-    # Rename variables to match Johannes Buchner's derivation using SymPy.
+    # Rename to match https://en.wikipedia.org/wiki/User:Nominal_animal
+    b = cyl_endpoint  # The 3d origin/end/endpoint of the cylinder on its axis.
+    a = cyl_tangent   # Unit 3d vector parallel to cylinder axis.
+    r = cyl_radius    # Scalar cylinder radius.
+    h = cyl_length    # Scalar length from endpoint along axis to other end.
     
-    # Parametric equation for line.
-    x0 = ray_endpoint.x
-    y0 = ray_endpoint.y
-    z0 = ray_endpoint.x
-    k = ray_tangent.y / ray_tangent.x  # TODO what if ray_tangent.x = 0?
-    l = ray_tangent.z / ray_tangent.x  # TODO what if ray_tangent.x = 0?
+    o = ray_endpoint  # The 3d origin/end/endpoint of ray.
+    n = ray_tangent   # Unit 3d vector parallel to ray.
     
-    # Equation for cylinder (assume centered at origin, on Z axis)
-    a = cyl_radius
-    b = cyl_radius
+    b = b - o         # Offset b by the ray's origin/end/endpoint
     
-    # Common subexpressions:
-    a2b2 = sq(a) * sq(b)
-    a2k2 = sq(a) * sq(k)
-    a2k2pb2 = a2k2 + sq(b)
-    k2x02 = sq(k) * sq(x0)
-    tkx0y0 = 2 * k * x0 * y0
+    assert a.is_unit_length()
+    assert n.is_unit_length()
+
+    na = n.cross(a)
+    r2 = r * r
     
-    radicand = a2b2 * (a2k2pb2 - k2x02 + tkx0y0 - sq(y0))
-    
+    radicand = (na.dot(na) * r2) - sq(b.dot(na))
+
     # If any (real valued) intersections exist (both same if radicand==0)
     if radicand >= 0:
         radical = math.sqrt(radicand)
-        a2ky0 = sq(a) * k * y0
-        b2x0 = sq(b) * x0
-        q1 = ( 1 / a2k2pb2) * (-a2ky0 - b2x0 + radical)
-        q2 = (-1 / a2k2pb2) * ( a2ky0 + b2x0 + radical)
-        intersection = [Vec3(x0 + q1, y0 + q1, z0 + q1),
-                        Vec3(x0 - q2, y0 - q2, z0 - q2)]
+        ba = b.cross(a)
+        nana = na.dot(na)
+        d1 = (na.dot(ba) + radical) / nana
+        d2 = (na.dot(ba) - radical) / nana
+        if d1 >= 0:
+            intersection = o + n * d1
+        if d2 >= 0 and d2 < d1:
+            intersection = o + n * d2
     return intersection
 
 
@@ -216,22 +368,13 @@ class CylinderObstacle(Obstacle):
     
     # Where the ray representing an Agent's path will intersect the obstacle.
     def ray_intersection(self, origin, tangent):
-    
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-        # TODO 20231127 WIP line/cylinder intersection
-        intersections = ray_cylinder_intersection(origin, tangent,
-                                                  self.endpoint, self.tangent,
-                                                  self.radius, self.length)
-#        if intersections:
-#            Draw.add_line_segment(origin, intersections[0], Vec3(1,0,0))
-#            Draw.add_line_segment(origin, intersections[1], Vec3(1,0,0))
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        intersection = ray_cylinder_intersection(origin, tangent,
+                                                 self.endpoint, self.tangent,
+                                                 self.radius, self.length)
+        if intersection:
+            Draw.add_line_segment(origin, intersection, Vec3(1, 0.3, 0.3))
+        return intersection
 
-        ########################################################################
-        # TODO 20231122 mock implementation
-        return (self.nearest_point_on_axis(origin) +
-                self.normal_at_poi(origin)  * self.radius)
-        ########################################################################
 
     # Normal to the obstacle at a given point of interest.
     def normal_at_poi(self, poi, agent_position=None):
