@@ -223,23 +223,8 @@ class Draw:
 
         return tri_mesh
 
-    ########################################################################
-    # TODO 20231125 draw cylinder -- maybe this is "the way of the future"?
-    #
-    # TODO 20231127 Now only the axes are handled here. Refactor?
-
+    # TODO 20231127 Now only the axes are handled here. Refactor? Rename?
     # Translate "static" scene meshes according to Draw.temp_camera_lookat.
-#    @staticmethod
-#    def adjust_static_scene_objects():
-#        for m in [Draw.axes, Draw.sphere_containment]:
-#            m.translate((-Draw.temp_camera_lookat).asarray(), relative=False)
-#            Draw.vis.update_geometry(m)
-#
-#    @staticmethod
-#    def adjust_static_scene_objects():
-#        for m in [Draw.axes, Draw.sphere_containment]:
-#            Draw.adjust_static_scene_object(m)
-#
     @staticmethod
     def adjust_static_scene_objects():
         for m in [Draw.axes]:
@@ -250,7 +235,6 @@ class Draw:
         translation = (-Draw.temp_camera_lookat).asarray()
         scene_object.translate(translation, relative=False)
         Draw.vis.update_geometry(scene_object)
-    ########################################################################
 
     # Set random seeds for Python, Numpy, and Open3D, all to the given value.
     # This will produce consistant starting positions/orientation. Longer term

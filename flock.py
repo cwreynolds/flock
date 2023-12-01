@@ -64,6 +64,8 @@ class Flock:
         self.pobs = PlaneObstacle()
         cep = Vec3(0, self.sphere_radius + 0.1, 0)
         self.cobs = CylinderObstacle(5, cep, -cep)
+        scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.3
+        self.squat_cyl_obs = CylinderObstacle(10, scep, -scep)
         self.obstacles = []
         self.obstacle_selection_counter = 0
         # If there is ever a need to have multiple Flock instances at the same
@@ -141,6 +143,7 @@ class Flock:
         ########################################################################
         # TODO 20231106 flies through PlaneObstacle
         # Very temporary code for debugging multiple obstacle avoidance.
+        # Counting avoidance violations should happen inside the obstacle class.
         
         # Should be reverted back to just:
         for boid in self.boids:
@@ -307,20 +310,16 @@ class Flock:
         # Remove geometry of current Obstacles from Open3D scene.
         for o in self.obstacles:
             Draw.vis.remove_geometry(o.tri_mesh, False)
-        # Set Obstacle list to next predefined set.
-        match self.obstacle_selection_counter % 6:
-            case 0:
-                self.obstacles = [self.sobs]
-            case 1:
-                self.obstacles = [self.sobs, self.pobs]
-            case 2:
-                self.obstacles = [self.sobs, self.cobs]
-            case 3:
-                self.obstacles = [self.sobs, self.pobs, self.cobs]
-            case 4:
-                self.obstacles = [self.cobs]
-            case 5:
-                self.obstacles = []
+        # Preset obstacle combinations:
+        presets = [[self.sobs],
+                   [self.sobs, self.pobs],
+                   [self.sobs, self.cobs],
+                   [self.sobs, self.pobs, self.cobs],
+                   [self.cobs],
+                   [self.squat_cyl_obs],
+                   []]
+        # Set Obstacle list to next preset combination.
+        self.obstacles = presets[self.obstacle_selection_counter % len(presets)]
         # Increment counter for next call.
         self.obstacle_selection_counter += 1
         # Add geometry of current obstacles to Open3D scene.
