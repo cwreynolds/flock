@@ -26,7 +26,7 @@ class Obstacle:
     def __init__(self):
         self.tri_mesh = None
 
-    # Where the ray representing an Agent's path will intersect the obstacle.
+    # Where a ray (Agent's path) will intersect the obstacle, or None.
     def ray_intersection(self, origin, tangent):
         pass
 
@@ -54,7 +54,7 @@ class EvertedSphereObstacle(Obstacle):
         self.radius = radius
         self.center = center
 
-    # Where the ray representing an Agent's path will intersect the obstacle.
+    # Where a ray (Agent's path) will intersect the obstacle, or None.
     def ray_intersection(self, origin, tangent):
         return Vec3.ray_sphere_intersection(origin, tangent,
                                             self.radius, self.center)
@@ -97,7 +97,7 @@ class PlaneObstacle(Obstacle):
         self.normal = normal
         self.center = center
 
-    # Where the ray representing an Agent's path will intersect the obstacle.
+    # Where a ray (Agent's path) will intersect the obstacle, or None.
     def ray_intersection(self, origin, tangent):
         return Vec3.ray_plane_intersection(origin, tangent,
                                            self.center, self.normal)
@@ -207,23 +207,54 @@ class CylinderObstacle(Obstacle):
         projection = offset.dot(self.tangent)
         return self.endpoint + self.tangent * projection
     
-    # Where the ray representing an Agent's path will intersect the obstacle.
+    ############################################################################
+    # TODO 20231201 draw tube interior — WIP, reconsider, optional?
+
+#    # Where the ray representing an Agent's path will intersect the obstacle.
+#    def ray_intersection(self, origin, tangent):
+#        intersection = ray_cylinder_intersection(origin, tangent,
+#                                                 self.endpoint, self.tangent,
+#                                                 self.radius, self.length)
+#        if intersection:
+#            Draw.add_line_segment(origin, intersection, Vec3(1, 0.3, 0.3))
+#        return intersection
+
+    # Where a ray (Agent's path) will intersect the obstacle, or None.
     def ray_intersection(self, origin, tangent):
+#        return ray_cylinder_intersection(origin, tangent,
+#                                         self.endpoint, self.tangent,
+#                                         self.radius, self.length)
         intersection = ray_cylinder_intersection(origin, tangent,
                                                  self.endpoint, self.tangent,
                                                  self.radius, self.length)
-        if intersection:
-            Draw.add_line_segment(origin, intersection, Vec3(1, 0.3, 0.3))
+#        if intersection:
+#            Draw.add_line_segment(origin, intersection, Vec3(1, 0.3, 0.3))
+#            norm = intersection + self.normal_at_poi(intersection)
+#            Draw.add_line_segment(intersection, norm, Vec3(1, 0.3, 0.3))
         return intersection
+
+
+    ############################################################################
 
     # Normal to the obstacle at a given point of interest.
     def normal_at_poi(self, poi, agent_position=None):
         on_axis = self.nearest_point_on_axis(poi)
         return (poi - on_axis).normalize()
 
+    ############################################################################
+    # TODO 20231201 draw tube interior — WIP, reconsider, optional?
+
+#    # Point on surface of obstacle nearest the given query_point
+#    def nearest_point(self, query_point):
+#        pass
+
     # Point on surface of obstacle nearest the given query_point
     def nearest_point(self, query_point):
-        pass
+        on_axis = self.nearest_point_on_axis(query_point)
+        return on_axis + ((query_point - on_axis).normalize() * self.radius)
+
+
+    ############################################################################
 
     # Compute direction for agent's static avoidance of (concave?) obstacles.
     def fly_away(self, agent_position, agent_forward, max_distance):

@@ -83,6 +83,10 @@ class Draw:
                 c = b + offset
                 d = a + offset
                 Draw.draw_quadrilateral(d, c, b, a, color, tri_mesh)
+                ################################################################
+                # TODO 20231201 draw tube interior — WIP, reconsider, optional?
+                Draw.draw_quadrilateral(a, b, c, d, color, tri_mesh)
+                ################################################################
 
     # Draw quadrilateral as 2 tris. Assumes planar and convex but does not care.
     @staticmethod

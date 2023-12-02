@@ -317,6 +317,10 @@ class Flock:
                    [self.sobs, self.pobs, self.cobs],
                    [self.cobs],
                    [self.squat_cyl_obs],
+                   #############################################################
+                   # TODO 20231201 draw tube interior — WIP, reconsider, optional?
+                   [self.squat_cyl_obs, self.sobs],
+                   #############################################################
                    []]
         # Set Obstacle list to next preset combination.
         self.obstacles = presets[self.obstacle_selection_counter % len(presets)]

@@ -297,10 +297,14 @@ class Boid(Agent):
         draw_tri(apex, wingtip0, wingtip1, color * 0.90)
         draw_tri(nose, wingtip1, wingtip0, color * 0.70)
 
+    ############################################################################
+    # TODO 20231201 draw tube interior — WIP, reconsider, optional?
     def should_annotate(self):
+#        return True
         return (self.flock.enable_annotation and
                 self.flock.tracking_camera and
                 (self.flock.selected_boid().position - self.position).length() < 3)
+    ############################################################################
 
     # Draw optional annotation of this Boid's current steering forces
     def annotation(self, separation, alignment, cohesion, avoidance, combined):
