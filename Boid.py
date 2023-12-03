@@ -161,6 +161,30 @@ class Boid(Agent):
         weight = 0
         avoidance = Vec3()
         if time_step > 0 and (collisions := self.predict_future_collisions(time_step)):
+            ###############################################################
+            # TODO 20231202 testing CylinderObstacle
+                        
+#            if self is self.flock.selected_boid():
+#                for c in collisions:
+#                    print(c.obstacle, 'ttc:', c.time_to_collision, end=' ')
+#                print()
+
+#            seeing data like:
+#            EvertedSphereObstacle ttc: 20.693818604481063
+#            EvertedSphereObstacle ttc: 24.98307746893625
+#            EvertedSphereObstacle ttc: 25.768207606645152
+#            CylinderObstacle ttc: 8.269378070648225 EvertedSphereObstacle ttc: 27.566667255652142
+#            CylinderObstacle ttc: 8.360679151781104 EvertedSphereObstacle ttc: 32.32865420296082
+#            CylinderObstacle ttc: 6.146462649874441 EvertedSphereObstacle ttc: 24.989293670790836
+#            CylinderObstacle ttc: 5.637158108364106 EvertedSphereObstacle ttc: 23.110124615256122
+#            CylinderObstacle ttc: 5.4890324278845455 EvertedSphereObstacle ttc: 21.490371268392046
+#            EvertedSphereObstacle ttc: 17.098261681031286
+#            EvertedSphereObstacle ttc: 14.80037903704973
+#            EvertedSphereObstacle ttc: 12.399382141488962
+#            EvertedSphereObstacle ttc: 9.97051262294781
+
+
+            ###############################################################
             first_collision = collisions[0]
             poi = first_collision.point_of_impact
             normal = first_collision.normal_at_poi
@@ -335,8 +359,16 @@ class Boid(Agent):
                 dist_to_collision = (point_of_impact - self.position).length()
                 time_to_collision = dist_to_collision / (self.speed / time_step)
                 normal_at_poi = obstacle.normal_at_poi(point_of_impact, self.position)
-                collisions.append(Collision(time_to_collision,
+                ################################################################
+                # TODO 20231202 why don't a Collision have an Obstacle pointer?
+#                collisions.append(Collision(time_to_collision,
+#                                            dist_to_collision,
+#                                            point_of_impact,
+#                                            normal_at_poi))
+                collisions.append(Collision(obstacle,
+                                            time_to_collision,
                                             dist_to_collision,
                                             point_of_impact,
                                             normal_at_poi))
+                ################################################################
         return sorted(collisions, key=lambda x: x.time_to_collision)

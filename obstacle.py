@@ -272,13 +272,31 @@ class CylinderObstacle(Obstacle):
                                   tri_mesh = self.tri_mesh)
         Draw.adjust_static_scene_object(self.tri_mesh)
 
+################################################################################
+# TODO 20231202 why don't a Collision object store an Obstacle pointer?
+
+#    class Collision:
+#        def __init__(self,
+#                     time_to_collision,
+#                     dist_to_collision,
+#                     point_of_impact,
+#                     normal_at_poi):
+#            self.time_to_collision = time_to_collision
+#            self.dist_to_collision = dist_to_collision
+#            self.point_of_impact = point_of_impact
+#            self.normal_at_poi = normal_at_poi
+
 class Collision:
     def __init__(self,
+                 obstacle,
                  time_to_collision,
                  dist_to_collision,
                  point_of_impact,
                  normal_at_poi):
+        self.obstacle = obstacle
         self.time_to_collision = time_to_collision
         self.dist_to_collision = dist_to_collision
         self.point_of_impact = point_of_impact
         self.normal_at_poi = normal_at_poi
+
+################################################################################
