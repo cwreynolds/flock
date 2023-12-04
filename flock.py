@@ -33,6 +33,11 @@ from obstacle import CylinderObstacle
 
 class Flock:
 
+    ############################################################################
+    # TODO 20231203 testing CylinderObstacle
+    cyl_test = False
+    ############################################################################
+
     def __init__(self,
                  boid_count = 200,
                  sphere_diameter = 60,
@@ -64,8 +69,13 @@ class Flock:
         self.pobs = PlaneObstacle()
         cep = Vec3(0, self.sphere_radius + 0.1, 0)
         self.cobs = CylinderObstacle(5, cep, -cep)
-        scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.3
-        self.squat_cyl_obs = CylinderObstacle(10, scep, -scep)
+        #############################################################
+        # TODO 20231201 draw tube interior — WIP, reconsider, optional?
+#        scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.3
+#        self.squat_cyl_obs = CylinderObstacle(10, scep, -scep)
+        scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.8
+        self.squat_cyl_obs = CylinderObstacle(20, scep, -scep)
+        #############################################################
         self.obstacles = []
         self.obstacle_selection_counter = 0
         # If there is ever a need to have multiple Flock instances at the same

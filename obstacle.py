@@ -206,55 +206,22 @@ class CylinderObstacle(Obstacle):
         offset = query_point - self.endpoint
         projection = offset.dot(self.tangent)
         return self.endpoint + self.tangent * projection
-    
-    ############################################################################
-    # TODO 20231201 draw tube interior — WIP, reconsider, optional?
-
-#    # Where the ray representing an Agent's path will intersect the obstacle.
-#    def ray_intersection(self, origin, tangent):
-#        intersection = ray_cylinder_intersection(origin, tangent,
-#                                                 self.endpoint, self.tangent,
-#                                                 self.radius, self.length)
-#        if intersection:
-#            Draw.add_line_segment(origin, intersection, Vec3(1, 0.3, 0.3))
-#        return intersection
 
     # Where a ray (Agent's path) will intersect the obstacle, or None.
     def ray_intersection(self, origin, tangent):
-#        return ray_cylinder_intersection(origin, tangent,
-#                                         self.endpoint, self.tangent,
-#                                         self.radius, self.length)
-        intersection = ray_cylinder_intersection(origin, tangent,
-                                                 self.endpoint, self.tangent,
-                                                 self.radius, self.length)
-#        if intersection:
-#            Draw.add_line_segment(origin, intersection, Vec3(1, 0.3, 0.3))
-#            norm = intersection + self.normal_at_poi(intersection)
-#            Draw.add_line_segment(intersection, norm, Vec3(1, 0.3, 0.3))
-        return intersection
-
-
-    ############################################################################
+        return ray_cylinder_intersection(origin, tangent,
+                                         self.endpoint, self.tangent,
+                                         self.radius, self.length)
 
     # Normal to the obstacle at a given point of interest.
     def normal_at_poi(self, poi, agent_position=None):
         on_axis = self.nearest_point_on_axis(poi)
         return (poi - on_axis).normalize()
 
-    ############################################################################
-    # TODO 20231201 draw tube interior — WIP, reconsider, optional?
-
-#    # Point on surface of obstacle nearest the given query_point
-#    def nearest_point(self, query_point):
-#        pass
-
     # Point on surface of obstacle nearest the given query_point
     def nearest_point(self, query_point):
         on_axis = self.nearest_point_on_axis(query_point)
         return on_axis + ((query_point - on_axis).normalize() * self.radius)
-
-
-    ############################################################################
 
     # Compute direction for agent's static avoidance of (concave?) obstacles.
     def fly_away(self, agent_position, agent_forward, max_distance):
@@ -272,20 +239,7 @@ class CylinderObstacle(Obstacle):
                                   tri_mesh = self.tri_mesh)
         Draw.adjust_static_scene_object(self.tri_mesh)
 
-################################################################################
-# TODO 20231202 why don't a Collision object store an Obstacle pointer?
-
-#    class Collision:
-#        def __init__(self,
-#                     time_to_collision,
-#                     dist_to_collision,
-#                     point_of_impact,
-#                     normal_at_poi):
-#            self.time_to_collision = time_to_collision
-#            self.dist_to_collision = dist_to_collision
-#            self.point_of_impact = point_of_impact
-#            self.normal_at_poi = normal_at_poi
-
+# Class to contain statistics of a predicted collision with an Obstacle.
 class Collision:
     def __init__(self,
                  obstacle,
@@ -298,5 +252,3 @@ class Collision:
         self.dist_to_collision = dist_to_collision
         self.point_of_impact = point_of_impact
         self.normal_at_poi = normal_at_poi
-
-################################################################################
