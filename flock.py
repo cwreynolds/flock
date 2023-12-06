@@ -71,10 +71,11 @@ class Flock:
         # give Flock a default list of obstacles
         self.sobs = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
         self.pobs = PlaneObstacle()
-        cep = Vec3(0, self.sphere_radius + 0.1, 0)
-        self.cobs = CylinderObstacle(5, cep, -cep)
         #############################################################
         # TODO 20231201 draw tube interior — WIP, reconsider, optional?
+        cep = Vec3(0, self.sphere_radius + 0.1, 0)
+#        self.cobs = CylinderObstacle(5, cep, -cep)
+        self.cobs = CylinderObstacle(10, cep, -cep)
 #        scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.3
 #        self.squat_cyl_obs = CylinderObstacle(10, scep, -scep)
         scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.8

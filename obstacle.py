@@ -9,9 +9,6 @@
 # MIT License -- Copyright © 2023 Craig Reynolds
 #
 #-------------------------------------------------------------------------------
-# TODO 20230831 not sure this deserves its own file.
-# TODO 20230831 I THINK I've read that Python modules ought to have lower case
-#               names so now I have a mix, to be sorted out later.
 # TODO 20230831 initiallly just a wrapper on the existing everted sphere, then
 #               generalize that, add a cylinder type, maybe later a triangle
 #               mesh type.
@@ -21,6 +18,7 @@ import math
 from Vec3 import Vec3
 from Draw import Draw
 import Utilities as util
+import shape
 
 class Obstacle:
     def __init__(self):
@@ -140,57 +138,6 @@ class PlaneObstacle(Obstacle):
                 avoidance = normal * weight
         return avoidance
 
-# Given a ray and a cylinder, find the intersection nearest the ray's origin
-# (endpoint), or None.
-#
-# TODO Currently ignores the endpoints, assuming the cylinder is infinitely long.
-#
-# Using the derivation by Nominal Animal:
-#     https://en.wikipedia.org/wiki/User:Nominal_animal
-#     https://math.stackexchange.com/a/1732445/516283
-#     https://www.nominal-animal.net
-#
-#@staticmethod
-def ray_cylinder_intersection(ray_endpoint, ray_tangent,
-                              cyl_endpoint, cyl_tangent,
-                              cyl_radius, cyl_length):
-    intersection = None
-    def sq(s):
-        return s * s
-
-    # Rename to match https://en.wikipedia.org/wiki/User:Nominal_animal
-    b = cyl_endpoint  # The 3d origin/end/endpoint of the cylinder on its axis.
-    a = cyl_tangent   # Unit 3d vector parallel to cylinder axis.
-    r = cyl_radius    # Scalar cylinder radius.
-    h = cyl_length    # Scalar length from endpoint along axis to other end.
-    
-    o = ray_endpoint  # The 3d origin/end/endpoint of ray.
-    n = ray_tangent   # Unit 3d vector parallel to ray.
-    
-    b = b - o         # Offset b by the ray's origin/end/endpoint
-    
-    assert a.is_unit_length()
-    assert n.is_unit_length()
-
-    na = n.cross(a)
-    r2 = r * r
-    
-    radicand = (na.dot(na) * r2) - sq(b.dot(na))
-
-    # If any (real valued) intersections exist (both same if radicand==0)
-    if radicand >= 0:
-        radical = math.sqrt(radicand)
-        ba = b.cross(a)
-        nana = na.dot(na)
-        d1 = (na.dot(ba) + radical) / nana
-        d2 = (na.dot(ba) - radical) / nana
-        if d1 >= 0:
-            intersection = o + n * d1
-        if d2 >= 0 and d2 < d1:
-            intersection = o + n * d2
-    return intersection
-
-
 # A bounded cylinder (between two endpoints) with given radius
 class CylinderObstacle(Obstacle):
     def __init__(self, radius, endpoint0, endpoint1):
@@ -209,9 +156,9 @@ class CylinderObstacle(Obstacle):
 
     # Where a ray (Agent's path) will intersect the obstacle, or None.
     def ray_intersection(self, origin, tangent):
-        return ray_cylinder_intersection(origin, tangent,
-                                         self.endpoint, self.tangent,
-                                         self.radius, self.length)
+        return shape.ray_cylinder_intersection(origin, tangent,
+                                               self.endpoint, self.tangent,
+                                               self.radius, self.length)
 
     # Normal to the obstacle at a given point of interest.
     def normal_at_poi(self, poi, agent_position=None):
