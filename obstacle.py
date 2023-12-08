@@ -15,10 +15,10 @@
 #-------------------------------------------------------------------------------
 
 import math
+import shape
 from Vec3 import Vec3
 from Draw import Draw
 import Utilities as util
-import shape
 
 class Obstacle:
     def __init__(self):
@@ -54,8 +54,8 @@ class EvertedSphereObstacle(Obstacle):
 
     # Where a ray (Agent's path) will intersect the obstacle, or None.
     def ray_intersection(self, origin, tangent):
-        return Vec3.ray_sphere_intersection(origin, tangent,
-                                            self.radius, self.center)
+        return shape.ray_sphere_intersection(origin, tangent,
+                                             self.radius, self.center)
 
     # Normal to the obstacle at a given point of interest.
     def normal_at_poi(self, poi, agent_position=None):
@@ -97,8 +97,8 @@ class PlaneObstacle(Obstacle):
 
     # Where a ray (Agent's path) will intersect the obstacle, or None.
     def ray_intersection(self, origin, tangent):
-        return Vec3.ray_plane_intersection(origin, tangent,
-                                           self.center, self.normal)
+        return shape.ray_plane_intersection(origin, tangent,
+                                            self.center, self.normal)
 
     # Normal to the obstacle at a given point of interest.
     def normal_at_poi(self, poi, agent_position=None):
