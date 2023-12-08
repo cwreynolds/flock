@@ -30,12 +30,14 @@ from LocalSpace import LocalSpace
 from obstacle import EvertedSphereObstacle
 from obstacle import PlaneObstacle
 from obstacle import CylinderObstacle
+import shape
 
 class Flock:
 
     ############################################################################
     # TODO 20231203 testing CylinderObstacle
     cyl_test = False
+#    cyl_test = True
     ############################################################################
 
     def __init__(self,
@@ -423,6 +425,7 @@ class Flock:
         LocalSpace.unit_test()
         Agent.unit_test()
         util.unit_test()
+        shape.unit_test()
         print('All unit tests OK.')
 
 

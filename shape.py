@@ -47,17 +47,12 @@ def ray_cylinder_intersection(ray_endpoint, ray_tangent,
     assert n.is_unit_length()
 
     na = n.cross(a)
-    r2 = r * r
-    
-    radicand = (na.dot(na) * r2) - sq(b.dot(na))
+    radicand = (na.dot(na) * sq(r)) - sq(b.dot(na))
 
     # If any (real valued) intersections exist (both same if radicand==0)
     if radicand >= 0:
         radical = math.sqrt(radicand)
         ba = b.cross(a)
-#        nana = na.dot(na)
-#        d1 = (na.dot(ba) + radical) / nana
-#        d2 = (na.dot(ba) - radical) / nana
         nana = na.dot(na)
         naba = na.dot(ba)
         d1 = (naba + radical) / nana
@@ -67,3 +62,22 @@ def ray_cylinder_intersection(ray_endpoint, ray_tangent,
         if d2 >= 0 and d2 < d1:
             intersection = o + n * d2
     return intersection
+
+
+def unit_test():
+
+    # Unit tests for ray_cylinder_intersection()
+    def rci(result, re, rt, ce, ct, cr, cl, description):
+        i = ray_cylinder_intersection(re, rt, ce, ct, cr, cl)
+        assert i == result, ('shape.ray_cylinder_intersection() unit test -- '
+                             + description + ' -- expecting ' + str(result)
+                             + ' but got ' + str(i))
+    rci(Vec3(1, 0, 0),
+        Vec3(2, 0, 0),
+        Vec3(-1, 0, 0),
+        Vec3(0, -1, 0),
+        Vec3(0, 1, 0),
+        1,
+        2,
+        'ray endpoint outside cylinder (+x), pointing toward cylinder')
+
