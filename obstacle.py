@@ -178,14 +178,6 @@ class CylinderObstacle(Obstacle):
 #        # does nothing for now?
 #        return Vec3()
 
-#    # Compute direction for agent's static avoidance of (concave?) obstacles.
-#    def fly_away(self, agent_position, agent_forward, max_distance):
-#        # TODO 20231204 very prototype, can be rewritten to be more efficient.
-#        on_surface = self.nearest_point(agent_position)
-#        dist_from_wall = (on_surface - agent_position).length()
-#        weight = 1 - util.clip01(dist_from_wall / max_distance)
-#        return self.normal_at_poi(agent_position) * weight
-
     # Compute direction for agent's static avoidance of (concave?) obstacles.
     def fly_away(self, agent_position, agent_forward, max_distance):
         avoidance = Vec3()
@@ -198,8 +190,6 @@ class CylinderObstacle(Obstacle):
             weight = 1 - util.clip01(dist_from_wall / max_distance)
             avoidance = normal * weight
         return avoidance
-
-
 
     ############################################################################
 

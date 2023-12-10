@@ -33,13 +33,6 @@ from obstacle import CylinderObstacle
 import shape
 
 class Flock:
-
-    ############################################################################
-    # TODO 20231203 testing CylinderObstacle
-    cyl_test = False
-#    cyl_test = True
-    ############################################################################
-
     def __init__(self,
                  boid_count = 200,
                  sphere_diameter = 60,
@@ -64,25 +57,18 @@ class Flock:
         self.tracking_camera = False
         self.wrap_vs_avoid = False
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
-        ########################################################################
-        # TODO 20231205 still debugging CylinderObstacle
         self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
-#        self.min_time_to_collide = 3 # react to predicted impact (seconds)
-        ########################################################################
         self.fps = util.Blender()
         # give Flock a default list of obstacles
         self.sobs = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
         self.pobs = PlaneObstacle()
-        #############################################################
-        # TODO 20231201 draw tube interior — WIP, reconsider, optional?
+        ########################################################################
+        # TODO 20231210 still fiddling with obstacle test cases
         cep = Vec3(0, self.sphere_radius + 0.1, 0)
-#        self.cobs = CylinderObstacle(5, cep, -cep)
         self.cobs = CylinderObstacle(10, cep, -cep)
-#        scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.3
-#        self.squat_cyl_obs = CylinderObstacle(10, scep, -scep)
         scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.8
         self.squat_cyl_obs = CylinderObstacle(20, scep, -scep)
-        #############################################################
+        ########################################################################
         self.obstacles = []
         self.obstacle_selection_counter = 0
         # If there is ever a need to have multiple Flock instances at the same
@@ -334,14 +320,8 @@ class Flock:
                    [self.sobs, self.pobs, self.cobs],
                    [self.cobs],
                    [self.squat_cyl_obs],
-                   #############################################################
-                   # TODO 20231201 draw tube interior — WIP, reconsider, optional?
                    [self.squat_cyl_obs, self.sobs],
-                   
-                    # TODO 20231209 why is avoid annotation frequently invisible
                    [self.squat_cyl_obs, self.pobs],
-
-                   #############################################################
                    []]
         # Set Obstacle list to next preset combination.
         self.obstacles = presets[self.obstacle_selection_counter % len(presets)]

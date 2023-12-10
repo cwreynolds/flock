@@ -83,11 +83,6 @@ class Draw:
                 c = b + offset
                 d = a + offset
                 Draw.draw_quadrilateral(d, c, b, a, color, tri_mesh)
-                ################################################################
-                # TODO 20231201 draw tube interior — WIP, reconsider, optional?
-#                if Flock.cyl_test:
-                Draw.draw_quadrilateral(a, b, c, d, Vec3(.3,.3,.3), tri_mesh)
-                ################################################################
 
     # Draw quadrilateral as 2 tris. Assumes planar and convex but does not care.
     @staticmethod
