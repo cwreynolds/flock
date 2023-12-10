@@ -147,14 +147,32 @@ class Boid(Agent):
         direction = neighbor_center - self.position
         return direction.normalize()
 
+    ############################################################################
+    # TODO 20231209 why is avoid annotation frequently invisible
+
+#    # Steering force to avoid obstacles. Adds "predictive" avoidance (I will
+#    # collide with an obstacle within Flock.min_time_to_collide seconds) with
+#    # "static" avoidance (I should move away from this obstacle, for everted
+#    # containment obstacles).
+#    def steer_to_avoid(self, time_step):
+#        return (Vec3() if self.flock.wrap_vs_avoid else
+#                (self.fly_away_from_obstacles() +
+#                 self.steer_for_predictive_avoidance(time_step)))
+
     # Steering force to avoid obstacles. Adds "predictive" avoidance (I will
     # collide with an obstacle within Flock.min_time_to_collide seconds) with
     # "static" avoidance (I should move away from this obstacle, for everted
     # containment obstacles).
     def steer_to_avoid(self, time_step):
-        return (Vec3() if self.flock.wrap_vs_avoid else
-                (self.fly_away_from_obstacles() +
-                 self.steer_for_predictive_avoidance(time_step)))
+        avoid = Vec3()
+        self.avoid_obstacle_annotation(0, 0, 0)
+        if not self.flock.wrap_vs_avoid:
+            avoid = (self.fly_away_from_obstacles() +
+                     self.steer_for_predictive_avoidance(time_step))
+        self.avoid_obstacle_annotation(3, 0, 0)
+        return avoid
+
+    ############################################################################
 
     # Steering force component for predictive obstacles avoidance.
     def steer_for_predictive_avoidance(self, time_step):
@@ -185,8 +203,17 @@ class Boid(Agent):
                 weight = util.unit_sigmoid_on_01(d)
             else:
                 weight = 1 if near else 0
-            self.avoid_obstacle_annotation(0, poi, weight)
             ####################################################################
+            # TODO 20231209 why is avoid annotation frequently invisible
+            
+            
+#            self.avoid_obstacle_annotation(0, poi, weight)
+            self.avoid_obstacle_annotation(1, poi, weight)
+
+
+#            if self is self.flock.selected_boid() and weight > 0.6:
+#                print('weight = ', weight, '  poi =', poi)
+            
             # TODO 20231203 testing CylinderObstacle
             if log_now:
                 print(', weight:', weight)
@@ -207,30 +234,104 @@ class Boid(Agent):
         for obstacle in self.flock.obstacles:
             oa = obstacle.fly_away(p, f, max_distance)
             weight = oa.length()
-            self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
+#            self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
+            self.avoid_obstacle_annotation(2, obstacle.nearest_point(p), weight)
             avoidance += oa
         return avoidance
+
+    ############################################################################
+    # TODO 20231209 why is avoid annotation frequently invisible
+
+#    # Draw a ray from Boid to point of impact, or nearest point for fly-away.
+#    # Magenta for strong avoidance, shades to background gray (85%) for gentle
+#    # avoidance. "Phase" used to show strongest avodiance: predictive vs static.
+#    def avoid_obstacle_annotation(self, phase, poi, weight):
+#        if self.should_annotate() and weight > 0.01:
+#            # For predictive avoidance (phase 0) just store poi and weight.
+#            if phase == 0:
+#                self.annote_avoid_poi = poi
+#                self.annote_avoid_weight = weight
+#            # For static avoidance (phase 1) use values for max weight.
+#            if phase == 1:
+#                if weight < self.annote_avoid_weight:
+#                    poi = self.annote_avoid_poi
+#                    weight = self.annote_avoid_weight
+#                Draw.add_line_segment(self.position, poi,
+#                                      # Interp color between gray and magenta.
+#                                      util.interpolate(weight,
+#                                                       Vec3(0.85, 0.85, 0.85),
+#                                                       Vec3(1, 0, 1)))
+
+#        # Draw a ray from Boid to point of impact, or nearest point for fly-away.
+#        # Magenta for strong avoidance, shades to background gray (85%) for gentle
+#        # avoidance. "Phase" used to show strongest avodiance: predictive vs static.
+#        def avoid_obstacle_annotation(self, phase, poi, weight):
+#
+#            if phase == 100:
+#                self.annote_avoid_poi = Vec3()  # This might be too elaborate: two vals
+#                self.annote_avoid_weight = 0    # per boid just for avoid annotation.
+#                return
+#
+#            if self.should_annotate() and weight > 0.01:
+#                # For predictive avoidance (phase 0) just store poi and weight.
+#                if phase == 0:
+#                    self.annote_avoid_poi = poi
+#                    self.annote_avoid_weight = weight
+#                # For static avoidance (phase 1) use values for max weight.
+#    #            if phase == 1:
+#    #                if weight < self.annote_avoid_weight:
+#    #                    poi = self.annote_avoid_poi
+#    #                    weight = self.annote_avoid_weight
+#    #                Draw.add_line_segment(self.position, poi,
+#    #                                      # Interp color between gray and magenta.
+#    #                                      util.interpolate(weight,
+#    #                                                       Vec3(0.85, 0.85, 0.85),
+#    #                                                       Vec3(1, 0, 1)))
+#
+#                if phase == 1:
+#                    if weight > self.annote_avoid_weight:
+#                        self.annote_avoid_poi = poi
+#                        self.annote_avoid_weight = weight
+#
+#            if phase == 200:
+#                Draw.add_line_segment(self.position,
+#                                      self.annote_avoid_poi,
+#                                      # Interp color between gray and magenta.
+#                                      util.interpolate(weight,
+#                                                       Vec3(0.85, 0.85, 0.85),
+#                                                       Vec3(1, 0, 1)))
 
     # Draw a ray from Boid to point of impact, or nearest point for fly-away.
     # Magenta for strong avoidance, shades to background gray (85%) for gentle
     # avoidance. "Phase" used to show strongest avodiance: predictive vs static.
     def avoid_obstacle_annotation(self, phase, poi, weight):
-        if self.should_annotate() and weight > 0.01:
-            # For predictive avoidance (phase 0) just store poi and weight.
-            if phase == 0:
+        if phase == 0:
+            self.annote_avoid_poi = Vec3()  # This might be too elaborate: two vals
+            self.annote_avoid_weight = 0    # per boid just for avoid annotation.
+#            return
+        # For predictive avoidance (phase 0) just store poi and weight.
+        if phase == 1:
+            self.annote_avoid_poi = poi
+            self.annote_avoid_weight = weight
+        # For static avoidance (phase 1) use values for max weight.
+        if phase == 2:
+            if weight > self.annote_avoid_weight:
                 self.annote_avoid_poi = poi
                 self.annote_avoid_weight = weight
-            # For static avoidance (phase 1) use values for max weight.
-            if phase == 1:
-                if weight < self.annote_avoid_weight:
-                    poi = self.annote_avoid_poi
-                    weight = self.annote_avoid_weight
-                Draw.add_line_segment(self.position, poi,
+        if phase == 3:
+            if self.should_annotate() and self.annote_avoid_weight > 0.01:
+                Draw.add_line_segment(self.position,
+                                      self.annote_avoid_poi,
                                       # Interp color between gray and magenta.
-                                      util.interpolate(weight,
+                                      util.interpolate(self.annote_avoid_weight,
                                                        Vec3(0.85, 0.85, 0.85),
                                                        Vec3(1, 0, 1)))
 
+
+
+
+
+    ############################################################################
 
     # Wander aimlessly via slowly varying steering force. Currently unused.
     def steer_to_wander(self, rs):

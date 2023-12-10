@@ -66,8 +66,8 @@ class Flock:
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
         ########################################################################
         # TODO 20231205 still debugging CylinderObstacle
-#        self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
-        self.min_time_to_collide = 3 # react to predicted impact (seconds)
+        self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
+#        self.min_time_to_collide = 3 # react to predicted impact (seconds)
         ########################################################################
         self.fps = util.Blender()
         # give Flock a default list of obstacles
@@ -337,6 +337,10 @@ class Flock:
                    #############################################################
                    # TODO 20231201 draw tube interior — WIP, reconsider, optional?
                    [self.squat_cyl_obs, self.sobs],
+                   
+                    # TODO 20231209 why is avoid annotation frequently invisible
+                   [self.squat_cyl_obs, self.pobs],
+
                    #############################################################
                    []]
         # Set Obstacle list to next preset combination.
