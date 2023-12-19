@@ -19,7 +19,6 @@ import Utilities as util
 import copy
 import math
 from obstacle import Collision
-from obstacle import EvertedSphereObstacle
 
 class Boid(Agent):
 

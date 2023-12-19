@@ -111,6 +111,23 @@ class Vec3:
                     a.z * b.x - a.x * b.z,
                     a.x * b.y - a.y * b.x)
 
+    # Get angle between two arbitrary direction vectors. (Visualize two vectors
+    # placed tail to tail, the angle is measured on the plane containing both.
+    # See https://commons.wikimedia.org/wiki/File:Inner-product-angle.svg)
+    def angle_between(a, b):
+        return math.acos(a.dot(b) / (a.length() * b.length()))
+
+    # Returns a vector describing a rotation around an arbitrary axis by a given
+    # angle. The axis must pass through the global origin but any orientation is
+    # allowed, as defined by the direction of the first argument. The return
+    # value is effectively the axis with its length set to the angle (expressed
+    # in radians). See https://en.wikipedia.org/wiki/Axis–angle_representation
+    def axis_angle(axis, angle):
+        aa = Vec3()
+        if angle != 0 and axis.length_squared() > 0:
+            aa = axis.normalize() * angle
+        return aa
+
     # Check for unit length. (Uses fast length_squared() just 3 mults, 2 adds.)
     def is_unit_length(self):
         return util.within_epsilon(self.length_squared(), 1)
