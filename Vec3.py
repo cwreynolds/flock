@@ -128,6 +128,12 @@ class Vec3:
             aa = axis.normalize() * angle
         return aa
 
+    # Given two vectors, return an axis_angle that rotates the first to the
+    # second. (Length of input vectors is irrelevant.)
+    def rotate_vec_to_vec(from_vec, to_vec):
+        return Vec3.axis_angle(Vec3.cross(from_vec, to_vec),
+                               Vec3.angle_between(from_vec, to_vec))
+
     # Check for unit length. (Uses fast length_squared() just 3 mults, 2 adds.)
     def is_unit_length(self):
         return util.within_epsilon(self.length_squared(), 1)
