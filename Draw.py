@@ -53,6 +53,40 @@ class Draw:
         t = len(tri_mesh.triangles) * 3
         tri_mesh.triangles.append([t, t + 1, t + 2])
 
+    ############################################################################
+    # TODO 20231222 draw cylinder end caps
+
+#    # TODO 20230430 line drawing support for annotation
+#    # given all the problems getting LineSets to draw in bright unshaded colors,
+#    # trying this approach drawing lines as several triangles.
+#    # TODO 20230426 add line drawing support for annotation
+#    # TODO 20230526 note that this is implicitly adjusted by temp_camera_lookat
+#    #               via being layered on top of add_triangle_single_color(). If
+#    #               this is ever reimplemented using Open3D's LineSet that
+#    #               adjustment will need to be made explicit.
+#    @staticmethod
+#    def add_line_segment(v1, v2, color=Vec3(),
+#                         radius=0.01, sides=3, tri_mesh=None):
+#        if tri_mesh == None:
+#            tri_mesh = Draw.dynamic_triangle_mesh
+#        # Vector along the segment, from v1 to v2
+#        offset = v2 - v1
+#        distance = offset.length()
+#        if distance > 0:
+#            tangent = offset / distance
+#            basis1 = tangent.find_perpendicular()
+#            basis2 = tangent.cross(basis1)
+#            # Make transform from "line segment space" to global space.
+#            ls = LocalSpace(basis1, basis2, tangent, v1)
+#            for i in range(sides):
+#                angle_step = math.pi * 2 / sides
+#                radial = Vec3(radius, 0, 0)
+#                a = ls.globalize(radial.rotate_xy_about_z(angle_step * i))
+#                b = ls.globalize(radial.rotate_xy_about_z(angle_step * (i+1)))
+#                c = b + offset
+#                d = a + offset
+#                Draw.draw_quadrilateral(d, c, b, a, color, tri_mesh)
+
     # TODO 20230430 line drawing support for annotation
     # given all the problems getting LineSets to draw in bright unshaded colors,
     # trying this approach drawing lines as several triangles.
@@ -61,9 +95,17 @@ class Draw:
     #               via being layered on top of add_triangle_single_color(). If
     #               this is ever reimplemented using Open3D's LineSet that
     #               adjustment will need to be made explicit.
+    # TODO 20231222 Added cylinder end caps. This increasingly complicated
+    #               method could benefit from some refactoring. And the name
+    #               add_line_segment() no longer fits its role.
     @staticmethod
-    def add_line_segment(v1, v2, color=Vec3(),
-                         radius=0.01, sides=3, tri_mesh=None):
+    def add_line_segment(v1, v2,
+                         color=Vec3(),
+                         radius=0.01,
+                         sides=3,
+#                         tri_mesh=None):
+                         tri_mesh=None,
+                         flat_end_caps=False):
         if tri_mesh == None:
             tri_mesh = Draw.dynamic_triangle_mesh
         # Vector along the segment, from v1 to v2
@@ -83,6 +125,16 @@ class Draw:
                 c = b + offset
                 d = a + offset
                 Draw.draw_quadrilateral(d, c, b, a, color, tri_mesh)
+                
+                if flat_end_caps:
+                    Draw.add_colored_triangle(a, b, v1, color, tri_mesh)
+                    Draw.add_colored_triangle(c, d, v2, color, tri_mesh)
+
+
+    # Add a cylinder to the "scene" -- actually add its geometry to a given tri-mesh. Implemented as wrapper on add_line_segment.
+    # ...no, needs to be more tightly integrated with add_line_segment()...
+    
+    ############################################################################
 
     # Draw quadrilateral as 2 tris. Assumes planar and convex but does not care.
     @staticmethod
@@ -230,32 +282,56 @@ class Draw:
         for m in [Draw.axes]:
             Draw.adjust_static_scene_object(m)
 
+    ############################################################################
+    # TODO 20231221 get_center?
+
+#        @staticmethod
+#    #    def adjust_static_scene_object(scene_object):
+#            ########################################################################
+#            # TODO 20231221 get_center?
+#        def adjust_static_scene_object(scene_object, original_center=Vec3()):
+#
+#    #        translation = (-Draw.temp_camera_lookat).asarray()
+#
+#            lookat_offset = (-Draw.temp_camera_lookat).asarray()
+#
+#    #        scene_object.translate(-lookat_offset, relative=False)
+#
+#
+#    #        c = scene_object.get_center()
+#    #        print('c =', c)
+#    #        translation = (c - Draw.temp_camera_lookat).asarray()
+#    #        translation = (-Draw.temp_camera_lookat).asarray() - c
+#    #        translation = c + lookat_offset
+#
+#    #        translation = scene_object.original_center + lookat_offset
+#            translation = original_center.asarray() + lookat_offset
+#
+#
+#            scene_object.translate(translation, relative=False)
+#            ########################################################################
+#            Draw.vis.update_geometry(scene_object)
+
+#    # Adjust the translation of a given static scene object (eg obstacle) for
+#    # the sake of the temp_camera_lookat hack.
+#    @staticmethod
+#    def adjust_static_scene_object(scene_object, original_center=Vec3()):
+#        lookat_offset = (-Draw.temp_camera_lookat).asarray()
+#        translation = original_center.asarray() + lookat_offset
+#        scene_object.translate(translation, relative=False)
+#        Draw.vis.update_geometry(scene_object)
+
+    # Adjust the translation of a given static scene object (eg obstacle) for
+    # the sake of the temp_camera_lookat hack. Note that absolute translation in
+    # Open3D is applied to the CENTER of the tri-mesh, not the origin of its
+    # local space.
     @staticmethod
-#    def adjust_static_scene_object(scene_object):
-        ########################################################################
-        # TODO 20231221 get_center?
     def adjust_static_scene_object(scene_object, original_center=Vec3()):
-
-#        translation = (-Draw.temp_camera_lookat).asarray()
-
-        lookat_offset = (-Draw.temp_camera_lookat).asarray()
-
-#        scene_object.translate(-lookat_offset, relative=False)
-        
-        
-#        c = scene_object.get_center()
-#        print('c =', c)
-#        translation = (c - Draw.temp_camera_lookat).asarray()
-#        translation = (-Draw.temp_camera_lookat).asarray() - c
-#        translation = c + lookat_offset
-        
-#        translation = scene_object.original_center + lookat_offset
-        translation = original_center.asarray() + lookat_offset
-        
-
-        scene_object.translate(translation, relative=False)
-        ########################################################################
+        translation = original_center - Draw.temp_camera_lookat
+        scene_object.translate(translation.asarray(), relative=False)
         Draw.vis.update_geometry(scene_object)
+
+    ############################################################################
 
     # Set random seeds for Python, Numpy, and Open3D, all to the given value.
     # This will produce consistant starting positions/orientation. Longer term

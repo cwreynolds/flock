@@ -200,12 +200,29 @@ class CylinderObstacle(Obstacle):
     def draw(self):
         if not self.tri_mesh:
             self.tri_mesh = Draw.new_empty_tri_mesh()
+            
+            ####################################################################
+            # TODO 20231222 draw cylinder end caps
+#            Draw.add_line_segment(self.endpoint,
+#                                  self.endpoint + (self.tangent * self.length),
+#                                  color = Vec3(1, 1, 1) * 0.98,
+#                                  radius = self.radius,
+#                                  sides = 10,
+#                                  tri_mesh = self.tri_mesh)
             Draw.add_line_segment(self.endpoint,
                                   self.endpoint + (self.tangent * self.length),
-                                  color = Vec3(1, 1, 1) * 0.98,
+#                                  color = Vec3(1, 1, 1) * 0.98,
+#                                  color = Vec3(1, 1, 1) * 0.6,
+                                  color = Vec3(1, 1, 1) * 0.8,
                                   radius = self.radius,
-                                  sides = 10,
-                                  tri_mesh = self.tri_mesh)
+#                                  sides = 10,
+#                                  tri_mesh = self.tri_mesh)
+                                  sides = 50,
+                                  tri_mesh = self.tri_mesh,
+                                  flat_end_caps=True)
+            self.tri_mesh.compute_vertex_normals()
+            ####################################################################
+                                  
             ####################################################################
             # TODO 20231219 sphere and 3 cylinders.
             print(self.endpoint, self.endpoint + (self.tangent * self.length))
