@@ -23,6 +23,10 @@ import Utilities as util
 class Obstacle:
     def __init__(self):
         self.tri_mesh = None
+        ########################################################################
+        # TODO 20231221 original_center.
+        self.original_center = Vec3()
+        ########################################################################
 
     # Where a ray (Agent's path) will intersect the obstacle, or None.
     def ray_intersection(self, origin, tangent):
@@ -202,7 +206,19 @@ class CylinderObstacle(Obstacle):
                                   radius = self.radius,
                                   sides = 10,
                                   tri_mesh = self.tri_mesh)
-        Draw.adjust_static_scene_object(self.tri_mesh)
+            ####################################################################
+            # TODO 20231219 sphere and 3 cylinders.
+            print(self.endpoint, self.endpoint + (self.tangent * self.length))
+            ####################################################################
+            ########################################################################
+            # TODO 20231221 original_center.
+            self.original_center = Vec3.from_array(self.tri_mesh.get_center())
+            ########################################################################
+        ########################################################################
+        # TODO 20231221 original_center.
+#        Draw.adjust_static_scene_object(self.tri_mesh)
+        Draw.adjust_static_scene_object(self.tri_mesh, self.original_center)
+        ########################################################################
 
 # Class to contain statistics of a predicted collision with an Obstacle.
 class Collision:

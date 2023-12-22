@@ -62,6 +62,7 @@ class Flock:
         # give Flock a default list of obstacles
         self.sobs = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
         self.pobs = PlaneObstacle()
+        
         ########################################################################
         # TODO 20231210 still fiddling with obstacle test cases
         cep = Vec3(0, self.sphere_radius + 0.1, 0)
@@ -69,6 +70,23 @@ class Flock:
         scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.8
         self.squat_cyl_obs = CylinderObstacle(20, scep, -scep)
         ########################################################################
+        
+        ########################################################################
+        # TODO 20231219 sphere and 3 cylinders.
+#        cyl3_h = 10
+#        cyl3_r = 3
+#        cyl3_o = 15
+        c3h = 10
+        c3r = 3
+        c3o = 15
+        self.cyl3x = CylinderObstacle(c3r, Vec3(-c3h, 0, c3o), Vec3(c3h, 0, c3o))
+        self.cyl3y = CylinderObstacle(c3r, Vec3(c3o, -c3h, 0), Vec3(c3o, c3h, 0))
+        self.cyl3z = CylinderObstacle(c3r, Vec3(0, c3o, -c3h), Vec3(0, c3o, c3h))
+        
+        diag = Vec3(1,1,1).normalize()
+        self.uncentered_cyl_obs = CylinderObstacle(5, diag * 5, diag * 30)
+        ########################################################################
+
         self.obstacles = []
         self.obstacle_selection_counter = 0
         # If there is ever a need to have multiple Flock instances at the same
@@ -84,6 +102,9 @@ class Flock:
         self.register_single_key_commands() # For Open3D visualizer GUI.
         self.make_boids(self.boid_count, self.sphere_radius, self.sphere_center)
         self.draw()
+        ########################################################################
+        print('Draw.temp_camera_lookat =', Draw.temp_camera_lookat)
+        ########################################################################
         self.cycle_obstacle_selection()
         while self.still_running():
             if self.run_simulation_this_frame():
@@ -314,7 +335,17 @@ class Flock:
         for o in self.obstacles:
             Draw.vis.remove_geometry(o.tri_mesh, False)
         # Preset obstacle combinations:
-        presets = [[self.sobs],
+
+        ########################################################################
+        # TODO 20231221 sphere and 3 cylinders.
+        presets = [
+                   #############################################################
+                   # test:
+                   [self.sobs, self.uncentered_cyl_obs],
+                   # test:
+                   [self.sobs, self.cyl3x, self.cyl3y, self.cyl3z],
+                   #############################################################
+                   [self.sobs],
                    [self.sobs, self.pobs],
                    [self.sobs, self.cobs],
                    [self.sobs, self.pobs, self.cobs],
@@ -323,6 +354,7 @@ class Flock:
                    [self.squat_cyl_obs, self.sobs],
                    [self.squat_cyl_obs, self.pobs],
                    []]
+        ########################################################################
         # Set Obstacle list to next preset combination.
         self.obstacles = presets[self.obstacle_selection_counter % len(presets)]
         # Increment counter for next call.

@@ -231,9 +231,30 @@ class Draw:
             Draw.adjust_static_scene_object(m)
 
     @staticmethod
-    def adjust_static_scene_object(scene_object):
-        translation = (-Draw.temp_camera_lookat).asarray()
+#    def adjust_static_scene_object(scene_object):
+        ########################################################################
+        # TODO 20231221 get_center?
+    def adjust_static_scene_object(scene_object, original_center=Vec3()):
+
+#        translation = (-Draw.temp_camera_lookat).asarray()
+
+        lookat_offset = (-Draw.temp_camera_lookat).asarray()
+
+#        scene_object.translate(-lookat_offset, relative=False)
+        
+        
+#        c = scene_object.get_center()
+#        print('c =', c)
+#        translation = (c - Draw.temp_camera_lookat).asarray()
+#        translation = (-Draw.temp_camera_lookat).asarray() - c
+#        translation = c + lookat_offset
+        
+#        translation = scene_object.original_center + lookat_offset
+        translation = original_center.asarray() + lookat_offset
+        
+
         scene_object.translate(translation, relative=False)
+        ########################################################################
         Draw.vis.update_geometry(scene_object)
 
     # Set random seeds for Python, Numpy, and Open3D, all to the given value.
