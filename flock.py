@@ -335,17 +335,11 @@ class Flock:
         for o in self.obstacles:
             Draw.vis.remove_geometry(o.tri_mesh, False)
         # Preset obstacle combinations:
-
-        ########################################################################
-        # TODO 20231221 sphere and 3 cylinders.
         presets = [
-                   #############################################################
-                   # test:
-                   [self.sobs, self.uncentered_cyl_obs],
-                   # test:
-                   [self.sobs, self.cyl3x, self.cyl3y, self.cyl3z],
-                   #############################################################
                    [self.sobs],
+                   [self.sobs, self.uncentered_cyl_obs],               # test?
+                   [self.sobs, self.cyl3x, self.cyl3y, self.cyl3z],    # make 6?
+                   #############################################################
                    [self.sobs, self.pobs],
                    [self.sobs, self.cobs],
                    [self.sobs, self.pobs, self.cobs],
@@ -354,7 +348,6 @@ class Flock:
                    [self.squat_cyl_obs, self.sobs],
                    [self.squat_cyl_obs, self.pobs],
                    []]
-        ########################################################################
         # Set Obstacle list to next preset combination.
         self.obstacles = presets[self.obstacle_selection_counter % len(presets)]
         # Increment counter for next call.

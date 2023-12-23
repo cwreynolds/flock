@@ -23,10 +23,9 @@ import Utilities as util
 class Obstacle:
     def __init__(self):
         self.tri_mesh = None
-        ########################################################################
-        # TODO 20231221 original_center.
+        # Seems hackish, related to Draw.temp_camera_lookat and the way Open3D
+        # does translation relative to center of geometry.
         self.original_center = Vec3()
-        ########################################################################
 
     # Where a ray (Agent's path) will intersect the obstacle, or None.
     def ray_intersection(self, origin, tangent):
@@ -200,42 +199,16 @@ class CylinderObstacle(Obstacle):
     def draw(self):
         if not self.tri_mesh:
             self.tri_mesh = Draw.new_empty_tri_mesh()
-            
-            ####################################################################
-            # TODO 20231222 draw cylinder end caps
-#            Draw.add_line_segment(self.endpoint,
-#                                  self.endpoint + (self.tangent * self.length),
-#                                  color = Vec3(1, 1, 1) * 0.98,
-#                                  radius = self.radius,
-#                                  sides = 10,
-#                                  tri_mesh = self.tri_mesh)
             Draw.add_line_segment(self.endpoint,
                                   self.endpoint + (self.tangent * self.length),
-#                                  color = Vec3(1, 1, 1) * 0.98,
-#                                  color = Vec3(1, 1, 1) * 0.6,
                                   color = Vec3(1, 1, 1) * 0.8,
                                   radius = self.radius,
-#                                  sides = 10,
-#                                  tri_mesh = self.tri_mesh)
                                   sides = 50,
                                   tri_mesh = self.tri_mesh,
                                   flat_end_caps=True)
             self.tri_mesh.compute_vertex_normals()
-            ####################################################################
-                                  
-            ####################################################################
-            # TODO 20231219 sphere and 3 cylinders.
-            print(self.endpoint, self.endpoint + (self.tangent * self.length))
-            ####################################################################
-            ########################################################################
-            # TODO 20231221 original_center.
             self.original_center = Vec3.from_array(self.tri_mesh.get_center())
-            ########################################################################
-        ########################################################################
-        # TODO 20231221 original_center.
-#        Draw.adjust_static_scene_object(self.tri_mesh)
         Draw.adjust_static_scene_object(self.tri_mesh, self.original_center)
-        ########################################################################
 
 # Class to contain statistics of a predicted collision with an Obstacle.
 class Collision:
