@@ -59,35 +59,10 @@ class Flock:
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
         self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
         self.fps = util.Blender()
-        # give Flock a default list of obstacles
-        self.sobs = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
-        self.pobs = PlaneObstacle()
-        
-        ########################################################################
-        # TODO 20231210 still fiddling with obstacle test cases
-        cep = Vec3(0, self.sphere_radius + 0.1, 0)
-        self.cobs = CylinderObstacle(10, cep, -cep)
-        scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.8
-        self.squat_cyl_obs = CylinderObstacle(20, scep, -scep)
-        ########################################################################
-        
-        ########################################################################
-        # TODO 20231219 sphere and 3 cylinders.
-#        cyl3_h = 10
-#        cyl3_r = 3
-#        cyl3_o = 15
-        c3h = 10
-        c3r = 3
-        c3o = 15
-        self.cyl3x = CylinderObstacle(c3r, Vec3(-c3h, 0, c3o), Vec3(c3h, 0, c3o))
-        self.cyl3y = CylinderObstacle(c3r, Vec3(c3o, -c3h, 0), Vec3(c3o, c3h, 0))
-        self.cyl3z = CylinderObstacle(c3r, Vec3(0, c3o, -c3h), Vec3(0, c3o, c3h))
-        
-        diag = Vec3(1,1,1).normalize()
-        self.uncentered_cyl_obs = CylinderObstacle(5, diag * 5, diag * 30)
-        ########################################################################
-
+        # Flock's current list of obstacles.
         self.obstacles = []
+        # Switchable pre-defined obstacle sets.
+        self.obstacle_presets = self.pre_defined_obstacle_sets()
         self.obstacle_selection_counter = 0
         # If there is ever a need to have multiple Flock instances at the same
         # time, these steps should be reconsidered:
@@ -102,9 +77,6 @@ class Flock:
         self.register_single_key_commands() # For Open3D visualizer GUI.
         self.make_boids(self.boid_count, self.sphere_radius, self.sphere_center)
         self.draw()
-        ########################################################################
-        print('Draw.temp_camera_lookat =', Draw.temp_camera_lookat)
-        ########################################################################
         self.cycle_obstacle_selection()
         while self.still_running():
             if self.run_simulation_this_frame():
@@ -334,24 +306,10 @@ class Flock:
         # Remove geometry of current Obstacles from Open3D scene.
         for o in self.obstacles:
             Draw.vis.remove_geometry(o.tri_mesh, False)
-        # Preset obstacle combinations:
-        presets = [
-                   [self.sobs],
-                   [self.sobs, self.uncentered_cyl_obs],               # test?
-                   [self.sobs, self.cyl3x, self.cyl3y, self.cyl3z],    # make 6?
-                   #############################################################
-                   [self.sobs, self.pobs],
-                   [self.sobs, self.cobs],
-                   [self.sobs, self.pobs, self.cobs],
-                   [self.cobs],
-                   [self.squat_cyl_obs],
-                   [self.squat_cyl_obs, self.sobs],
-                   [self.squat_cyl_obs, self.pobs],
-                   []]
         # Set Obstacle list to next preset combination.
-        self.obstacles = presets[self.obstacle_selection_counter % len(presets)]
-        # Increment counter for next call.
+        next_set = self.obstacle_selection_counter % len(self.obstacle_presets)
         self.obstacle_selection_counter += 1
+        self.obstacles = self.obstacle_presets[next_set]
         # Add geometry of current obstacles to Open3D scene.
         for o in self.obstacles:
             o.draw()
@@ -367,6 +325,45 @@ class Flock:
         else:
             description += 'none'
         print(description + '\n')
+
+    # Builds a list of preset obstacle combinations, each a list of Obstacles.
+    def pre_defined_obstacle_sets(self):
+        main_sphere = EvertedSphereObstacle(self.sphere_radius, self.sphere_center)
+        plane_obstacle = PlaneObstacle()
+        
+        cep = Vec3(0, self.sphere_radius + 0.1, 0)
+        cobs = CylinderObstacle(10, cep, -cep)
+        
+        scep = Vec3(-1, 1, 1) * self.sphere_radius * 0.8
+        squat_cyl_obs = CylinderObstacle(20, scep, -scep)
+
+        diag = Vec3(1,1,1).normalize()
+        uncentered_cyl_obs = CylinderObstacle(5, diag * 5, diag * 30)
+        
+        # 6 symmetric cylinders on main axes.
+        c3r = 4
+        c3o = 15
+        c3h = 20
+        cyl3x = CylinderObstacle(c3r, Vec3(-c3h, 0, c3o), Vec3(c3h, 0, c3o))
+        cyl3y = CylinderObstacle(c3r, Vec3(c3o, -c3h, 0), Vec3(c3o, c3h, 0))
+        cyl3z = CylinderObstacle(c3r, Vec3(0, c3o, -c3h), Vec3(0, c3o, c3h))
+        c3o = - c3o
+        cyl3p = CylinderObstacle(c3r, Vec3(-c3h, 0, c3o), Vec3(c3h, 0, c3o))
+        cyl3q = CylinderObstacle(c3r, Vec3(c3o, -c3h, 0), Vec3(c3o, c3h, 0))
+        cyl3r = CylinderObstacle(c3r, Vec3(0, c3o, -c3h), Vec3(0, c3o, c3h))
+
+        # Preset obstacle combinations:
+        return [[main_sphere],
+                [main_sphere, plane_obstacle],
+                [main_sphere, uncentered_cyl_obs],
+                [main_sphere, cyl3x, cyl3y, cyl3z, cyl3p, cyl3q, cyl3r],
+                [main_sphere, cobs],
+                [main_sphere, plane_obstacle, cobs],
+                [cobs],
+                [squat_cyl_obs],
+                [squat_cyl_obs, main_sphere],
+                [squat_cyl_obs, plane_obstacle],
+                []]
 
     # Print mini-help on shell.
     def print_help(self):
