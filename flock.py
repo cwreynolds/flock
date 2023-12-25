@@ -64,6 +64,10 @@ class Flock:
         # Switchable pre-defined obstacle sets.
         self.obstacle_presets = self.pre_defined_obstacle_sets()
         self.obstacle_selection_counter = 0
+        ########################################################################
+        # TODO 20231225 count stalls
+        self.total_stalls = 0
+        ########################################################################
         # If there is ever a need to have multiple Flock instances at the same
         # time, these steps should be reconsidered:
         Draw.set_random_seeds(seed)
@@ -159,6 +163,14 @@ class Flock:
 #                      ', boid.position.length(): ', boid.position.length())
         ########################################################################
 
+        ########################################################################
+        # TODO 20231225 count stalls
+        for boid in self.boids:
+            min_speed = boid.max_speed * 0.2  ## TODO 20231225 ad hoc weight
+            if boid.speed < min_speed:
+                self.total_stalls += 1
+        ########################################################################
+
     # When a Boid gets more than "radius" from the origin, teleport it to the
     # other side of the world, just inside of its antipodal point.
     def sphere_wrap_around(self):
@@ -210,7 +222,12 @@ class Flock:
                       ', cumulative_sep_fail/boid=' +
                           (str(self.cumulative_sep_fail / len(self.boids)) +
                           '00')[0:5] +
-                      ', avoid_fail=' + str(self.total_avoid_fail))
+                      ##########################################################
+                      # TODO 20231225 count stalls
+#                      ', avoid_fail=' + str(self.total_avoid_fail))
+                      ', avoid_fail=' + str(self.total_avoid_fail) +
+                      ', stalls=' + str(self.total_stalls))
+                      ##########################################################
 
     # Keep track of a smoothed (LPF) version of frames per second metric.
     def update_fps(self):
