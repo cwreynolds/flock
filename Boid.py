@@ -26,6 +26,12 @@ class Boid(Agent):
         super().__init__()
         self.max_speed = 0.3     # Speed upper limit (m/s)
         self.max_force = 0.6     # Acceleration upper limit (m/s²)
+        ########################################################################
+        # TODO 20231226 prevent stalls
+#        self.min_speed = self.max_speed * 0.2  ## TODO 20231225 ad hoc weight
+#        self.min_speed = self.max_speed * 0.4  ## TODO 20231225 ad hoc weight
+        self.min_speed = self.max_speed * 0.3  ## TODO 20231225 ad hoc weight
+        ########################################################################
         self.speed = self.max_speed * 0.6
         self.body_radius = 0.5   # "assume a spherical boid" -- unit diameter
         self.flock = flock
@@ -74,6 +80,26 @@ class Boid(Agent):
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
         self.next_steer = self.steer_to_flock(time_step)
+        ########################################################################
+        # TODO 20231226 prevent stalls
+#        if self.speed < self.min_speed:
+        prevention_margin = 1.5
+        if self.speed < (self.min_speed * prevention_margin):
+
+            if Vec3.dot(self.next_steer, self.forward) < 0:
+
+#                self.next_steer = self.next_steer.perpendicular_component(self.forward)
+
+#                self.next_steer = self.forward * self.max_force
+
+#                self.next_steer = (self.forward * self.max_force +
+#                                   self.next_steer.perpendicular_component(self.forward))
+
+#                ahead = self.forward * self.max_force * 0.5
+                ahead = self.forward * self.max_force * 0.9
+                side = self.next_steer.perpendicular_component(self.forward)
+                self.next_steer = ahead + side
+        ########################################################################
 
     # Apply desired steering for this simulation step
     def apply_next_steer(self, time_step):

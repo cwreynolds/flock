@@ -165,9 +165,12 @@ class Flock:
 
         ########################################################################
         # TODO 20231225 count stalls
+#        for boid in self.boids:
+#            min_speed = boid.max_speed * 0.2  ## TODO 20231225 ad hoc weight
+#            if boid.speed < min_speed:
+#                self.total_stalls += 1
         for boid in self.boids:
-            min_speed = boid.max_speed * 0.2  ## TODO 20231225 ad hoc weight
-            if boid.speed < min_speed:
+            if boid.speed < boid.min_speed:
                 self.total_stalls += 1
         ########################################################################
 
