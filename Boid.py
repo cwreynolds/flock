@@ -80,26 +80,6 @@ class Boid(Agent):
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
         self.next_steer = self.steer_to_flock(time_step)
-        ########################################################################
-        # TODO 20231226 prevent stalls
-#        if self.speed < self.min_speed:
-        prevention_margin = 1.5
-        if self.speed < (self.min_speed * prevention_margin):
-
-            if Vec3.dot(self.next_steer, self.forward) < 0:
-
-#                self.next_steer = self.next_steer.perpendicular_component(self.forward)
-
-#                self.next_steer = self.forward * self.max_force
-
-#                self.next_steer = (self.forward * self.max_force +
-#                                   self.next_steer.perpendicular_component(self.forward))
-
-#                ahead = self.forward * self.max_force * 0.5
-                ahead = self.forward * self.max_force * 0.9
-                side = self.next_steer.perpendicular_component(self.forward)
-                self.next_steer = ahead + side
-        ########################################################################
 
     # Apply desired steering for this simulation step
     def apply_next_steer(self, time_step):
@@ -115,6 +95,7 @@ class Boid(Agent):
         c = self.weight_cohere * self.steer_to_cohere(neighbors)
         o = self.weight_avoid * self.steer_to_avoid(time_step)
         combined_steering = self.smoothed_steering(f + s + a + c + o)
+        combined_steering = self.anti_stall_adjustment(combined_steering)
         self.annotation(s, a, c, o, combined_steering)
         return combined_steering
 
@@ -248,6 +229,22 @@ class Boid(Agent):
                                       util.interpolate(self.annote_avoid_weight,
                                                        Vec3(0.85, 0.85, 0.85),
                                                        Vec3(1, 0, 1)))
+
+    # Prevent "stalls" -- when a Boid's speed drops so low that it looks like it
+    # is floating rather than flying. Tries to keep the boid's speed above
+    # self.min_speed (currently (20231227) self.max_speed * 0.3). It starts to
+    # adjust when self.speed get within 1.5 times the min speed (which is about
+    # self.max_speed * 0.5 now). This is done by extracting the lateral turning
+    # component of steering and adding that to a moderate forward acceleration.
+    def anti_stall_adjustment(self, raw_steering):
+        adjusted = raw_steering
+        prevention_margin = 1.5
+        if self.speed < (self.min_speed * prevention_margin):
+            if Vec3.dot(raw_steering, self.forward) < 0:
+                ahead = self.forward * self.max_force * 0.9
+                side = self.next_steer.perpendicular_component(self.forward)
+                adjusted = ahead + side
+        return adjusted
 
     # Wander aimlessly via slowly varying steering force. Currently unused.
     def steer_to_wander(self, rs):
