@@ -85,6 +85,9 @@ class Vec3:
         return self / self.length()
     def normalize_or_0(self):
         return self if self.length_is_0() else self.normalize()
+    def normalize_and_length(self):
+        original_length = self.length()
+        return (self / original_length, original_length)
         
     # Returns vector parallel to "this" but no longer than "max_length"
     def truncate(self, max_length):
@@ -262,6 +265,10 @@ class Vec3:
         assert 2 * Vec3(1, 2, 3) == Vec3(2, 4, 6)
         assert Vec3(2, 4, 6) / 2 == Vec3(1, 2, 3)
         assert Vec3(1, 2, 3) < Vec3(-1, -2, -4)
+        
+        v123 = Vec3(1, 2, 3)
+        (n, l) = v123.normalize_and_length()
+        assert (n == v123.normalize()) and (l == v123.length())
 
         f33 = 0.3333333333333334
         f66 = 0.6666666666666665
