@@ -265,10 +265,47 @@ class Vec3:
         assert 2 * Vec3(1, 2, 3) == Vec3(2, 4, 6)
         assert Vec3(2, 4, 6) / 2 == Vec3(1, 2, 3)
         assert Vec3(1, 2, 3) < Vec3(-1, -2, -4)
-        
+
+        v000 = Vec3(0, 0, 0)
+        v111 = Vec3(1, 1, 1)
         v123 = Vec3(1, 2, 3)
+        v236 = Vec3(2, 3, 6)
+
         (n, l) = v123.normalize_and_length()
         assert (n == v123.normalize()) and (l == v123.length())
+        
+        assert v000.length_is_0()
+        assert not v111.length_is_0()
+
+        assert v000.normalize_or_0() == v000
+        assert v236.normalize_or_0() == Vec3(2, 3, 6) / 7
+        
+        assert not v000.is_unit_length()
+        assert not v111.is_unit_length()
+        assert v123.normalize().is_unit_length()
+        
+        assert Vec3.max(v000) == v000
+        assert Vec3.max(v000, v111) == v111
+        assert Vec3.max(v111, v000) == v111
+        assert Vec3.max(v123, v111, v236, v000) == v236
+        
+        for i in range(20):
+            r = Vec3.random_point_in_axis_aligned_box(v236, v123)
+            assert util.between(r.x, v123.x, v236.x)
+            assert util.between(r.y, v123.y, v236.y)
+            assert util.between(r.z, v123.z, v236.z)
+            
+            r = Vec3.random_point_in_unit_radius_sphere()
+            assert r.length() <= 1
+
+            r = Vec3.random_unit_vector()
+            assert util.within_epsilon(r.length(), 1)
+
+        # assert unmodified:
+        assert v000 == Vec3(0, 0, 0)
+        assert v111 == Vec3(1, 1, 1)
+        assert v123 == Vec3(1, 2, 3)
+        assert v236 == Vec3(2, 3, 6)
 
         f33 = 0.3333333333333334
         f66 = 0.6666666666666665
