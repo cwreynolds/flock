@@ -26,12 +26,7 @@ class Boid(Agent):
         super().__init__()
         self.max_speed = 0.3     # Speed upper limit (m/s)
         self.max_force = 0.6     # Acceleration upper limit (m/s²)
-        ########################################################################
-        # TODO 20231226 prevent stalls
-#        self.min_speed = self.max_speed * 0.2  ## TODO 20231225 ad hoc weight
-#        self.min_speed = self.max_speed * 0.4  ## TODO 20231225 ad hoc weight
-        self.min_speed = self.max_speed * 0.3  ## TODO 20231225 ad hoc weight
-        ########################################################################
+        self.min_speed = self.max_speed * 0.3  # TODO 20231225 ad hoc factor.
         self.speed = self.max_speed * 0.6
         self.body_radius = 0.5   # "assume a spherical boid" -- unit diameter
         self.flock = flock
@@ -56,15 +51,10 @@ class Boid(Agent):
         self.annote_avoid_weight = 0    # per boid just for avoid annotation.
 
         # Tuning parameters
-        ########################################################################
-        # TODO 20231115 -- experiment: just furthest two?
         self.weight_forward    = 0.15
-#        self.weight_separate   = 0.55
-        self.weight_separate   = 0.50
+        self.weight_separate   = 0.55
         self.weight_align      = 0.35
-#        self.weight_cohere     = 0.30
-        self.weight_cohere     = 0.40
-        ########################################################################
+        self.weight_cohere     = 0.25
         self.weight_avoid      = 0.80
         self.max_dist_separate = 10 * self.body_radius
         self.max_dist_align    = 100  # TODO 20231017 should this be ∞ or
@@ -132,15 +122,7 @@ class Boid(Agent):
         direction = Vec3()
         neighbor_center = Vec3()
         total_weight = 0
-        ########################################################################
-        # TODO 20231112 -- experiment: try a only the nearest 2 neighbors
-#        for neighbor in neighbors:
-#        for neighbor in neighbors[2:]:
-#        # TODO 20231115 -- experiment: just furthest one?
-#        for neighbor in neighbors[-1:]:
-        # TODO 20231115 -- experiment: just furthest two?
-        for neighbor in neighbors[-2:]:
-        ########################################################################
+        for neighbor in neighbors:
             dist = (neighbor.position - self.position).length()
             weight = 1 / (dist ** self.exponent_cohere)
             weight *= 1 - util.unit_sigmoid_on_01(dist / self.max_dist_cohere)
