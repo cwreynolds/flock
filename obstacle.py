@@ -148,8 +148,7 @@ class CylinderObstacle(Obstacle):
         self.radius = radius
         self.endpoint = endpoint0
         offset = endpoint1 - endpoint0
-        self.length = offset.length()
-        self.tangent = offset.normalize()
+        (self.tangent, self.length) = offset.normalize_and_length()
 
     # Nearest point on the infinite line containing cylinder's axis.
     def nearest_point_on_axis(self, query_point):

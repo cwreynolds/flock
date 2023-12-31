@@ -79,23 +79,30 @@ class Vec3:
         return math.sqrt(self.length_squared())
     def length_squared(self):
         return self.dot(self)
-    def length_is_0(self):
-        return self.length_squared() == 0
     def normalize(self):
         return self / self.length()
+
+    # Normalize except if input is zero length, then return that.
     def normalize_or_0(self):
-        return self if self.length_is_0() else self.normalize()
+        return self if self.is_zero_length() else self.normalize()
+
+    # Normalize and return length
     def normalize_and_length(self):
         original_length = self.length()
         return (self / original_length, original_length)
-        
+
+    # Fast check for unit length.
+    def is_unit_length(self):
+        return util.within_epsilon(self.length_squared(), 1)
+
+    # Fast check for zero length.
+    def is_zero_length(self):
+        return util.within_epsilon(self.length_squared(), 0)
+
     # Returns vector parallel to "this" but no longer than "max_length"
     def truncate(self, max_length):
-        truncated = self
-        magnitude = self.length()
-        if magnitude > max_length:
-            truncated = self * (max_length / magnitude)
-        return truncated
+        len = self.length()
+        return self if len <= max_length else self * (max_length / len)
 
     # return component of vector parallel to a unit basis vector
     def parallel_component(self, unit_basis):
@@ -137,9 +144,6 @@ class Vec3:
         return Vec3.axis_angle(Vec3.cross(from_vec, to_vec),
                                Vec3.angle_between(from_vec, to_vec))
 
-    # Check for unit length. (Uses fast length_squared() just 3 mults, 2 adds.)
-    def is_unit_length(self):
-        return util.within_epsilon(self.length_squared(), 1)
 
     # Check if two vectors are perpendicular. (What about zero length?)
     def is_perpendicular(self, other):
@@ -274,8 +278,8 @@ class Vec3:
         (n, l) = v123.normalize_and_length()
         assert (n == v123.normalize()) and (l == v123.length())
         
-        assert v000.length_is_0()
-        assert not v111.length_is_0()
+        assert v000.is_zero_length()
+        assert not v111.is_zero_length()
 
         assert v000.normalize_or_0() == v000
         assert v236.normalize_or_0() == Vec3(2, 3, 6) / 7
