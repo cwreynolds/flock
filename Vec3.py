@@ -3,9 +3,6 @@
 #-------------------------------------------------------------------------------
 #
 # Vec3.py -- new flock experiments
-# not sure if this should be a Python class, since [x, y, z] is a perfectly fine
-# representation. But if not a class it ought to be a package of utilities,
-# since Open3D does not provide abstractions like this.
 #
 # Cartesian 3d vector space utility.
 #
@@ -250,6 +247,17 @@ class Vec3:
 
     @staticmethod
     def unit_test():
+        v000 = Vec3(0, 0, 0)
+        v100 = Vec3(1, 0, 0)
+        v010 = Vec3(0, 1, 0)
+        v001 = Vec3(0, 0, 1)
+        v011 = Vec3(0, 1, 1)
+        v101 = Vec3(1, 0, 1)
+        v110 = Vec3(1, 1, 0)
+        v111 = Vec3(1, 1, 1)
+        v123 = Vec3(1, 2, 3)
+        v236 = Vec3(2, 3, 6)
+
         assert str(Vec3(1, 2, 3)) == 'Vec3(1, 2, 3)'
         assert Vec3(1, 2, 3) == Vec3(1, 2, 3)
         assert Vec3(0, 0, 0) != Vec3(1, 0, 0)
@@ -269,11 +277,6 @@ class Vec3:
         assert 2 * Vec3(1, 2, 3) == Vec3(2, 4, 6)
         assert Vec3(2, 4, 6) / 2 == Vec3(1, 2, 3)
         assert Vec3(1, 2, 3) < Vec3(-1, -2, -4)
-
-        v000 = Vec3(0, 0, 0)
-        v111 = Vec3(1, 1, 1)
-        v123 = Vec3(1, 2, 3)
-        v236 = Vec3(2, 3, 6)
 
         (n, l) = v123.normalize_and_length()
         assert (n == v123.normalize()) and (l == v123.length())
@@ -304,12 +307,6 @@ class Vec3:
 
             r = Vec3.random_unit_vector()
             assert util.within_epsilon(r.length(), 1)
-
-        # assert unmodified:
-        assert v000 == Vec3(0, 0, 0)
-        assert v111 == Vec3(1, 1, 1)
-        assert v123 == Vec3(1, 2, 3)
-        assert v236 == Vec3(2, 3, 6)
 
         f33 = 0.3333333333333334
         f66 = 0.6666666666666665
@@ -346,6 +343,44 @@ class Vec3:
         assert j.cross(i) == -k
         assert k.cross(j) == -i
         
+        pi2 = math.pi / 2
+        pi3 = math.pi / 3
+        pi4 = math.pi / 4
+        pi5 = math.pi / 5
+        ang = math.acos(1 / math.sqrt(3))
+
+        assert k.angle_between(k) == 0
+        assert i.angle_between(j) == pi2
+        assert util.within_epsilon(i.angle_between(Vec3(1, 1, 0)), pi4)
+
+        assert Vec3.axis_angle(v100, math.pi) == v100 * math.pi
+        assert Vec3.axis_angle(v111, pi3) == v111.normalize() * pi3
+
+        assert Vec3.rotate_vec_to_vec(i, j) == v001 * pi2
+        assert Vec3.is_equal_within_epsilon(Vec3.rotate_vec_to_vec(v100, v110),
+                                            Vec3.axis_angle(v001, pi4))
+        assert Vec3.is_equal_within_epsilon(Vec3.rotate_vec_to_vec(v111, v001),
+                                            Vec3.axis_angle(Vec3(1,-1,0), ang))
+        
+        spi3 = math.sqrt(3) / 2                         # sin(60°), sin(pi/3)
+        cpi3 = 0.5                                      # cos(60°), cos(pi/3)
+        spi5 = math.sqrt((5 / 8) - (math.sqrt(5) / 8))  # sin(36°), sin(pi/5)
+        cpi5 = (1 + math.sqrt(5)) / 4                   # cos(36°), cos(pi/5)
+
+        assert Vec3.is_equal_within_epsilon(v111.rotate_xy_about_z(pi2),
+                                            Vec3(1, -1, 1))
+        assert Vec3.is_equal_within_epsilon(v111.rotate_xy_about_z(pi3),
+                                            Vec3(cpi3 + spi3, cpi3 - spi3, 1))
+        assert Vec3.is_equal_within_epsilon(v111.rotate_xy_about_z(pi5),
+                                            Vec3(cpi5 + spi5, cpi5 - spi5, 1))
+
+        assert Vec3.is_equal_within_epsilon(v111.rotate_xz_about_y(pi2),
+                                            Vec3(1, 1, -1))
+        assert Vec3.is_equal_within_epsilon(v111.rotate_xz_about_y(pi3),
+                                            Vec3(cpi3 + spi3, 1, cpi3 - spi3))
+        assert Vec3.is_equal_within_epsilon(v111.rotate_xz_about_y(pi5),
+                                            Vec3(cpi5 + spi5, 1, cpi5 - spi5))
+
         v = Vec3(4, 5, 6)
         v += Vec3(1, 2, 3)
         assert v == Vec3(5, 7, 9), 'Vec3: test +='
@@ -358,3 +393,15 @@ class Vec3:
         v = Vec3(2, 4, 6)
         v /= 2
         assert v == Vec3(1, 2, 3), 'Vec3: test /='
+
+        # assert unmodified:
+        assert v000 == Vec3(0, 0, 0)
+        assert v100 == Vec3(1, 0, 0)
+        assert v010 == Vec3(0, 1, 0)
+        assert v001 == Vec3(0, 0, 1)
+        assert v011 == Vec3(0, 1, 1)
+        assert v101 == Vec3(1, 0, 1)
+        assert v110 == Vec3(1, 1, 0)
+        assert v111 == Vec3(1, 1, 1)
+        assert v123 == Vec3(1, 2, 3)
+        assert v236 == Vec3(2, 3, 6)
