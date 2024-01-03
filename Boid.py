@@ -182,7 +182,6 @@ class Boid(Agent):
         for obstacle in self.flock.obstacles:
             oa = obstacle.fly_away(p, f, max_distance)
             weight = oa.length()
-#            self.avoid_obstacle_annotation(1, obstacle.nearest_point(p), weight)
             self.avoid_obstacle_annotation(2, obstacle.nearest_point(p), weight)
             avoidance += oa
         return avoidance
@@ -293,40 +292,43 @@ class Boid(Agent):
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self, color=None):
-        center = self.position
-        nose = center + self.forward * self.body_radius
-        tail = center - self.forward * self.body_radius
-        bd = self.body_radius * 2  # body diameter (defaults to 1)
-        apex = tail + self.up * 0.25 * bd + self.forward * 0.1 * bd
-        wingtip0 = tail + self.side * 0.3 * bd
-        wingtip1 = tail - self.side * 0.3 * bd
-        # Draw the 4 triangles of a boid's body.
-        def draw_tri(a, b, c, color):
-            Draw.add_colored_triangle(a, b, c, color)
-        if color is None:
-            color = self.color
-        draw_tri(nose, apex,     wingtip1, color * 1.00)
-        draw_tri(nose, wingtip0, apex,     color * 0.95)
-        draw_tri(apex, wingtip0, wingtip1, color * 0.90)
-        draw_tri(nose, wingtip1, wingtip0, color * 0.70)
+        if Draw.enable:
+            center = self.position
+            nose = center + self.forward * self.body_radius
+            tail = center - self.forward * self.body_radius
+            bd = self.body_radius * 2  # body diameter (defaults to 1)
+            apex = tail + self.up * 0.25 * bd + self.forward * 0.1 * bd
+            wingtip0 = tail + self.side * 0.3 * bd
+            wingtip1 = tail - self.side * 0.3 * bd
+            # Draw the 4 triangles of a boid's body.
+            def draw_tri(a, b, c, color):
+                Draw.add_colored_triangle(a, b, c, color)
+            if color is None:
+                color = self.color
+            draw_tri(nose, apex,     wingtip1, color * 1.00)
+            draw_tri(nose, wingtip0, apex,     color * 0.95)
+            draw_tri(apex, wingtip0, wingtip1, color * 0.90)
+            draw_tri(nose, wingtip1, wingtip0, color * 0.70)
 
     # Should this Boid be annotated? (At most its those near selected boid.)
     def should_annotate(self):
-        return (self.flock.enable_annotation and
+        return (Draw.enable and
+                self.flock.enable_annotation and
                 self.flock.tracking_camera and
                 (self.flock.selected_boid().position - self.position).length() < 3)
 
     # Draw optional annotation of this Boid's current steering forces
     def annotation(self, separation, alignment, cohesion, avoidance, combined):
-        center = self.position
-        def relative_force_annotation(offset, color):
-            Draw.add_line_segment(center, center + offset, color)
-        if self.should_annotate():
-            relative_force_annotation(separation, Vec3(1, 0, 0))
-            relative_force_annotation(alignment,  Vec3(0, 1, 0))
-            relative_force_annotation(cohesion,   Vec3(0, 0, 1))
-            relative_force_annotation(avoidance,  Vec3(1, 0, 1))
-            relative_force_annotation(combined,   Vec3(0.5, 0.5, 0.5))
+        if Draw.enable:
+            center = self.position
+            def relative_force_annotation(offset, color):
+                Draw.add_line_segment(center, center + offset, color)
+            if self.should_annotate():
+                relative_force_annotation(separation, Vec3(1, 0, 0))
+                relative_force_annotation(alignment,  Vec3(0, 1, 0))
+                relative_force_annotation(cohesion,   Vec3(0, 0, 1))
+                relative_force_annotation(avoidance,  Vec3(1, 0, 1))
+                relative_force_annotation(combined,   Vec3(0.5, 0.5, 0.5))
 
     # Bird-like roll control: blends vector toward path curvature center with
     # global up. Overrides method in base class Agent

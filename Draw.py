@@ -17,7 +17,6 @@ from Vec3 import Vec3     # temp?
 import random             # temp?
 from LocalSpace import LocalSpace
 
-
 class Draw:
     """Graphics utilities based on Open3D."""
 
@@ -30,6 +29,8 @@ class Draw:
     frame_start_time = 0
     frame_duration = 0
     frame_counter = 0
+    # Global switch to disable drawing when needed.
+    enable = True
     
     # This TriangleMesh is refilled each frame with the moving "bodies" of boids
     # and annotation lines.
@@ -105,53 +106,57 @@ class Draw:
     # Initialize visualizer for simulation run.
     @staticmethod
     def start_visualizer(containment_radius, containment_center):
-        # Create Visualizer and a window for it.
-        Draw.vis = o3d.visualization.VisualizerWithKeyCallback()
-        Draw.vis.create_window()
+        if Draw.enable:
+            # Create Visualizer and a window for it.
+            Draw.vis = o3d.visualization.VisualizerWithKeyCallback()
+            Draw.vis.create_window()
 
-        # Init view: add (then remove) sphere, aim_radius controls distance.
-        aim_radius = 20
-        aim_ball = o3d.geometry.TriangleMesh.create_sphere(aim_radius, 10)
-        Draw.vis.add_geometry(aim_ball)
-        Draw.vis.remove_geometry(aim_ball, False)
-        
-        # TODO 23230411 temp ball for camera aim reference
-        ball = o3d.geometry.TriangleMesh.create_sphere(0.1, 10)
-        ball.compute_vertex_normals()
-        ball.paint_uniform_color([0.1, 0.1, 0.1])
-        Draw.vis.add_geometry(ball, False)
+            # Init view: add (then remove) sphere, aim_radius controls distance.
+            aim_radius = 20
+            aim_ball = o3d.geometry.TriangleMesh.create_sphere(aim_radius, 10)
+            Draw.vis.add_geometry(aim_ball)
+            Draw.vis.remove_geometry(aim_ball, False)
+            
+            # TODO 23230411 temp ball for camera aim reference
+            ball = o3d.geometry.TriangleMesh.create_sphere(0.1, 10)
+            ball.compute_vertex_normals()
+            ball.paint_uniform_color([0.1, 0.1, 0.1])
+            Draw.vis.add_geometry(ball, False)
 
-        # Create axes "jack" and add to scene.
-        Draw.axes = Draw.make_global_axes()
-        Draw.vis.add_geometry(Draw.axes, False)
+            # Create axes "jack" and add to scene.
+            Draw.axes = Draw.make_global_axes()
+            Draw.vis.add_geometry(Draw.axes, False)
 
-        # Add to scene dynamic_triangle_mesh with boid "bodies" and annotation.
-        Draw.vis.add_geometry(Draw.dynamic_triangle_mesh, False)
+            # Add to scene dynamic_triangle_mesh with boid "bodies" and annotation.
+            Draw.vis.add_geometry(Draw.dynamic_triangle_mesh, False)
 
-        # Keep track of time elapsed per frame.
-        Draw.frame_start_time = time.time()
+            # Keep track of time elapsed per frame.
+            Draw.frame_start_time = time.time()
 
-        ctr = Draw.vis.get_view_control()
-        ctr.set_constant_z_far(containment_radius * 10)
+            ctr = Draw.vis.get_view_control()
+            ctr.set_constant_z_far(containment_radius * 10)
 
     # Close visualizer after simulation run.
     @staticmethod
     def close_visualizer():
-        Draw.vis.destroy_window()
+        if Draw.enable:
+            Draw.vis.destroy_window()
 
     # Clear all flock geometry held in a TriangleMesh.
     @staticmethod
     def clear_scene():
-        if Draw.clear_dynamic_mesh:
-            Draw.dynamic_triangle_mesh.clear()
+        if Draw.enable:
+            if Draw.clear_dynamic_mesh:
+                Draw.dynamic_triangle_mesh.clear()
 
     # Update scene geometry. Called once each simulation step (rendered frame).
     # In this application, most geometry is regenerated anew every frame.
     @staticmethod
     def update_scene():
-        # Update (GPU reload?) dynamic_triangle_mesh (boid "bodies", annotation)
-        Draw.vis.update_geometry(Draw.dynamic_triangle_mesh)
-        Draw.adjust_static_scene_objects() # move static objects for lookat hack
+        if Draw.enable:
+            # Update dynamic_triangle_mesh (boid "bodies", annotation)
+            Draw.vis.update_geometry(Draw.dynamic_triangle_mesh)
+            Draw.adjust_static_scene_objects() # move static objects for lookat hack
 
     @staticmethod
     def reset_timer():
@@ -246,9 +251,14 @@ class Draw:
     # local space.
     @staticmethod
     def adjust_static_scene_object(scene_object, original_center=Vec3()):
-        translation = original_center - Draw.temp_camera_lookat
-        scene_object.translate(translation.asarray(), relative=False)
-        Draw.vis.update_geometry(scene_object)
+        if Draw.enable:
+            translation = original_center - Draw.temp_camera_lookat
+            scene_object.translate(translation.asarray(), relative=False)
+            Draw.vis.update_geometry(scene_object)
+    
+    def register_key_callback(key, callback_func):
+        if Draw.enable:
+            Draw.vis.register_key_callback(key, callback_func)
 
     # Set random seeds for Python, Numpy, and Open3D, all to the given value.
     # This will produce consistant starting positions/orientation. Longer term

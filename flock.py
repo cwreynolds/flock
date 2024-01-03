@@ -82,7 +82,8 @@ class Flock:
         while self.still_running():
             if self.run_simulation_this_frame():
                 Draw.clear_scene()
-                self.fly_flock(1 / self.fixed_fps if self.fixed_time_step
+                self.fly_flock(1 / self.fixed_fps
+                               if self.fixed_time_step or not Draw.enable
                                else Draw.frame_duration)
                 self.sphere_wrap_around()
                 self.draw()
@@ -112,16 +113,17 @@ class Flock:
 
     # Draw each boid in flock.
     def draw(self):
-        Draw.update_camera(self.selected_boid().position if
-                           self.tracking_camera else Vec3())
-        for o in self.obstacles:
-            o.draw()
-        for boid in self.boids:
-            color = None
-            if self.enable_annotation and self.tracking_camera and \
-                    boid in self.selected_boid().cached_nearest_neighbors:
-                color = Vec3(0.0, 1.0, 0.0)
-            boid.draw(color=color)
+        if Draw.enable:
+            Draw.update_camera(self.selected_boid().position if
+                               self.tracking_camera else Vec3())
+            for o in self.obstacles:
+                o.draw()
+            for boid in self.boids:
+                color = None
+                if self.enable_annotation and self.tracking_camera and \
+                        boid in self.selected_boid().cached_nearest_neighbors:
+                    color = Vec3(0.0, 1.0, 0.0)
+                boid.draw(color=color)
 
     ########################################################################
     # TODO 20231106 flies through PlaneObstacle
@@ -237,17 +239,17 @@ class Flock:
 
     # Register single key commands with the Open3D visualizer GUI.
     def register_single_key_commands(self):
-        Draw.vis.register_key_callback(ord(' '), Flock.toggle_paused_mode)
-        Draw.vis.register_key_callback(ord('1'), Flock.set_single_step_mode)
-        Draw.vis.register_key_callback(ord('S'), Flock.select_next_boid)
-        Draw.vis.register_key_callback(ord('A'), Flock.toggle_annotation)
-        Draw.vis.register_key_callback(ord('C'), Flock.toggle_tracking_camera)
-        Draw.vis.register_key_callback(ord('W'), Flock.toggle_wrap_vs_avoid)
-        Draw.vis.register_key_callback(ord('E'), Flock.toggle_dynamic_erase)
-        Draw.vis.register_key_callback(ord('F'), Flock.toggle_fixed_time_step)
-        Draw.vis.register_key_callback(ord('B'), Flock.toggle_avoid_blend_mode)
-        Draw.vis.register_key_callback(ord('O'), Flock.cycle_obstacle_selection)
-        Draw.vis.register_key_callback(ord('H'), Flock.print_help)
+        Draw.register_key_callback(ord(' '), Flock.toggle_paused_mode)
+        Draw.register_key_callback(ord('1'), Flock.set_single_step_mode)
+        Draw.register_key_callback(ord('S'), Flock.select_next_boid)
+        Draw.register_key_callback(ord('A'), Flock.toggle_annotation)
+        Draw.register_key_callback(ord('C'), Flock.toggle_tracking_camera)
+        Draw.register_key_callback(ord('W'), Flock.toggle_wrap_vs_avoid)
+        Draw.register_key_callback(ord('E'), Flock.toggle_dynamic_erase)
+        Draw.register_key_callback(ord('F'), Flock.toggle_fixed_time_step)
+        Draw.register_key_callback(ord('B'), Flock.toggle_avoid_blend_mode)
+        Draw.register_key_callback(ord('O'), Flock.cycle_obstacle_selection)
+        Draw.register_key_callback(ord('H'), Flock.print_help)
 
     # Toggle simulation pause mode.
     def toggle_paused_mode(self):
@@ -310,17 +312,19 @@ class Flock:
     def cycle_obstacle_selection(self):
         self = Flock.convert_to_flock(self)
         # Remove geometry of current Obstacles from Open3D scene.
-        for o in self.obstacles:
-            Draw.vis.remove_geometry(o.tri_mesh, False)
+        if Draw.enable:
+            for o in self.obstacles:
+                Draw.vis.remove_geometry(o.tri_mesh, False)
         # Set Obstacle list to next preset combination.
         next_set = self.obstacle_selection_counter % len(self.obstacle_presets)
         self.obstacle_selection_counter += 1
         self.obstacles = self.obstacle_presets[next_set]
         # Add geometry of current obstacles to Open3D scene.
-        for o in self.obstacles:
-            o.draw()
-            if o.tri_mesh: # TODO only need until all Obstacles draw themselves.
-                Draw.vis.add_geometry(o.tri_mesh, False)
+        if Draw.enable:
+            for o in self.obstacles:
+                o.draw()
+                if o.tri_mesh: # TODO only need until all Obstacles draw themselves.
+                    Draw.vis.add_geometry(o.tri_mesh, False)
         # Print description of current Obstacle set.
         description = '\n  obstacles: '
         if self.obstacles:
@@ -424,8 +428,9 @@ class Flock:
 
     # Simulation continues running until this returns False.
     def still_running(self):
-        return (Draw.vis.poll_events() and
-                Draw.frame_counter < self.max_simulation_steps)
+        a = True if not Draw.enable else Draw.vis.poll_events()
+        b = Draw.frame_counter < self.max_simulation_steps
+        return a and b
 
     # Perform "before simulation" tasks: log versions, run unit tests.
     def setup(self):
@@ -452,5 +457,5 @@ if __name__ == "__main__":
 #    Flock(max_simulation_steps=200, fixed_time_step=True, fixed_fps=30).run()
 #    Flock(max_simulation_steps=200, fixed_time_step=True, seed=438538457).run()
 
+#    Draw.enable = False
     Flock().run()
-#    Flock(2).run()
