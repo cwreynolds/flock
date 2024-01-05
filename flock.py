@@ -32,6 +32,29 @@ from obstacle import PlaneObstacle
 from obstacle import CylinderObstacle
 import shape
 
+################################################################################
+# TODO 20240104 using parallel threads/processes for simulation step
+
+import time
+import threading
+import multiprocessing
+from multiprocessing import Pool
+
+import functools
+
+
+def apply_next(boid):
+    boid.apply_next_steer(boid.temp_time_step)
+    return boid
+
+def plan_next(boid):
+    boid.plan_next_steer(boid.temp_time_step)
+    return boid
+
+# QQQ
+
+################################################################################
+
 class Flock:
     def __init__(self,
                  boid_count = 200,
@@ -70,6 +93,9 @@ class Flock:
         Draw.set_random_seeds(seed)
         self.setup()
 
+    ############################################################################
+    # TODO 20240104 using parallel threads/processes for simulation step
+
     # Run boids simulation. (Currently runs until stopped by user.)
     def run(self):
         draw = Draw() ## ?? currently unused but should contain draw state
@@ -79,19 +105,37 @@ class Flock:
         self.make_boids(self.boid_count, self.sphere_radius, self.sphere_center)
         self.draw()
         self.cycle_obstacle_selection()
-        while self.still_running():
-            if self.run_simulation_this_frame():
-                Draw.clear_scene()
-                self.fly_flock(1 / self.fixed_fps
-                               if self.fixed_time_step or not Draw.enable
-                               else Draw.frame_duration)
-                self.sphere_wrap_around()
-                self.draw()
-                Draw.update_scene()
-                self.log_stats()
-                self.update_fps()
+        
+#        while self.still_running():
+#            if self.run_simulation_this_frame():
+#                Draw.clear_scene()
+#                self.fly_flock(1 / self.fixed_fps
+#                               if self.fixed_time_step or not Draw.enable
+#                               else Draw.frame_duration)
+#                self.sphere_wrap_around()
+#                self.draw()
+#                Draw.update_scene()
+#                self.log_stats()
+#                self.update_fps()
+
+        with Pool() as pool:
+            while self.still_running():
+                if self.run_simulation_this_frame():
+                    Draw.clear_scene()
+                    self.fly_flock(1 / self.fixed_fps
+                                   if self.fixed_time_step or not Draw.enable
+                                   else Draw.frame_duration,
+                                   pool)
+                    self.sphere_wrap_around()
+                    self.draw()
+                    Draw.update_scene()
+                    self.log_stats()
+                    self.update_fps()
+
         Draw.close_visualizer()
         print('Exit at step:', Draw.frame_counter)
+
+    ############################################################################
 
     # Populate this flock by creating "count" boids with uniformly distributed
     # random positions inside a sphere with the given "radius" and "center".
@@ -125,46 +169,268 @@ class Flock:
                     color = Vec3(0.0, 1.0, 0.0)
                 boid.draw(color=color)
 
-    ########################################################################
-    # TODO 20231106 flies through PlaneObstacle
-    # Very temporary code for debugging multiple obstacle avoidance.
-    plane_obstacle_fail = 0
-    ########################################################################
+
+    ############################################################################
+    # TODO 20240104 using parallel threads/processes for simulation step
+
+#    # Fly each boid in flock for one simulation step. Consists of two sequential
+#    # steps to avoid artifacts from order of boids. First a "sense/plan" phase
+#    # which computes the desired steering based on current state. Then an "act"
+#    # phase which actually moves the boids.
+#    def fly_flock(self, time_step):
+#        for boid in self.boids:
+#            boid.plan_next_steer(time_step)
+#        for boid in self.boids:
+#            boid.apply_next_steer(time_step)
+#        for boid in self.boids:
+#            if boid.speed < boid.min_speed:
+#                self.total_stalls += 1
+
+
+#        # Fly each boid in flock for one simulation step. Consists of two sequential
+#        # steps to avoid artifacts from order of boids. First a "sense/plan" phase
+#        # which computes the desired steering based on current state. Then an "act"
+#        # phase which actually moves the boids.
+#    #    def fly_flock(self, time_step):
+#        def fly_flock(self, time_step, pool):
+#    #        for boid in self.boids:
+#    #            boid.plan_next_steer(time_step)
+#    #        for boid in self.boids:
+#    #            boid.apply_next_steer(time_step)
+#
+#
+#    #        ### TODO
+#    #        ###     ok, this is definitely not the right thing
+#    #        ###     for no graphics, it runs at 5 fps versus 50 fps
+#    #        ###     but the simulation seems frozen, since maybe per-process memory?
+#    #
+#    #        pool.map(functools.partial(Boid.plan_next_steer, time_step=time_step),
+#    #                 self.boids)
+#    #        pool.map(functools.partial(Boid.apply_next_steer, time_step=time_step),
+#    #                 self.boids)
+#
+#
+#    #        def map_over_boids_range(function, time_step, start_index, end_index):
+#    #            for boid in self.boids[start_index : end_index]:
+#    #                function(boid, time_step)
+#
+#            def map_over_boids_range(function, time_step, start_index, end_index):
+#                for i in range(start_index, end_index):
+#                    function(self.boids[i], time_step)
+#
+#    #        print('create threads')
+#    #        threads = []
+#    #        for i in range(10):
+#
+#
+#    #        batch_size = 20
+#    #        batch_size = 10
+#    #        batch_size = 40
+#    #        batch_size = 100
+#            batch_size = 5
+#
+#
+#            threads = []
+#            for i in range(0, len(self.boids), batch_size):
+#                threads.append(threading.Thread(target=map_over_boids_range,
+#                                                args=(Boid.plan_next_steer,
+#                                                      time_step, i, i + batch_size)))
+#            for t in threads:
+#                t.start()
+#            for t in threads:
+#                t.join()
+#
+#
+#            threads = []
+#            for i in range(0, len(self.boids), batch_size):
+#                threads.append(threading.Thread(target=map_over_boids_range,
+#                                                args=(Boid.apply_next_steer,
+#                                                      time_step, i, i + batch_size)))
+#            for t in threads:
+#                t.start()
+#            for t in threads:
+#                t.join()
+#
+#
+#
+#            for boid in self.boids:
+#                if boid.speed < boid.min_speed:
+#                    self.total_stalls += 1
+
+#        # Fly each boid in flock for one simulation step. Consists of two sequential
+#        # steps to avoid artifacts from order of boids. First a "sense/plan" phase
+#        # which computes the desired steering based on current state. Then an "act"
+#        # phase which actually moves the boids.
+#    #    def fly_flock(self, time_step):
+#        def fly_flock(self, time_step, pool):
+#    #        for boid in self.boids:
+#    #            boid.plan_next_steer(time_step)
+#    #        for boid in self.boids:
+#    #            boid.apply_next_steer(time_step)
+#
+#
+#            batch_size = 20
+#            batch_args = []
+#
+#            for i in range(0, len(self.boids), batch_size):
+#                batch_args.append([time_step, self.boids[i : i + batch_size]])
+#
+#    #            threads.append(threading.Thread(target=map_over_boids_range,
+#    #                                            args=(Boid.apply_next_steer,
+#    #                                                  time_step, i, i + batch_size)))
+#
+#
+#            def map_over_boids_slice(function, time_step, boids_slice):
+#                for boid in boids_slice:
+#                    function(boid, time_step)
+#
+#
+#
+#            self.boids = pool.map(functools.partial(Boid.plan_next_steer,
+#                                                    time_step=time_step),
+#                                  self.boids[i : i + batch_size])
+#            self.boids = pool.map(functools.partial(Boid.apply_next_steer,
+#                                                    time_step=time_step),
+#                                  self.boids[i : i + batch_size])
+#
+#
+#            for boid in self.boids:
+#                if boid.speed < boid.min_speed:
+#                    self.total_stalls += 1
+
+#        # Fly each boid in flock for one simulation step. Consists of two sequential
+#        # steps to avoid artifacts from order of boids. First a "sense/plan" phase
+#        # which computes the desired steering based on current state. Then an "act"
+#        # phase which actually moves the boids.
+#    #    def fly_flock(self, time_step):
+#        def fly_flock(self, time_step, pool):
+#    #        for boid in self.boids:
+#    #            boid.plan_next_steer(time_step)
+#    #        for boid in self.boids:
+#    #            boid.apply_next_steer(time_step)
+#
+#
+#    #        batch_size = 20
+#    #        batch_args = []
+#    #
+#    #        for i in range(0, len(self.boids), batch_size):
+#    #            batch_args.append([time_step, self.boids[i : i + batch_size]])
+#    #
+#    #
+#    #
+#    #        def map_over_boids_slice(function, time_step, boids_slice):
+#    #            for boid in boids_slice:
+#    #                function(boid, time_step)
+#
+#
+#
+#
+#    #        self.boids = pool.map(functools.partial(Boid.plan_next_steer,
+#    #                                                time_step=time_step),
+#    #                              self.boids)
+#    #        self.boids = pool.map(functools.partial(Boid.apply_next_steer,
+#    #                                                time_step=time_step),
+#    #                              self.boids)
+#
+#
+#    #        def plan_next(boid):
+#    #            boid.plan_next_steer(boid, time_step)
+#    #            return boid
+#    #
+#    #        def apply_next(boid):
+#    #            boid.apply_next_steer(boid, time_step)
+#    #            return boid
+#
+#    #        self.boids = pool.map(plan_next, self.boids)
+#    #        self.boids = pool.map(apply_next, self.boids)
+#
+#
+#            interleave_boid_and_time_step = []
+#            for boid in self.boids:
+#    #            interleave_boid_and_time_step.append(boid)
+#    #            interleave_boid_and_time_step.append(time_step)
+#                interleave_boid_and_time_step.append([boid,time_step])
+#
+#            interleave_boid_and_time_step = pool.map(plan_next, interleave_boid_and_time_step)
+#            interleave_boid_and_time_step = pool.map(apply_next, interleave_boid_and_time_step)
+#
+#            self.boids = []
+#            for pair in interleave_boid_and_time_step:
+#                self.boids.append(pair[0])
+#
+#
+#            for boid in self.boids:
+#                if boid.speed < boid.min_speed:
+#                    self.total_stalls += 1
+
+
+#        # Fly each boid in flock for one simulation step. Consists of two sequential
+#        # steps to avoid artifacts from order of boids. First a "sense/plan" phase
+#        # which computes the desired steering based on current state. Then an "act"
+#        # phase which actually moves the boids.
+#    #    def fly_flock(self, time_step):
+#        def fly_flock(self, time_step, pool):
+#    #        for boid in self.boids:
+#    #            boid.plan_next_steer(time_step)
+#    #        for boid in self.boids:
+#    #            boid.apply_next_steer(time_step)
+#
+#
+#
+#
+#    #            interleave_boid_and_time_step = []
+#    #            for boid in self.boids:
+#    #    #            interleave_boid_and_time_step.append(boid)
+#    #    #            interleave_boid_and_time_step.append(time_step)
+#    #                interleave_boid_and_time_step.append([boid,time_step])
+#    #
+#    #            interleave_boid_and_time_step = pool.map(plan_next, interleave_boid_and_time_step)
+#    #            interleave_boid_and_time_step = pool.map(apply_next, interleave_boid_and_time_step)
+#    #
+#    #            self.boids = []
+#    #            for pair in interleave_boid_and_time_step:
+#    #                self.boids.append(pair[0])
+#
+#
+#            for boid in self.boids:
+#                boid.temp_time_step = time_step
+#
+#
+#
+#            self.boids = pool.map(plan_next, self.boids)
+#            self.boids = pool.map(apply_next, self.boids)
+#
+#    #        self.boids = []
+#    #        for pair in interleave_boid_and_time_step:
+#    #            self.boids.append(pair[0])
+#
+#
+#            for boid in self.boids:
+#                if boid.speed < boid.min_speed:
+#                    self.total_stalls += 1
+
 
     # Fly each boid in flock for one simulation step. Consists of two sequential
     # steps to avoid artifacts from order of boids. First a "sense/plan" phase
     # which computes the desired steering based on current state. Then an "act"
     # phase which actually moves the boids.
-    def fly_flock(self, time_step):
+#    def fly_flock(self, time_step):
+    def fly_flock(self, time_step, pool):
         for boid in self.boids:
             boid.plan_next_steer(time_step)
-
-        ########################################################################
-        # TODO 20231106 flies through PlaneObstacle
-        # Very temporary code for debugging multiple obstacle avoidance.
-        # Counting avoidance violations should happen inside the obstacle class.
-        
-        # Should be reverted back to just:
         for boid in self.boids:
             boid.apply_next_steer(time_step)
 
-#        def diff_sign(a, b):
-#            return (a > 0 and b < 0) or (a < 0 and b > 0)
 #        for boid in self.boids:
-#            before = boid.position
-#            boid.apply_next_steer(time_step)
-#            if diff_sign(before.y, boid.position.y):
-#                self.plane_obstacle_fail += 1
-#                ho = boid.position - before
-#                ho.y = 0
-#                print(Draw.frame_counter,
-#                      ' Boid cross PlaneObstacle:', self.plane_obstacle_fail,
-#                      ', boid.position.length(): ', boid.position.length())
-        ########################################################################
+#            boid.temp_time_step = time_step
+#        self.boids = pool.map(plan_next, self.boids)
+#        self.boids = pool.map(apply_next, self.boids)
+#        for boid in self.boids:
+#            if boid.speed < boid.min_speed:
+#                self.total_stalls += 1
 
-        for boid in self.boids:
-            if boid.speed < boid.min_speed:
-                self.total_stalls += 1
+# QQQ
+    ############################################################################
 
     # When a Boid gets more than "radius" from the origin, teleport it to the
     # other side of the world, just inside of its antipodal point.
@@ -457,5 +723,17 @@ if __name__ == "__main__":
 #    Flock(max_simulation_steps=200, fixed_time_step=True, fixed_fps=30).run()
 #    Flock(max_simulation_steps=200, fixed_time_step=True, seed=438538457).run()
 
+    ############################################################################
+    # TODO 20240104 using parallel threads/processes for simulation step
+
+#    test_pool()
+#    quit()
+    
+    ############################################################################
+
 #    Draw.enable = False
     Flock().run()
+#    Flock(boid_count=20).run()
+
+#    for i in range(0, 200, 20):
+#        print(i)

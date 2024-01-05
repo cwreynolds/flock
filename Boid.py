@@ -66,6 +66,11 @@ class Boid(Agent):
         self.angle_separate = -0.707  # 135°
         self.angle_align    =  0.940  # 20°
         self.angle_cohere   = -0.707  # 135°
+        
+        ########################################################################
+        # TODO 20240104 using parallel threads/processes for simulation step
+        self.temp_time_step = 0
+        ########################################################################
 
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
