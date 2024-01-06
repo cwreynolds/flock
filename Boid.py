@@ -257,13 +257,53 @@ class Boid(Agent):
 
     ############################################################################
 
+
+    ############################################################################
+    # TODO 20240105 Flock.multiprocessing flag, neighbor's cache
+
     # Returns a list of the N Boids nearest this one.
     # (n=3 increased frame rate from ~30 to ~50 fps. No other obvious changes.)
     def nearest_neighbors(self, time_step, n=7):
+#    def nearest_neighbors(self, time_step, n=2):
+#    def nearest_neighbors(self, time_step, n=1):
         self.time_since_last_neighbor_refresh += time_step
         if self.time_since_last_neighbor_refresh > self.neighbor_refresh_rate:
             self.recompute_nearest_neighbors(n)
         return self.cached_nearest_neighbors
+
+
+#    # Returns a list of the N Boids nearest this one.
+#    # (n=3 increased frame rate from ~30 to ~50 fps. No other obvious changes.)
+#    def nearest_neighbors(self, time_step, n=7):
+#    
+#        ###################### TODO VERY TEMPORARY test ######################
+#
+#        self.time_since_last_neighbor_refresh += time_step
+#        self.recompute_nearest_neighbors(n)
+#        nn = self.cached_nearest_neighbors
+#        self.cached_nearest_neighbors = [] # clear it to avoid picking
+#        return nn
+
+
+#    # Returns a list of the N Boids nearest this one.
+#    # (n=3 increased frame rate from ~30 to ~50 fps. No other obvious changes.)
+#    def nearest_neighbors(self, time_step, n=7):
+#    
+#        
+#        self.time_since_last_neighbor_refresh += time_step
+#        
+#        if self.flock.multiprocessing:
+#        
+#            self.recompute_nearest_neighbors(n)
+#        
+#        else:
+#        
+#            if self.time_since_last_neighbor_refresh > self.neighbor_refresh_rate:
+#                self.recompute_nearest_neighbors(n)
+#
+#        return self.cached_nearest_neighbors
+
+    ############################################################################
 
     # Recomputes a list of the N Boids nearest this one.
     def recompute_nearest_neighbors(self, n=7):
