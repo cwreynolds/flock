@@ -155,7 +155,8 @@ class Flock:
             boid = Boid(self)
             boid.sphere_radius = radius
             boid.sphere_center = center
-            boid.ls.randomize_orientation()
+#            boid.ls.randomize_orientation()
+            boid.ls = boid.ls.randomize_orientation()
             boid.ls.p = (center + (radius * 0.95 *
                                    Vec3.random_point_in_unit_radius_sphere()))
             self.boids.append(boid)
@@ -791,6 +792,12 @@ if __name__ == "__main__":
 #    #    Flock().run()
 #        Flock(multiprocessing=True).run()
 
-    Flock().run()
+#    Flock().run()
 
     ############################################################################
+
+#    util.executions_per_second(Vec3.unit_test)
+
+    ############################################################################
+
+    Flock().run()

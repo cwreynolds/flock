@@ -8,6 +8,7 @@
 #
 #------------------------------------------------------------------------------
 
+import time
 import math
 import numpy as np
 
@@ -52,10 +53,8 @@ def within_epsilon(a, b, e=epsilon):
     return abs(a - b) <= e
 
 # Taken from https://en.wikipedia.org/wiki/Logistic_function
-#def logistic(x, k, L, x0):
-#    return L / (1 + math.exp(-k * (x - x0)))
-# TODO 20230910 TEMP FOR DEBUGGING
 def logistic(x, k, L, x0):
+    # Gets "OverflowError: math range error" for large negative values (eg -1000)
     x = max(x, -50)
     return L / (1 + math.exp(-k * (x - x0)))
 
@@ -71,7 +70,10 @@ def unit_sigmoid_on_01(x):
 # (20230910 borrowed from PredatorEye's DiskFind.py)
 # TODO -- note similar API in numpy
 def remap_interval(x, in0, in1, out0, out1):
-    return interpolate((x - in0) / (in1 - in0), out0, out1)
+    # Remap if input range is nonzero, otherwise blend them evenly.
+    input_range = in1 - in0
+    blend = 0.5 if input_range == 0 else ((x - in0) / input_range)
+    return interpolate(blend, out0, out1)
 
 # Like remapInterval but the result is clipped to remain between out0 and out1
 # (20220108 borrowed from TexSyn's c++ Utilities package)
@@ -116,6 +118,21 @@ class Blender:
                       else interpolate(smoothness, new_value, self.value))
         return self.value
 
+# Measure the execution time of a given "work load" function (of no arguments)
+# and an optional suggested repetition count.
+def executions_per_second(work_load, count=2000):
+    start = time.perf_counter()
+    for i in range(count):
+        work_load()
+    elapsed_seconds = time.perf_counter() - start
+    
+    executions_per_second = count / elapsed_seconds
+    seconds_per_execution = 1 / executions_per_second
+    print('seconds_per_execution =', seconds_per_execution)
+    print('executions_per_second =', executions_per_second)
+    return executions_per_second
+
+
 @staticmethod
 def unit_test():
     assert clip01(1.5) == 1
@@ -134,6 +151,20 @@ def unit_test():
     assert within_epsilon(-1.1, -1.2, 0.2)
     assert not within_epsilon(1.1, 1.2, 0.01)
     assert rehash32bits(2653567485) == 1574776808
+        
+    assert unit_sigmoid_on_01(0.5) == 0.5
+    assert within_epsilon(unit_sigmoid_on_01(-1000), 0)
+    assert within_epsilon(unit_sigmoid_on_01(+1000), 1)
+
+    assert remap_interval(1.5, 1, 2, 20, 30) == 25
+    assert remap_interval(1.5, 2, 1, 30, 20) == 25
+    assert remap_interval(2, 1, 4, 10, 40) == 20
+    assert remap_interval_clip(5, 1, 4, 10, 40) == 40
+    assert remap_interval(1.5, 1, 2, 30, 20) == 25
+    assert remap_interval(2, 1, 3, 30, 10) == 20
+    assert remap_interval_clip(5, 1, 4, 40, 10) == 10
+    assert not math.isnan(remap_interval(1, 1, 1, 2, 3))
+    assert not math.isnan(remap_interval_clip(1, 1, 1, 2, 3))
 
     p = Pairings()
     p.add_pair(1.23, 'a')

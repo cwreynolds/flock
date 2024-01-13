@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# LocalSpace.h -- new flock experiments
+# LocalSpace.py -- new flock experiments
 #
 # Local space (transformation) for a boid/agent.
 #
@@ -40,23 +40,24 @@ class LocalSpace:
         # Position of local center:
         self.p = p
 
-    # 20230409 TODO this assumes unit length, orthonormal bases.
-    #               Should either generalize (why?) or put in an assert.
+    # Transforms a global space position into the local space of this object.
     def localize(self, global_vector):
         v = global_vector - self.p
         return Vec3(v.dot(self.i),  v.dot(self.j), v.dot(self.k))
 
+    # Transforms a local space position to the global space.
     def globalize(self, local_vector):
         v = local_vector
         return ((v.x * self.i) + (v.y * self.j) + (v.z * self.k) + self.p)
 
+    # Checks that basis vectors are unit length and mutually perpendicular.
     def is_orthonormal(self):
-        return (util.within_epsilon(self.i.length_squared(), 1) and
-                util.within_epsilon(self.j.length_squared(), 1) and
-                util.within_epsilon(self.k.length_squared(), 1) and
-                util.within_epsilon(self.i.dot(self.j), 0) and
-                util.within_epsilon(self.j.dot(self.k), 0) and
-                util.within_epsilon(self.k.dot(self.i), 0))
+        return (self.i.is_unit_length() and
+                self.j.is_unit_length() and
+                self.k.is_unit_length() and
+                self.i.is_perpendicular(self.j) and
+                self.j.is_perpendicular(self.k) and
+                self.k.is_perpendicular(self.i))
 
     # TODO 20230405 speculative API, maybe for PinholeCameraParameters?
     def asarray(self):
@@ -72,13 +73,13 @@ class LocalSpace:
                 ", k=" + str(self.k) +
                 ", p=" + str(self.p) + "]")
 
-    # Set to random orientation. Almost certainly the wrong way to do this.
+    # Return copy with random orientation, position is preserved.
     def randomize_orientation(self):
-        self.i = Vec3.random_unit_vector()
-        self.j = Vec3.random_unit_vector()
-        self.k = self.i.cross(self.j).normalize()
-        self.j = self.k.cross(self.i).normalize()
-        return self
+        ii = Vec3.random_unit_vector()
+        jj = Vec3.random_unit_vector()
+        kk = ii.cross(jj).normalize()
+        jj = kk.cross(ii).normalize()
+        return LocalSpace(ii, jj, kk, self.p)
 
     @staticmethod
     def unit_test():

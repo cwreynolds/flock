@@ -141,8 +141,7 @@ class Vec3:
         return Vec3.axis_angle(Vec3.cross(from_vec, to_vec),
                                Vec3.angle_between(from_vec, to_vec))
 
-
-    # Check if two vectors are perpendicular. (What about zero length?)
+    # Check if two vectors are perpendicular.
     def is_perpendicular(self, other):
         # TODO 20230430 Should it check for unit length, or normalize? For now,
         # assert that given vectors are unit length to see if it ever comes up.
@@ -157,20 +156,15 @@ class Vec3:
         assert self.is_unit_length()
         assert other.is_unit_length()
         return util.within_epsilon(abs(self.dot(other)), 1)
-    
-    # Given a (unit) vector, return some vector that is purpendicular.
+
+    # Given a (unit) vector, return some vector that is perpendicular.
     # (There are infinitely many such vectors, one is chosen arbitrarily.)
     def find_perpendicular(self):
-        perpendicular = None
-        reference = Vec3(1, 0, 0) # Any vector NOT parallet to "self"
-        # If "self" is parallel to initial "reference":
-        if self.is_parallel(reference):
-            # Return fixed perpendicular to initial "reference".
-            perpendicular = Vec3(0, 1, 0)
-        else:
-            # return cross product with non-parallel "reference".
-            perpendicular = self.cross(reference).normalize()
-        return perpendicular
+        reference = Vec3(1, 0, 0) # Any vector NOT parallel to "self"
+        # If parallel to initial "reference" return constant perpendicular.
+        # Otherwise return cross produce, defined to be perpendicular to self
+        return (Vec3(0, 1, 0) if self.is_parallel(reference)
+                else self.cross(reference).normalize())
 
     # Check if two vectors are within epsilon of being equal.
     def is_equal_within_epsilon(self, other):
