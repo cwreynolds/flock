@@ -64,9 +64,18 @@ class Flock:
 #                 sphere_diameter = 60,
 #                 boid_count = 150,
 #                 sphere_diameter = 100,
-                 boid_count = 200,
-                 sphere_diameter = 60,
+#                 boid_count = 200,
+#                 sphere_diameter = 60,
                  ###############################################################
+                 
+                 
+                 ###############################################################
+                 # TODO 20240115 tuning
+                 boid_count = 200,
+                 sphere_diameter = 100,
+                 ###############################################################
+                 
+
                  sphere_center = Vec3(),
                  max_simulation_steps = math.inf,
                  fixed_time_step = False,
@@ -92,7 +101,13 @@ class Flock:
         self.tracking_camera = False
         self.wrap_vs_avoid = False
         self.avoid_blend_mode = True   # obstacle avoid: blend vs hard switch
-        self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
+        ########################################################################
+        # TODO 20240115 tuning
+#        self.min_time_to_collide = 1.2 # react to predicted impact (seconds)
+#        self.min_time_to_collide = 1.5 # react to predicted impact (seconds)
+#        self.min_time_to_collide = 0.5 # react to predicted impact (seconds)
+        self.min_time_to_collide = 0.3 # react to predicted impact (seconds)
+        ########################################################################
         self.fps = util.Blender()
         # Flock's current list of obstacles.
         self.obstacles = []

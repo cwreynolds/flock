@@ -97,21 +97,52 @@ class Boid(Agent):
 #        self.max_dist_align    = 100  # TODO 20231017 should this be ∞ or
 #        self.max_dist_cohere   = 100  # should the behavior just ignore it?
         
-        # self.weight_forward  = 0.20
-        # self.weight_separate = 1.00
-        # self.weight_align    = 0.30
-        # self.weight_cohere   = 0.60
-        # self.weight_avoid    = 0.80
-        self.weight_forward  = 10.0
-        self.weight_separate = 30.0
-        self.weight_align    = 10.0
-        self.weight_cohere   = 12.0
-        self.weight_avoid    = 50.0
-        self.max_dist_separate = 3
-        self.max_dist_align    = 3
-        self.max_dist_cohere   = 3  # TODO 20231017 should this be ∞ or
-                                    # should the behavior just ignore it?
-        
+#        # self.weight_forward  = 0.20
+#        # self.weight_separate = 1.00
+#        # self.weight_align    = 0.30
+#        # self.weight_cohere   = 0.60
+#        # self.weight_avoid    = 0.80
+#        self.weight_forward  = 10.0
+#        self.weight_separate = 30.0
+#        self.weight_align    = 10.0
+#        self.weight_cohere   = 12.0
+#        self.weight_avoid    = 50.0
+#        self.max_dist_separate = 3
+#        self.max_dist_align    = 3
+#        self.max_dist_cohere   = 3  # TODO 20231017 should this be ∞ or
+#                                    # should the behavior just ignore it?
+
+
+#        self.weight_forward  = 10.0
+#        self.weight_forward  = 2
+        self.weight_forward  = 5
+#        self.weight_separate = 30.0
+#        self.weight_separate = 8
+#        self.weight_separate = 10
+        self.weight_separate = 12
+#        self.weight_align    = 10.0
+#        self.weight_align    = 8
+#        self.weight_align    = 10
+#        self.weight_align    = 12
+        self.weight_align    = 8
+#        self.weight_cohere   = 12.0
+#        self.weight_cohere   = 5
+        self.weight_cohere   = 10
+#        self.weight_avoid    = 50.0
+#        self.weight_avoid    = 10
+#        self.weight_avoid    = 12
+#        self.weight_avoid    = 16
+        self.weight_avoid    = 20
+
+#        self.max_dist_separate = 3
+#        self.max_dist_align    = 3
+#        self.max_dist_cohere   = 3  # TODO 20231017 should this be ∞ or
+#                                    # should the behavior just ignore it?
+        self.max_dist_separate = 10 * self.body_radius
+        self.max_dist_align    = 100
+        self.max_dist_cohere   = 100  # TODO 20231017 should this be ∞ or
+                                      # should the behavior just ignore it?
+
         
         self.exponent_separate = 1  # TODO 20231019 are these useful? Or should
         self.exponent_align    = 1  # it just assume 1/dist is used to weight
@@ -477,8 +508,16 @@ class Boid(Agent):
                 ################################################################
                 # TODO 20240114 Matthew's version
                 #               he set this to "... < 1" -- why?
-                (self.flock.selected_boid().position - self.position).length() < 3)
+#                (self.flock.selected_boid().position - self.position).length() < 3)
                 ################################################################
+                
+                ################################################################
+                # TODO 20240115 tuning
+#                (self.flock.selected_boid().position - self.position).length() < 3)
+                ((self == self.flock.selected_boid()) or
+                 (self.flock.selected_boid().is_neighbor(self))))
+                ################################################################
+
 
     # Draw optional annotation of this Boid's current steering forces
     def annotation(self, separation, alignment, cohesion, avoidance, combined):
@@ -492,6 +531,33 @@ class Boid(Agent):
                 relative_force_annotation(cohesion,   Vec3(0, 0, 1))
                 relative_force_annotation(avoidance,  Vec3(1, 0, 1))
                 relative_force_annotation(combined,   Vec3(0.5, 0.5, 0.5))
+
+
+    ############################################################################
+    # TODO 20240115 tuning
+
+    # Is "other_boid" a nearest neighbor of this ("self") boid?
+#    def is_neighbor(self, other_boid):
+#        in_neighborhood = False
+#        for n in self.cached_nearest_neighbors:
+#            if n == other_boid:
+#                in_neighborhood = True
+#        return in_neighborhood
+ 
+
+#    def is_neighbor(self, other_boid):
+#        print(self.cached_nearest_neighbors.count(other_boid))
+#        return 0 < self.cached_nearest_neighbors.count(other_boid)
+
+#    def is_neighbor(self, other_boid):
+#        return 0 < self.cached_nearest_neighbors.count(other_boid)
+
+    def is_neighbor(self, other_boid):
+        return 0 < self.cached_nearest_neighbors[:2].count(other_boid)
+
+        
+    ############################################################################
+
 
     # Bird-like roll control: blends vector toward path curvature center with
     # global up. Overrides method in base class Agent
