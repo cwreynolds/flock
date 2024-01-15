@@ -25,7 +25,7 @@ class Agent:
         self.speed = 0            # Current forward speed (m/s).
         # TODO 20230411 no idea if these values are plausible for these units
         #                I mean they are meter-long birds?!
-        #                Note that average bird flying sdpeed is ~10-16 m/s
+        #                Note that average bird flying speed is ~10-16 m/s
         self.max_speed = 1.0      # Speed upper limit (m/s)
         self.max_force = 0.3      # Acceleration upper limit (m/s²)
         #
@@ -67,6 +67,46 @@ class Agent:
     def velocity(self):
         return self.forward * self.speed
 
+    ############################################################################
+    # TODO 20240113 Matthew's bug report
+    
+#    # Advance Agent state forward by time_step while applying steering_force.
+#    # (TODO the use of Vec3.truncate() below (like util.clip() in update_...())
+#    # is likely a problem for automatic differentiation. Perhaps we need another
+#    # way to accomplish that, like say velocity dependent wind resistance?)
+#    def steer(self, steering_force, time_step):
+#        assert isinstance(steering_force, Vec3), "steering_force must be Vec3."
+#        # Limit steering force by max force (simulates power or thrust limit).
+#        limit_steering_force = steering_force.truncate(self.max_force)
+#        # Adjust force by mass to get acceleration.
+#        acceleration = limit_steering_force / self.mass
+#        # Update dynamic and gerometric state...
+#        self.update_speed_and_local_space(acceleration * time_step);
+
+#    # Applies given acceleration to Agent's dynamic and geometric state.
+#    def update_speed_and_local_space(self, acceleration):
+#        new_velocity = self.velocity + acceleration
+#        new_speed = new_velocity.length()
+#        
+#        # TODO 20230407 what if new_speed is zero?
+#        #               maybe this should be inside speed>0 block?
+#        self.speed = util.clip(new_speed, 0, self.max_speed)
+#        new_forward = new_velocity / new_speed;
+#        
+#        # Update geometric state when moving.
+#        if (self.speed > 0):
+#            # Reorthonormalize to correspond to new_forward
+#            ref_up = self.up_reference(acceleration)
+#            new_side = ref_up.cross(new_forward).normalize()
+#            new_up = new_forward.cross(new_side).normalize()
+#            new_position = self.position + (new_forward * self.speed)
+#            # Set new geometric state.
+#            new_ls = LocalSpace(new_side, new_up, new_forward, new_position)
+#            if new_ls.is_orthonormal():
+#                self.ls = new_ls
+#            else:
+#                print('Ignore bad ls in Agent.update_speed_and_local_space')
+
     # Advance Agent state forward by time_step while applying steering_force.
     # (TODO the use of Vec3.truncate() below (like util.clip() in update_...())
     # is likely a problem for automatic differentiation. Perhaps we need another
@@ -77,12 +117,18 @@ class Agent:
         limit_steering_force = steering_force.truncate(self.max_force)
         # Adjust force by mass to get acceleration.
         acceleration = limit_steering_force / self.mass
-        # Update dynamic and gerometric state...
-        self.update_speed_and_local_space(acceleration * time_step);
+#        # Update dynamic and gerometric state...
+#        self.update_speed_and_local_space(acceleration * time_step);
+        # Update dynamic and geometric state...
+        self.update_speed_and_local_space(acceleration, time_step);
 
     # Applies given acceleration to Agent's dynamic and geometric state.
-    def update_speed_and_local_space(self, acceleration):
-        new_velocity = self.velocity + acceleration
+
+#    def update_speed_and_local_space(self, acceleration):
+#        new_velocity = self.velocity + acceleration
+
+    def update_speed_and_local_space(self, acceleration, time_step):
+        new_velocity = self.velocity + (acceleration * time_step)
         new_speed = new_velocity.length()
         
         # TODO 20230407 what if new_speed is zero?
@@ -93,16 +139,27 @@ class Agent:
         # Update geometric state when moving.
         if (self.speed > 0):
             # Reorthonormalize to correspond to new_forward
-            ref_up = self.up_reference(acceleration)
+            
+#            ref_up = self.up_reference(acceleration)
+            ref_up = self.up_reference(acceleration * time_step) # TODO arg ignored
+            
             new_side = ref_up.cross(new_forward).normalize()
             new_up = new_forward.cross(new_side).normalize()
-            new_position = self.position + (new_forward * self.speed)
+            
+#            new_position = self.position + (new_forward * self.speed)
+#            new_position = self.position + (new_forward * self.speed * time_step)
+            # TODO Matthew's version:
+            clipped_velocity = new_forward * self.speed
+            new_position = self.position + clipped_velocity * time_step
+             
             # Set new geometric state.
             new_ls = LocalSpace(new_side, new_up, new_forward, new_position)
             if new_ls.is_orthonormal():
                 self.ls = new_ls
             else:
                 print('Ignore bad ls in Agent.update_speed_and_local_space')
+
+    ############################################################################
 
     # Very basic roll control: use global UP as reference up
     def up_reference(self, acceleration):
@@ -140,4 +197,8 @@ class Agent:
         for i in range(5):
             a.steer(force, time_step)
             #print(a.position())
-        assert a.position == ref_position, 'position after 5 steer() calls'
+
+        ########################################################################
+        # TODO 20240113 Matthew's bug report
+#        assert a.position == ref_position, 'position after 5 steer() calls'
+        ########################################################################

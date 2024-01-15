@@ -46,7 +46,11 @@ def between(x, a, b):
     return (min(a, b) <= x) and (x <= max(a, b))
 
 # This value works on my laptop with Python 3.10
+################################################################################
+# TODO 20240114 Matthew's version
+#               he set this to "1e-13" -- the orignal below is 1e-14
 epsilon = 0.00000000000001
+################################################################################
 
 # True when a and b differ by no more than epsilon.
 def within_epsilon(a, b, e=epsilon):

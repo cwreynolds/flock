@@ -57,8 +57,16 @@ def plan_next(boid):
 
 class Flock:
     def __init__(self,
+                 ###############################################################
+                 # TODO 20240114 Matthew's version
+                 # why?
+#                 boid_count = 200,
+#                 sphere_diameter = 60,
+#                 boid_count = 150,
+#                 sphere_diameter = 100,
                  boid_count = 200,
                  sphere_diameter = 60,
+                 ###############################################################
                  sphere_center = Vec3(),
                  max_simulation_steps = math.inf,
                  fixed_time_step = False,
@@ -800,4 +808,6 @@ if __name__ == "__main__":
 
     ############################################################################
 
+    print(1e-13)
+    print(util.epsilon)
     Flock().run()
