@@ -25,43 +25,10 @@ class Boid(Agent):
     def __init__(self, flock=None):
         super().__init__()
         
-        ########################################################################
-        # TODO 20240113 Matthew's bug report
-        # "...The max speed and max force constants are bumped to 20 and 100..."
-        
-#        self.max_speed = 0.3     # Speed upper limit (m/s)
-#        self.max_force = 0.6     # Acceleration upper limit (m/s²)
-
-#        self.max_speed = 20     # Speed upper limit (m/s)
-#        self.max_force = 100    # Acceleration upper limit (m/s²)
-
-#        self.max_speed = 15     # Speed upper limit (m/s)
-#        self.max_force = 50     # Acceleration upper limit (m/s²)
-
-#        self.max_speed = 15     # Speed upper limit (m/s)
-#        self.max_force = 75     # Acceleration upper limit (m/s²)
-        
-        
-        # TODO 20240114 Matthew's version
         self.max_speed = 20.0     # Speed upper limit (m/s)
         self.max_force = 100.0     # Acceleration upper limit (m/s²)
-#        self.response = 1.0  # ???? TODO 20240114 Matthew's version -- seems to be unused
-         
-         
-#        self.min_speed = self.max_speed * 0.3  # TODO 20231225 ad hoc factor.
-#        self.min_speed = self.max_speed * 0.1  # TODO 20231225 ad hoc factor.
-#        self.min_speed = self.max_speed * 0.01  # TODO 20231225 ad hoc factor.
-#        self.min_speed = 0
         self.min_speed = self.max_speed * 0.3  # TODO 20231225 ad hoc factor.
-        
-#        self.speed = self.max_speed * 0.6
-#        self.speed = self.max_speed * 0.1
-#        self.speed = 0.1
         self.speed = self.max_speed * 0.3
-
-        ########################################################################
-
-
         self.body_radius = 0.5   # "assume a spherical boid" -- unit diameter
         self.flock = flock
         self.sphere_radius = 0
@@ -84,66 +51,18 @@ class Boid(Agent):
         self.annote_avoid_poi = Vec3()  # This might be too elaborate: two vals
         self.annote_avoid_weight = 0    # per boid just for avoid annotation.
 
-        ########################################################################
-        # TODO 20240114 Matthew's version
-
-#        # Tuning parameters
-#        self.weight_forward    = 0.15
-#        self.weight_separate   = 0.55
-#        self.weight_align      = 0.35
-#        self.weight_cohere     = 0.25
-#        self.weight_avoid      = 0.80
-#        self.max_dist_separate = 10 * self.body_radius
-#        self.max_dist_align    = 100  # TODO 20231017 should this be ∞ or
-#        self.max_dist_cohere   = 100  # should the behavior just ignore it?
-        
-#        # self.weight_forward  = 0.20
-#        # self.weight_separate = 1.00
-#        # self.weight_align    = 0.30
-#        # self.weight_cohere   = 0.60
-#        # self.weight_avoid    = 0.80
-#        self.weight_forward  = 10.0
-#        self.weight_separate = 30.0
-#        self.weight_align    = 10.0
-#        self.weight_cohere   = 12.0
-#        self.weight_avoid    = 50.0
-#        self.max_dist_separate = 3
-#        self.max_dist_align    = 3
-#        self.max_dist_cohere   = 3  # TODO 20231017 should this be ∞ or
-#                                    # should the behavior just ignore it?
-
-
-#        self.weight_forward  = 10.0
-#        self.weight_forward  = 2
-        self.weight_forward  = 5
-#        self.weight_separate = 30.0
-#        self.weight_separate = 8
-#        self.weight_separate = 10
-        self.weight_separate = 12
-#        self.weight_align    = 10.0
-#        self.weight_align    = 8
-#        self.weight_align    = 10
-#        self.weight_align    = 12
-        self.weight_align    = 8
-#        self.weight_cohere   = 12.0
-#        self.weight_cohere   = 5
-        self.weight_cohere   = 10
-#        self.weight_avoid    = 50.0
-#        self.weight_avoid    = 10
-#        self.weight_avoid    = 12
-#        self.weight_avoid    = 16
-        self.weight_avoid    = 20
-
-#        self.max_dist_separate = 3
-#        self.max_dist_align    = 3
-#        self.max_dist_cohere   = 3  # TODO 20231017 should this be ∞ or
-#                                    # should the behavior just ignore it?
-        self.max_dist_separate = 10 * self.body_radius
+        # Tuning parameters
+        self.weight_forward  = 4
+        self.weight_separate = 23
+        self.weight_align    = 10
+        self.weight_cohere   = 15
+        self.weight_cohere   = 15
+        self.weight_avoid    = 40
+        self.max_dist_separate = 15 * self.body_radius
         self.max_dist_align    = 100
         self.max_dist_cohere   = 100  # TODO 20231017 should this be ∞ or
                                       # should the behavior just ignore it?
 
-        
         self.exponent_separate = 1  # TODO 20231019 are these useful? Or should
         self.exponent_align    = 1  # it just assume 1/dist is used to weight
         self.exponent_cohere   = 1  # all neighbors in all three behaviors?
@@ -151,8 +70,6 @@ class Boid(Agent):
         self.angle_separate = -0.707  # 135°
         self.angle_align    =  0.940  # 20°
         self.angle_cohere   = -0.707  # 135°
-
-        ########################################################################
         
         ########################################################################
         # TODO 20240104 using parallel threads/processes for simulation step
@@ -176,13 +93,7 @@ class Boid(Agent):
         a = self.weight_align * self.steer_to_align(neighbors)
         c = self.weight_cohere * self.steer_to_cohere(neighbors)
         o = self.weight_avoid * self.steer_to_avoid(time_step)
-        ########################################################################
-        # TODO 20240114 Matthew's version
-#        combined_steering = self.smoothed_steering(f + s + a + c + o)
-#        combined_steering = self.response * self.smoothed_steering(f + s + a + c + o)
-        # TODO change back:
         combined_steering = self.smoothed_steering(f + s + a + c + o)
-        ########################################################################
         combined_steering = self.anti_stall_adjustment(combined_steering)
         self.annotation(s, a, c, o, combined_steering)
         return combined_steering
@@ -229,29 +140,22 @@ class Boid(Agent):
 
             neighbor_center += neighbor.position * weight
             total_weight += weight
-        ########################################################################
-        # TODO 20240114 Matthew's version
-        
-#        neighbor_center /= total_weight
         if total_weight > 0:
              neighbor_center /= total_weight
-             
         direction = neighbor_center - self.position
-        
-#        return direction.normalize()
         return direction.normalize_or_0()
-        ########################################################################
 
-    # Steering force to avoid obstacles. Adds "predictive" avoidance (I will
-    # collide with an obstacle within Flock.min_time_to_collide seconds) with
-    # "static" avoidance (I should move away from this obstacle, for everted
+    # Steering force to avoid obstacles. Takes the max of "predictive" avoidance
+    #  (I will collide with obstacle within Flock.min_time_to_collide seconds)
+    # and "static" avoidance (I should fly away from this obstacle, for everted
     # containment obstacles).
     def steer_to_avoid(self, time_step):
         avoid = Vec3()
         self.avoid_obstacle_annotation(0, 0, 0)
         if not self.flock.wrap_vs_avoid:
-            avoid = (self.fly_away_from_obstacles() +
-                     self.steer_for_predictive_avoidance(time_step))
+            predict_avoid = self.steer_for_predictive_avoidance(time_step)
+            static_avoid = self.fly_away_from_obstacles()
+            avoid = Vec3.max(static_avoid, predict_avoid)
         self.avoid_obstacle_annotation(3, 0, 0)
         return avoid
 
@@ -259,24 +163,14 @@ class Boid(Agent):
     def steer_for_predictive_avoidance(self, time_step):
         weight = 0
         avoidance = Vec3()
-        if time_step > 0 and (collisions := self.predict_future_collisions(time_step)):
+        collisions = self.predict_future_collisions()
+        if time_step > 0 and collisions:
             first_collision = collisions[0]
             poi = first_collision.point_of_impact
             normal = first_collision.normal_at_poi
-            ####################################################################
-            # TODO 20240114 Matthew's version
-            
-            
-#            # TODO 20240114 seems oddly ad hoc for him, think about this more
-#            pure_steering = normal.perpendicular_component(self.forward).normalize()
-#            avoidance = (pure_steering + normal * 2.0).normalize()
-            
-            # TODO changed back:
             pure_steering = self.pure_lateral_steering(normal)
             avoidance = pure_steering.normalize()
-
-            ####################################################################
-            min_dist = self.speed * self.flock.min_time_to_collide / time_step
+            min_dist = self.speed * self.flock.min_time_to_collide
             # Near enough to require avoidance steering?
             near = min_dist > first_collision.dist_to_collision
             if self.flock.avoid_blend_mode:
@@ -288,28 +182,6 @@ class Boid(Agent):
                 weight = 1 if near else 0
             self.avoid_obstacle_annotation(1, poi, weight)
         return avoidance * weight
-    
-    ############################################################################
-    # TODO 20240114 Matthew's version
-    #
-    # note that he removed
-    #
-    #    if weight < 0.1:
-    #        avoidance = self.prototype_fly_away_from_obstacle()
-    #        weight = 1
-    #
-    # which has since been refactored out. Similarly this:
-    #
-    #    if dist_from_wall < r * 0.95:  # outer 95% of sphere
-    #         normal = offset_to_sphere_center / distance_to_sphere_center
-    #         if normal.dot(self.forward) < 0.9:
-    #             weight = (distance_to_sphere_center / r) ** 3
-    #             avoidance = normal * weight
-    #
-    #             if self.should_annotate():
-    #                 Draw.add_line_segment(p, p + avoidance, Vec3(1, 1, 0))
-    ############################################################################
-
 
     # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
     # Non-predictive "repulsion" from "large" obstacles like walls.
@@ -318,7 +190,7 @@ class Boid(Agent):
         avoidance = Vec3()
         p = self.position
         f = self.forward
-        max_distance = self.body_radius * 10  # six body diameters
+        max_distance = self.body_radius * 20 # TODO tuning parameter?
         for obstacle in self.flock.obstacles:
             oa = obstacle.fly_away(p, f, max_distance)
             weight = oa.length()
@@ -468,17 +340,7 @@ class Boid(Agent):
     # determined "raw" steering into a per-boid accumulator, then returns that
     # smoothed value to use for actually steering the boid this simulation step.
     def smoothed_steering(self, steer):
-        ########################################################################
-        # TODO 20240113 Matthew's bug report
-#        return self.steer_memory.blend(steer, 0.6) # Ad hoc smoothness param.
-#        return self.steer_memory.blend(steer, 0.2) # Ad hoc smoothness param.
-#        return self.steer_memory.blend(steer, 0) # Ad hoc smoothness param.
-        
-        # TODO 20240114 Matthew's version
-        #               (seems high to me)
-        return self.steer_memory.blend(steer, 0.9) # Ad hoc smoothness param.
-
-        ########################################################################
+        return self.steer_memory.blend(steer, 0.1) # Ad hoc smoothness param.
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self, color=None):
@@ -505,26 +367,16 @@ class Boid(Agent):
         return (Draw.enable and
                 self.flock.enable_annotation and
                 self.flock.tracking_camera and
-                ################################################################
-                # TODO 20240114 Matthew's version
-                #               he set this to "... < 1" -- why?
-#                (self.flock.selected_boid().position - self.position).length() < 3)
-                ################################################################
-                
-                ################################################################
-                # TODO 20240115 tuning
-#                (self.flock.selected_boid().position - self.position).length() < 3)
                 ((self == self.flock.selected_boid()) or
                  (self.flock.selected_boid().is_neighbor(self))))
-                ################################################################
-
 
     # Draw optional annotation of this Boid's current steering forces
     def annotation(self, separation, alignment, cohesion, avoidance, combined):
         if Draw.enable:
+            scale = 0.05
             center = self.position
             def relative_force_annotation(offset, color):
-                Draw.add_line_segment(center, center + offset, color)
+                Draw.add_line_segment(center, center + offset * scale, color)
             if self.should_annotate():
                 relative_force_annotation(separation, Vec3(1, 0, 0))
                 relative_force_annotation(alignment,  Vec3(0, 1, 0))
@@ -532,32 +384,8 @@ class Boid(Agent):
                 relative_force_annotation(avoidance,  Vec3(1, 0, 1))
                 relative_force_annotation(combined,   Vec3(0.5, 0.5, 0.5))
 
-
-    ############################################################################
-    # TODO 20240115 tuning
-
-    # Is "other_boid" a nearest neighbor of this ("self") boid?
-#    def is_neighbor(self, other_boid):
-#        in_neighborhood = False
-#        for n in self.cached_nearest_neighbors:
-#            if n == other_boid:
-#                in_neighborhood = True
-#        return in_neighborhood
- 
-
-#    def is_neighbor(self, other_boid):
-#        print(self.cached_nearest_neighbors.count(other_boid))
-#        return 0 < self.cached_nearest_neighbors.count(other_boid)
-
-#    def is_neighbor(self, other_boid):
-#        return 0 < self.cached_nearest_neighbors.count(other_boid)
-
     def is_neighbor(self, other_boid):
-        return 0 < self.cached_nearest_neighbors[:2].count(other_boid)
-
-        
-    ############################################################################
-
+        return other_boid in self.flock.selected_boid().cached_nearest_neighbors
 
     # Bird-like roll control: blends vector toward path curvature center with
     # global up. Overrides method in base class Agent
@@ -568,13 +396,13 @@ class Boid(Agent):
         return self.up_memory.value
 
     # Returns a list of future collisions sorted by time, with soonest first.
-    def predict_future_collisions(self, time_step):
+    def predict_future_collisions(self):
         collisions = []
         for obstacle in self.flock.obstacles:
             point_of_impact = obstacle.ray_intersection(self.position, self.forward)
             if point_of_impact:
                 dist_to_collision = (point_of_impact - self.position).length()
-                time_to_collision = dist_to_collision / (self.speed / time_step)
+                time_to_collision = dist_to_collision / self.speed
                 normal_at_poi = obstacle.normal_at_poi(point_of_impact, self.position)
                 collisions.append(Collision(obstacle,
                                             time_to_collision,
