@@ -28,7 +28,8 @@ class Boid(Agent):
         self.max_speed = 20.0     # Speed upper limit (m/s)
         self.max_force = 100.0     # Acceleration upper limit (m/s²)
         self.min_speed = self.max_speed * 0.3  # TODO 20231225 ad hoc factor.
-        self.speed = self.max_speed * 0.3
+#        self.speed = self.max_speed * 0.3
+        self.speed = self.min_speed
         self.body_radius = 0.5   # "assume a spherical boid" -- unit diameter
         self.flock = flock
         self.sphere_radius = 0
@@ -54,8 +55,7 @@ class Boid(Agent):
         # Tuning parameters
         self.weight_forward  = 4
         self.weight_separate = 23
-        self.weight_align    = 10
-        self.weight_cohere   = 15
+        self.weight_align    = 12
         self.weight_cohere   = 15
         self.weight_avoid    = 40
         self.max_dist_separate = 15 * self.body_radius
@@ -70,11 +70,6 @@ class Boid(Agent):
         self.angle_separate = -0.707  # 135°
         self.angle_align    =  0.940  # 20°
         self.angle_cohere   = -0.707  # 135°
-        
-        ########################################################################
-        # TODO 20240104 using parallel threads/processes for simulation step
-        self.temp_time_step = 0
-        ########################################################################
 
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
@@ -265,52 +260,13 @@ class Boid(Agent):
     ############################################################################
 
 
-    ############################################################################
-    # TODO 20240105 Flock.multiprocessing flag, neighbor's cache
-
     # Returns a list of the N Boids nearest this one.
     # (n=3 increased frame rate from ~30 to ~50 fps. No other obvious changes.)
     def nearest_neighbors(self, time_step, n=7):
-#    def nearest_neighbors(self, time_step, n=2):
-#    def nearest_neighbors(self, time_step, n=1):
         self.time_since_last_neighbor_refresh += time_step
         if self.time_since_last_neighbor_refresh > self.neighbor_refresh_rate:
             self.recompute_nearest_neighbors(n)
         return self.cached_nearest_neighbors
-
-
-#    # Returns a list of the N Boids nearest this one.
-#    # (n=3 increased frame rate from ~30 to ~50 fps. No other obvious changes.)
-#    def nearest_neighbors(self, time_step, n=7):
-#    
-#        ###################### TODO VERY TEMPORARY test ######################
-#
-#        self.time_since_last_neighbor_refresh += time_step
-#        self.recompute_nearest_neighbors(n)
-#        nn = self.cached_nearest_neighbors
-#        self.cached_nearest_neighbors = [] # clear it to avoid picking
-#        return nn
-
-
-#    # Returns a list of the N Boids nearest this one.
-#    # (n=3 increased frame rate from ~30 to ~50 fps. No other obvious changes.)
-#    def nearest_neighbors(self, time_step, n=7):
-#    
-#        
-#        self.time_since_last_neighbor_refresh += time_step
-#        
-#        if self.flock.multiprocessing:
-#        
-#            self.recompute_nearest_neighbors(n)
-#        
-#        else:
-#        
-#            if self.time_since_last_neighbor_refresh > self.neighbor_refresh_rate:
-#                self.recompute_nearest_neighbors(n)
-#
-#        return self.cached_nearest_neighbors
-
-    ############################################################################
 
     # Recomputes a list of the N Boids nearest this one.
     def recompute_nearest_neighbors(self, n=7):
