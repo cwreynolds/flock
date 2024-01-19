@@ -99,10 +99,11 @@ class LocalSpace:
         assert LocalSpace().is_orthonormal(), 'initial value is orthonormal'
         assert ls.is_orthonormal(), 'handmade ls is orthonormal'
         assert r.is_orthonormal(), 'randomized ls is still orthonormal'
-        assert a.is_equal_within_epsilon(r.globalize(r.localize(a)))
-        assert a.is_equal_within_epsilon(r.localize(r.globalize(a)))
-        assert b.is_equal_within_epsilon(r.globalize(r.localize(b)))
-        assert b.is_equal_within_epsilon(r.localize(r.globalize(b)))
+        e = util.epsilon * 10
+        assert a.is_equal_within_epsilon(r.globalize(r.localize(a)), e)
+        assert a.is_equal_within_epsilon(r.localize(r.globalize(a)), e)
+        assert b.is_equal_within_epsilon(r.globalize(r.localize(b)), e)
+        assert b.is_equal_within_epsilon(r.localize(r.globalize(b)), e)
         
         # Just to verify that copy.copy() works for LocalSpace, as expected.
         a = LocalSpace()

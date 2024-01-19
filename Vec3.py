@@ -167,11 +167,10 @@ class Vec3:
                 else self.cross(reference).normalize())
 
     # Check if two vectors are within epsilon of being equal.
-    def is_equal_within_epsilon(self, other):
-        bigger_epsilon = util.epsilon * 10  # Got occasional fail with default.
-        return (util.within_epsilon(self.x, other.x, bigger_epsilon) and
-                util.within_epsilon(self.y, other.y, bigger_epsilon) and
-                util.within_epsilon(self.z, other.z, bigger_epsilon))
+    def is_equal_within_epsilon(self, other, epsilon = util.epsilon):
+        return (util.within_epsilon(self.x, other.x, epsilon) and
+                util.within_epsilon(self.y, other.y, epsilon) and
+                util.within_epsilon(self.z, other.z, epsilon))
 
     # Rotate X and Y values about the Z axis by given angle.
     # This is used in combination with a LocalSpace transform to get model in
