@@ -152,21 +152,16 @@ class Agent:
             #print(agent1.position)
         assert agent1.position == ref_position, 'position after 5 steer() calls'
 
-        # TODO 20230119 I do not trust the test below. It gets a significantly
-        #               different result than on the c++ side
-        
-#        # Slightly more complicated "historical repeatability" test. Steering
-#        # force is expressed in Agent's local space then transformed into
-#        # global space.
-#        agent2 = Agent()
-#        local_force = Vec3(0.1, 0.5, 1)
-#        for i in range(5):
-#            agent2.steer(force, time_step)
-#            global_force = agent2.ls.globalize(local_force)
-#            agent2.steer(global_force, time_step)
-#            # print(agent2.position)
-#        ref_position2 = Vec3(0.000157790528647075, # recorded 20240117
-#                             0.000921239641353907,
-#                             0.00071099761041107)
-#        print('(agent2.position - ref_position2).length() =', (agent2.position - ref_position2).length())
-#        assert Vec3.is_equal_within_epsilon(agent2.position, ref_position2, e)
+        # Slightly more complicated "historical repeatability" test. Steering
+        # force is expressed in Agent's local space then transformed into
+        # global space.
+        agent2 = Agent()
+        agent2.max_speed = 1000  # Disable speed ceiling for this sub-test.
+        local_force = Vec3(0.1, 0.5, 1)
+        for i in range(n):
+            global_force = agent2.ls.globalize(local_force)
+            agent2.steer(global_force, 1);
+        ref_position2 = Vec3(194.704195501038, # recorded 20240119 on c++ side.
+                             1079.7517268385,
+                             1041.8997370084)
+        assert Vec3.is_equal_within_epsilon(agent2.position, ref_position2, e)
