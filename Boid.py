@@ -296,7 +296,7 @@ class Boid(Agent):
     # determined "raw" steering into a per-boid accumulator, then returns that
     # smoothed value to use for actually steering the boid this simulation step.
     def smoothed_steering(self, steer):
-        return self.steer_memory.blend(steer, 0.1) # Ad hoc smoothness param.
+        return self.steer_memory.blend(steer, 0.8) # Ad hoc smoothness param.
 
     # Draw this Boid's “body” -- currently an irregular tetrahedron.
     def draw(self, color=None):

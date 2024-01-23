@@ -325,9 +325,9 @@ class Flock:
         uncentered_cyl_obs = CylinderObstacle(5, diag * 5, diag * 30)
         
         # 6 symmetric cylinders on main axes.
-        c3r = 4
-        c3o = 15
-        c3h = 20
+        c3r =  4 / 30 * self.sphere_radius
+        c3o = 15 / 30 * self.sphere_radius
+        c3h = 20 / 30 * self.sphere_radius
         cyl3x = CylinderObstacle(c3r, Vec3(-c3h, 0, c3o), Vec3(c3h, 0, c3o))
         cyl3y = CylinderObstacle(c3r, Vec3(c3o, -c3h, 0), Vec3(c3o, c3h, 0))
         cyl3z = CylinderObstacle(c3r, Vec3(0, c3o, -c3h), Vec3(0, c3o, c3h))

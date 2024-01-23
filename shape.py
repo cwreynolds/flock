@@ -69,7 +69,7 @@ def ray_plane_intersection(ray_origin, ray_tangent, plane_origin, plane_normal):
 # TODO Currently ignores the endpoints, assuming the cylinder is infinitely long.
 #
 # Using the derivation by Nominal Animal:
-#     https://en.wikipedia.org/wiki/User:Nominal_animal
+#     https://en.wikipedia.org/wiki/Line-cylinder_intersection
 #     https://math.stackexchange.com/a/1732445/516283
 #     https://www.nominal-animal.net
 #
@@ -77,26 +77,18 @@ def ray_cylinder_intersection(ray_endpoint, ray_tangent,
                               cyl_endpoint, cyl_tangent,
                               cyl_radius, cyl_length):
     intersection = None
-    def sq(s):
-        return s * s
-
     # Rename to match https://en.wikipedia.org/wiki/User:Nominal_animal
     b = cyl_endpoint  # The 3d origin/end/endpoint of the cylinder on its axis.
     a = cyl_tangent   # Unit 3d vector parallel to cylinder axis.
     r = cyl_radius    # Scalar cylinder radius.
     h = cyl_length    # Scalar length from endpoint along axis to other end.
-    
     o = ray_endpoint  # The 3d origin/end/endpoint of ray.
     n = ray_tangent   # Unit 3d vector parallel to ray.
-    
     b = b - o         # Offset b by the ray's origin/end/endpoint
-    
     assert a.is_unit_length()
     assert n.is_unit_length()
-
     na = n.cross(a)
-    radicand = (na.dot(na) * sq(r)) - sq(b.dot(na))
-
+    radicand = (na.dot(na) * r ** 2) - b.dot(na) ** 2
     # If any (real valued) intersections exist (both same if radicand==0)
     if radicand >= 0:
         radical = math.sqrt(radicand)
@@ -111,14 +103,36 @@ def ray_cylinder_intersection(ray_endpoint, ray_tangent,
             intersection = o + n * d2
     return intersection
 
+# Distance between two 3d lines. To provide a quick reject for an Agent's path
+# and a CylinderObstacle when computing avoidance. This version is for lines.
+# Could be made to work for rays and segments to provide better performance.
+# Derivation from https://math.stackexchange.com/a/2217845/516283
+#
+def distance_between_lines(origin1, tangent1, origin2, tangent2):
+    rd = origin1 - origin2
+    if tangent1.is_parallel(tangent2):
+        # Distance between parallel lines.
+        q = rd.cross(tangent1)
+        distance = math.sqrt(q.dot(q) / tangent2.length() ** 2)
+    else:
+        # Distance between skew lines.
+        n = tangent1.cross(tangent2)
+        distance = abs(n.dot(rd)) / n.length()
+    return distance
 
 def unit_test():
     zzz = Vec3()
     ooo = Vec3(1, 1, 1)
     ozz = Vec3(1, 0, 0)
     zoz = Vec3(0, 1, 0)
+    zzo = Vec3(0, 0, 1)
+    zoo = Vec3(0, 1, 1)
+    ozo = Vec3(1, 0, 1)
+    ooz = Vec3(1, 1, 0)
     mzz = Vec3(-1, 0, 0)
+    zmz = Vec3(0, -1, 0)
     ddd = ooo.normalize()
+    ddz = ooz.normalize()
 
     # Unit tests for ray_sphere_intersection()
     def rsi(result, ao, at, sr, sc, description):
@@ -138,7 +152,8 @@ def unit_test():
        'typical case inside r=2 sphere, ray at -1 on x axis pointing +x')
     rsi(ozz * math.sqrt(3), mzz, ozz, 2, zoz,
         'radius 2 sphere at (0,1,0), ray at (-1,0,0) pointing +x')
-        
+
+
     # Unit tests for ray_plane_intersection()
     def rpi(result, ro, rt, po, pn):
         i = ray_plane_intersection(ro, rt, po, pn)
@@ -154,12 +169,19 @@ def unit_test():
         assert i == result, ('shape.ray_cylinder_intersection() unit test -- '
                              + description + ' -- expecting ' + str(result)
                              + ' but got ' + str(i))
-    rci(Vec3(1, 0, 0),
-        Vec3(2, 0, 0),
-        Vec3(-1, 0, 0),
-        Vec3(0, -1, 0),
-        Vec3(0, 1, 0),
-        1,
-        2,
+    rci(Vec3(1, 0, 0), Vec3(2, 0, 0),
+        Vec3(-1, 0, 0), Vec3(0, -1, 0), Vec3(0, 1, 0), 1, 2,
         'ray endpoint outside cylinder (+x), pointing toward cylinder')
 
+
+    # Unit tests for distance_between_lines()
+    assert (2 == distance_between_lines(zoz, ozz, zmz, zzo))
+    assert (0 == distance_between_lines(zzz, ozz, zzz, zzo))
+    assert (0 == distance_between_lines(zzz, zoz, zoz, ozz))
+    assert (2 == distance_between_lines(zzz, zoz, Vec3(5, 0, 2), ddz))
+    # Parallel line case.
+    assert (1 == distance_between_lines(zzz, zzo, ozz, zzo))
+    # Closed form answer from:
+    # https://onlinemschool.com/math/assistance/cartesian_coordinate/p_line/
+    assert (math.sqrt(2) / math.sqrt(3) ==
+            distance_between_lines(zzz, ddd, ozo, Vec3(-1, 0, 1).normalize()))

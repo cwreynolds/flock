@@ -174,23 +174,45 @@ class CylinderObstacle(Obstacle):
 
     ############################################################################
     # TODO 20231204 WIP fix bug in CylinderObstacle avoidance
+    # TODO 20240121 revisit
     
 #    # Compute direction for agent's static avoidance of (concave?) obstacles.
 #    def fly_away(self, agent_position, agent_forward, max_distance):
 #        # does nothing for now?
 #        return Vec3()
 
+#    # Compute direction for agent's static avoidance of (concave?) obstacles.
+#    def fly_away(self, agent_position, agent_forward, max_distance):
+#        avoidance = Vec3()
+#        # TODO 20231204 very prototype, can be rewritten to be more efficient.
+#        on_surface = self.nearest_point(agent_position)
+#        dist_from_wall = (on_surface - agent_position).length()
+#        normal = self.normal_at_poi(agent_position)
+#        # Unless agent is already facing away from obstacle.
+#        if normal.dot(agent_forward) < 0.9:
+#            weight = 1 - util.clip01(dist_from_wall / max_distance)
+#            avoidance = normal * weight
+#        return avoidance
+
     # Compute direction for agent's static avoidance of (concave?) obstacles.
+    #
+    # This variant (#3) seeks merely to be centered at least 1.5 body diameter
+    # away from the surface.
+    #
     def fly_away(self, agent_position, agent_forward, max_distance):
         avoidance = Vec3()
         # TODO 20231204 very prototype, can be rewritten to be more efficient.
         on_surface = self.nearest_point(agent_position)
         dist_from_wall = (on_surface - agent_position).length()
-        normal = self.normal_at_poi(agent_position)
-        # Unless agent is already facing away from obstacle.
-        if normal.dot(agent_forward) < 0.9:
-            weight = 1 - util.clip01(dist_from_wall / max_distance)
-            avoidance = normal * weight
+        xxx_body_radius = 0.5 ## TODO 20240122 maybe this needs to be passed in?
+#        if dist_from_wall < xxx_body_radius * 2:
+#        if dist_from_wall < xxx_body_radius * 3:
+        if dist_from_wall < xxx_body_radius * 3:
+            normal = self.normal_at_poi(agent_position)
+            # Unless agent is already facing away from obstacle.
+            if normal.dot(agent_forward) < 0.9:
+                weight = 1 - util.clip01(dist_from_wall / max_distance)
+                avoidance = normal * weight
         return avoidance
 
     ############################################################################
