@@ -187,7 +187,7 @@ class Boid(Agent):
         f = self.forward
         max_distance = self.body_radius * 20 # TODO tuning parameter?
         for obstacle in self.flock.obstacles:
-            oa = obstacle.fly_away(p, f, max_distance)
+            oa = obstacle.fly_away(p, f, max_distance, self.body_radius)
             weight = oa.length()
             self.avoid_obstacle_annotation(2, obstacle.nearest_point(p), weight)
             avoidance += oa
@@ -355,11 +355,14 @@ class Boid(Agent):
     def predict_future_collisions(self):
         collisions = []
         for obstacle in self.flock.obstacles:
-            point_of_impact = obstacle.ray_intersection(self.position, self.forward)
+            point_of_impact = obstacle.ray_intersection(self.position,
+                                                        self.forward,
+                                                        self.body_radius)
             if point_of_impact:
                 dist_to_collision = (point_of_impact - self.position).length()
                 time_to_collision = dist_to_collision / self.speed
-                normal_at_poi = obstacle.normal_at_poi(point_of_impact, self.position)
+                normal_at_poi = obstacle.normal_at_poi(point_of_impact,
+                                                       self.position)
                 collisions.append(Collision(obstacle,
                                             time_to_collision,
                                             dist_to_collision,

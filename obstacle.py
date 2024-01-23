@@ -28,7 +28,7 @@ class Obstacle:
         self.original_center = Vec3()
 
     # Where a ray (Agent's path) will intersect the obstacle, or None.
-    def ray_intersection(self, origin, tangent):
+    def ray_intersection(self, origin, tangent, body_radius):
         pass
 
     # Normal to the obstacle at a given point of interest.
@@ -39,8 +39,8 @@ class Obstacle:
     def nearest_point(self, query_point):
         pass
 
-    # Compute direction for agent's static avoidance of (concave?) obstacles.
-    def fly_away(self, agent_position, agent_forward, max_distance):
+    # Compute direction for agent's static avoidance of nearby obstacles.
+    def fly_away(self, agent_position, agent_forward, max_distance, body_radius):
         pass
 
     def draw(self):
@@ -56,7 +56,7 @@ class EvertedSphereObstacle(Obstacle):
         self.center = center
 
     # Where a ray (Agent's path) will intersect the obstacle, or None.
-    def ray_intersection(self, origin, tangent):
+    def ray_intersection(self, origin, tangent, body_radius):
         return shape.ray_sphere_intersection(origin, tangent,
                                              self.radius, self.center)
 
@@ -68,8 +68,8 @@ class EvertedSphereObstacle(Obstacle):
     def nearest_point(self, query_point):
         return (query_point - self.center).normalize() * self.radius
 
-    # Compute direction for agent's static avoidance of (concave?) obstacles.
-    def fly_away(self, agent_position, agent_forward, max_distance):
+    # Compute direction for agent's static avoidance of nearby obstacles.
+    def fly_away(self, agent_position, agent_forward, max_distance, body_radius):
         avoidance = Vec3()
         p = agent_position
         r = self.radius
@@ -99,7 +99,7 @@ class PlaneObstacle(Obstacle):
         self.center = center
 
     # Where a ray (Agent's path) will intersect the obstacle, or None.
-    def ray_intersection(self, origin, tangent):
+    def ray_intersection(self, origin, tangent, body_radius):
         return shape.ray_plane_intersection(origin, tangent,
                                             self.center, self.normal)
 
@@ -125,8 +125,8 @@ class PlaneObstacle(Obstacle):
         # Translate back to global space.
         return on_plane + self.center
 
-    # Compute direction for agent's static avoidance of (concave?) obstacles.
-    def fly_away(self, agent_position, agent_forward, max_distance):
+    # Compute direction for agent's static avoidance of nearby obstacles.
+    def fly_away(self, agent_position, agent_forward, max_distance, body_radius):
         avoidance = Vec3()
         # Project agent_position to obstacle surface.
         on_obstacle = self.nearest_point(agent_position)
@@ -157,10 +157,11 @@ class CylinderObstacle(Obstacle):
         return self.endpoint + self.tangent * projection
 
     # Where a ray (Agent's path) will intersect the obstacle, or None.
-    def ray_intersection(self, origin, tangent):
+    def ray_intersection(self, origin, tangent, body_radius):
         return shape.ray_cylinder_intersection(origin, tangent,
                                                self.endpoint, self.tangent,
-                                               self.radius, self.length)
+                                               self.radius + 2 * body_radius,
+                                               self.length)
 
     # Normal to the obstacle at a given point of interest.
     def normal_at_poi(self, poi, agent_position=None):
@@ -172,50 +173,21 @@ class CylinderObstacle(Obstacle):
         on_axis = self.nearest_point_on_axis(query_point)
         return on_axis + ((query_point - on_axis).normalize() * self.radius)
 
-    ############################################################################
-    # TODO 20231204 WIP fix bug in CylinderObstacle avoidance
-    # TODO 20240121 revisit
-    
-#    # Compute direction for agent's static avoidance of (concave?) obstacles.
-#    def fly_away(self, agent_position, agent_forward, max_distance):
-#        # does nothing for now?
-#        return Vec3()
-
-#    # Compute direction for agent's static avoidance of (concave?) obstacles.
-#    def fly_away(self, agent_position, agent_forward, max_distance):
-#        avoidance = Vec3()
-#        # TODO 20231204 very prototype, can be rewritten to be more efficient.
-#        on_surface = self.nearest_point(agent_position)
-#        dist_from_wall = (on_surface - agent_position).length()
-#        normal = self.normal_at_poi(agent_position)
-#        # Unless agent is already facing away from obstacle.
-#        if normal.dot(agent_forward) < 0.9:
-#            weight = 1 - util.clip01(dist_from_wall / max_distance)
-#            avoidance = normal * weight
-#        return avoidance
-
-    # Compute direction for agent's static avoidance of (concave?) obstacles.
-    #
-    # This variant (#3) seeks merely to be centered at least 1.5 body diameter
-    # away from the surface.
-    #
-    def fly_away(self, agent_position, agent_forward, max_distance):
+    # Compute direction for agent's static avoidance of nearby obstacles.
+    def fly_away(self, agent_position, agent_forward, max_distance, body_radius):
         avoidance = Vec3()
-        # TODO 20231204 very prototype, can be rewritten to be more efficient.
-        on_surface = self.nearest_point(agent_position)
-        dist_from_wall = (on_surface - agent_position).length()
-        xxx_body_radius = 0.5 ## TODO 20240122 maybe this needs to be passed in?
-#        if dist_from_wall < xxx_body_radius * 2:
-#        if dist_from_wall < xxx_body_radius * 3:
-        if dist_from_wall < xxx_body_radius * 3:
-            normal = self.normal_at_poi(agent_position)
-            # Unless agent is already facing away from obstacle.
-            if normal.dot(agent_forward) < 0.9:
-                weight = 1 - util.clip01(dist_from_wall / max_distance)
-                avoidance = normal * weight
+        # Distance between this cylinder's axis and the agent's current path.
+        path_to_axis_dist = shape.distance_between_lines(agent_position,
+                                                         agent_forward,
+                                                         self.endpoint,
+                                                         self.tangent)
+        # When too close, avoidance is unit normal to cylinder surface.
+        margin = 3 * body_radius
+        if path_to_axis_dist < self.radius + margin:
+            on_surface = self.nearest_point(agent_position)
+            if (on_surface - agent_position).length_squared() < margin ** 2:
+                avoidance = self.normal_at_poi(agent_position)
         return avoidance
-
-    ############################################################################
 
     def draw(self):
         if not self.tri_mesh:
