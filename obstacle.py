@@ -9,10 +9,6 @@
 # MIT License -- Copyright © 2023 Craig Reynolds
 #
 #-------------------------------------------------------------------------------
-# TODO 20230831 initiallly just a wrapper on the existing everted sphere, then
-#               generalize that, add a cylinder type, maybe later a triangle
-#               mesh type.
-#-------------------------------------------------------------------------------
 
 import math
 import shape
@@ -31,9 +27,15 @@ class Obstacle:
     def ray_intersection(self, origin, tangent, body_radius):
         pass
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # TODO 20240127 make "agent_position" non-optional.
+#    # Normal to the obstacle at a given point of interest.
+#    def normal_at_poi(self, poi, agent_position=None):
+#        pass
     # Normal to the obstacle at a given point of interest.
-    def normal_at_poi(self, poi, agent_position=None):
+    def normal_at_poi(self, poi, agent_position):
         pass
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # Point on surface of obstacle nearest the given query_point
     def nearest_point(self, query_point):
@@ -60,9 +62,12 @@ class EvertedSphereObstacle(Obstacle):
         return shape.ray_sphere_intersection(origin, tangent,
                                              self.radius, self.center)
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # TODO 20240127 make "agent_position" non-optional.
     # Normal to the obstacle at a given point of interest.
-    def normal_at_poi(self, poi, agent_position=None):
+    def normal_at_poi(self, poi, agent_position):
         return (self.center - poi).normalize()
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # Point on surface of obstacle nearest the given query_point
     def nearest_point(self, query_point):
@@ -163,10 +168,13 @@ class CylinderObstacle(Obstacle):
                                                self.radius + 2 * body_radius,
                                                self.length)
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # TODO 20240127 make "agent_position" non-optional.
     # Normal to the obstacle at a given point of interest.
-    def normal_at_poi(self, poi, agent_position=None):
+    def normal_at_poi(self, poi, agent_position):
         on_axis = self.nearest_point_on_axis(poi)
         return (poi - on_axis).normalize()
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # Point on surface of obstacle nearest the given query_point
     def nearest_point(self, query_point):
@@ -186,7 +194,11 @@ class CylinderObstacle(Obstacle):
         if path_to_axis_dist < self.radius + margin:
             on_surface = self.nearest_point(agent_position)
             if (on_surface - agent_position).length_squared() < margin ** 2:
-                avoidance = self.normal_at_poi(agent_position)
+                #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # TODO 20240127 make "agent_position" non-optional.
+#                avoidance = self.normal_at_poi(agent_position)
+                avoidance = self.normal_at_poi(agent_position, agent_position)
+                #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         return avoidance
 
     def draw(self):

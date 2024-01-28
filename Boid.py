@@ -56,7 +56,7 @@ class Boid(Agent):
         self.weight_forward  = 4
         self.weight_separate = 23
         self.weight_align    = 12
-        self.weight_cohere   = 15
+        self.weight_cohere   = 18
         self.weight_avoid    = 40
         self.max_dist_separate = 15 * self.body_radius
         self.max_dist_align    = 100
@@ -69,7 +69,7 @@ class Boid(Agent):
         # Cosine of threshold angle (max angle from forward to be seen)
         self.angle_separate = -0.707  # 135°
         self.angle_align    =  0.940  # 20°
-        self.angle_cohere   = -0.707  # 135°
+        self.angle_cohere   = 0 # 90°
 
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
@@ -79,8 +79,8 @@ class Boid(Agent):
     def apply_next_steer(self, time_step):
         self.steer(self.next_steer, time_step)
 
-    # Basic flocking behavior. Performs one simulation step (an animation frame)
-    # for one boid in a flock.
+    # Basic flocking behavior. Computes steering force for one simulation step
+    # (an animation frame) for one boid in a flock.
     def steer_to_flock(self, time_step):
         neighbors = self.nearest_neighbors(time_step)
         f = self.weight_forward * self.forward
@@ -141,7 +141,7 @@ class Boid(Agent):
         return direction.normalize_or_0()
 
     # Steering force to avoid obstacles. Takes the max of "predictive" avoidance
-    #  (I will collide with obstacle within Flock.min_time_to_collide seconds)
+    # (I will collide with obstacle within Flock.min_time_to_collide seconds)
     # and "static" avoidance (I should fly away from this obstacle, for everted
     # containment obstacles).
     def steer_to_avoid(self, time_step):
@@ -247,18 +247,11 @@ class Boid(Agent):
                 (1 / 3) *
                 (self.max_force * 0.5))
 
-    ############################################################################
-    # TODO 20231020 neighbor angle
-    
     def angle_weight(self, neighbor, cos_angle_threshold):
-        offset = self.position - neighbor.position
+        offset = neighbor.position - self.position
         projection = offset.normalize().dot(self.forward)
-        within_angle =  projection > self.angle_separate
-#        return 1 if within_angle else 0
-        return 1 if within_angle else 0.01
-
-    ############################################################################
-
+        within_angle =  projection > cos_angle_threshold
+        return 1 if within_angle else 0
 
     # Returns a list of the N Boids nearest this one.
     # (n=3 increased frame rate from ~30 to ~50 fps. No other obvious changes.)
