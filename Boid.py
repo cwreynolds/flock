@@ -230,7 +230,7 @@ class Boid(Agent):
         if self.speed < (self.min_speed * prevention_margin):
             if Vec3.dot(raw_steering, self.forward) < 0:
                 ahead = self.forward * self.max_force * 0.9
-                side = self.next_steer.perpendicular_component(self.forward)
+                side = raw_steering.perpendicular_component(self.forward)
                 adjusted = ahead + side
         return adjusted
 
@@ -247,11 +247,11 @@ class Boid(Agent):
                 (1 / 3) *
                 (self.max_force * 0.5))
 
+    # Return weight related to neighbor's position relative to my forward axis.
     def angle_weight(self, neighbor, cos_angle_threshold):
         offset = neighbor.position - self.position
-        projection = offset.normalize().dot(self.forward)
-        within_angle =  projection > cos_angle_threshold
-        return 1 if within_angle else 0
+        projection_onto_forward = offset.normalize().dot(self.forward)
+        return 1 if projection_onto_forward > cos_angle_threshold else 0.1
 
     # Returns a list of the N Boids nearest this one.
     # (n=3 increased frame rate from ~30 to ~50 fps. No other obvious changes.)
