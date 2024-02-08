@@ -52,12 +52,13 @@ class LocalSpace:
 
     # Checks that basis vectors are unit length and mutually perpendicular.
     def is_orthonormal(self):
-        return (self.i.is_unit_length() and
-                self.j.is_unit_length() and
-                self.k.is_unit_length() and
-                self.i.is_perpendicular(self.j) and
-                self.j.is_perpendicular(self.k) and
-                self.k.is_perpendicular(self.i))
+        epsilon = util.epsilon * 10
+        return (self.i.is_unit_length(epsilon) and
+                self.j.is_unit_length(epsilon) and
+                self.k.is_unit_length(epsilon) and
+                self.i.is_perpendicular(self.j, epsilon) and
+                self.j.is_perpendicular(self.k, epsilon) and
+                self.k.is_perpendicular(self.i, epsilon))
 
     # TODO 20230405 speculative API, maybe for PinholeCameraParameters?
     def asarray(self):

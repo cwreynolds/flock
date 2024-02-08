@@ -45,7 +45,7 @@ def clip01 (x):
 def between(x, a, b):
     return (min(a, b) <= x) and (x <= max(a, b))
 
-# This value works on my laptop with Python 3.10
+# This value (aka 1e-14) works on my laptop with Python 3.10 and c++17
 epsilon = 0.00000000000001
 
 # True when a and b differ by no more than epsilon.

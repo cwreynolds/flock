@@ -70,7 +70,7 @@ class Flock:
         Draw.set_random_seeds(seed)
         self.setup()
 
-    # Run boids simulation. (Currently runs until stopped by user.)
+    # Run boids simulation.
     def run(self):
         draw = Draw() ## ?? currently unused but should contain draw state
         Draw.start_visualizer(self.sphere_radius, self.sphere_center)
@@ -140,8 +140,8 @@ class Flock:
             if boid.speed < (boid.min_speed - util.epsilon):
                 self.total_stalls += 1
 
-    # When a Boid gets more than "radius" from the origin, teleport it to the
-    # other side of the world, just inside of its antipodal point.
+    # When a Boid gets more than "radius" from "sphere_center", teleport it to
+    # the other side of the sphere, just inside of its antipodal point.
     def sphere_wrap_around(self):
         radius = self.sphere_radius
         center = self.sphere_center
@@ -438,3 +438,12 @@ if __name__ == "__main__":
     ############################################################################
 
     Flock().run()
+
+#        # 20240204 speed testing
+#        Draw.enable = False
+#    #    Flock(boid_count = 200,
+#        Flock(boid_count = 1000,
+#              max_simulation_steps = 1000,
+#              fixed_time_step = True).run()
+
+#        Flock(boid_count = 500).run()

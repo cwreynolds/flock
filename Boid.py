@@ -28,7 +28,6 @@ class Boid(Agent):
         self.max_speed = 20.0     # Speed upper limit (m/s)
         self.max_force = 100.0     # Acceleration upper limit (m/s²)
         self.min_speed = self.max_speed * 0.3  # TODO 20231225 ad hoc factor.
-#        self.speed = self.max_speed * 0.3
         self.speed = self.min_speed
         self.body_radius = 0.5   # "assume a spherical boid" -- unit diameter
         self.flock = flock
@@ -87,7 +86,7 @@ class Boid(Agent):
         s = self.weight_separate * self.steer_to_separate(neighbors)
         a = self.weight_align * self.steer_to_align(neighbors)
         c = self.weight_cohere * self.steer_to_cohere(neighbors)
-        o = self.weight_avoid * self.steer_to_avoid(time_step)
+        o = self.weight_avoid * self.steer_to_avoid()
         combined_steering = self.smoothed_steering(f + s + a + c + o)
         combined_steering = self.anti_stall_adjustment(combined_steering)
         self.annotation(s, a, c, o, combined_steering)
@@ -144,22 +143,22 @@ class Boid(Agent):
     # (I will collide with obstacle within Flock.min_time_to_collide seconds)
     # and "static" avoidance (I should fly away from this obstacle, for everted
     # containment obstacles).
-    def steer_to_avoid(self, time_step):
+    def steer_to_avoid(self):
         avoid = Vec3()
         self.avoid_obstacle_annotation(0, 0, 0)
         if not self.flock.wrap_vs_avoid:
-            predict_avoid = self.steer_for_predictive_avoidance(time_step)
+            predict_avoid = self.steer_for_predictive_avoidance()
             static_avoid = self.fly_away_from_obstacles()
             avoid = Vec3.max(static_avoid, predict_avoid)
         self.avoid_obstacle_annotation(3, 0, 0)
         return avoid
 
     # Steering force component for predictive obstacles avoidance.
-    def steer_for_predictive_avoidance(self, time_step):
+    def steer_for_predictive_avoidance(self):
         weight = 0
         avoidance = Vec3()
         collisions = self.predict_future_collisions()
-        if time_step > 0 and collisions:
+        if collisions:
             first_collision = collisions[0]
             poi = first_collision.point_of_impact
             normal = first_collision.normal_at_poi
@@ -180,7 +179,6 @@ class Boid(Agent):
 
     # Computes static obstacle avoidance: steering AWAY from nearby obstacle.
     # Non-predictive "repulsion" from "large" obstacles like walls.
-    # TODO currently assumes exactly one obstacle exists
     def fly_away_from_obstacles(self):
         avoidance = Vec3()
         p = self.position
@@ -261,7 +259,7 @@ class Boid(Agent):
             self.recompute_nearest_neighbors(n)
         return self.cached_nearest_neighbors
 
-    # Recomputes a list of the N Boids nearest this one.
+    # Recomputes a cached list of the N Boids nearest this one.
     def recompute_nearest_neighbors(self, n=7):
         def distance_squared_from_me(boid):
             return (boid.position - self.position).length_squared()

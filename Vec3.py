@@ -89,12 +89,12 @@ class Vec3:
         return (self / original_length, original_length)
 
     # Fast check for unit length.
-    def is_unit_length(self):
-        return util.within_epsilon(self.length_squared(), 1)
+    def is_unit_length(self, epsilon=util.epsilon):
+        return util.within_epsilon(self.length_squared(), 1, epsilon)
 
     # Fast check for zero length.
-    def is_zero_length(self):
-        return util.within_epsilon(self.length_squared(), 0)
+    def is_zero_length(self, epsilon=util.epsilon):
+        return util.within_epsilon(self.length_squared(), 0, epsilon)
 
     # Returns vector parallel to "this" but no longer than "max_length"
     def truncate(self, max_length):
@@ -142,20 +142,20 @@ class Vec3:
                                Vec3.angle_between(from_vec, to_vec))
 
     # Check if two vectors are perpendicular.
-    def is_perpendicular(self, other):
+    def is_perpendicular(self, other, epsilon=util.epsilon):
         # TODO 20230430 Should it check for unit length, or normalize? For now,
         # assert that given vectors are unit length to see if it ever comes up.
-        assert self.is_unit_length()
-        assert other.is_unit_length()
-        return util.within_epsilon(self.dot(other), 0)
+        assert self.is_unit_length(epsilon)
+        assert other.is_unit_length(epsilon)
+        return util.within_epsilon(self.dot(other), 0, epsilon)
     
     # Check if two unit vectors are parallel (or anti-parallel).
-    def is_parallel(self, other):
+    def is_parallel(self, other, epsilon=util.epsilon):
         # TODO 20230430 Should it check for unit length, or normalize? For now,
         # assert that given vectors are unit length to see if it ever comes up.
-        assert self.is_unit_length()
-        assert other.is_unit_length()
-        return util.within_epsilon(abs(self.dot(other)), 1)
+        assert self.is_unit_length(epsilon)
+        assert other.is_unit_length(epsilon)
+        return util.within_epsilon(abs(self.dot(other)), 1, epsilon)
 
     # Given a (unit) vector, return some vector that is perpendicular.
     # (There are infinitely many such vectors, one is chosen arbitrarily.)
