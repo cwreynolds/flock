@@ -88,6 +88,8 @@ class Flock:
                 self.sphere_wrap_around()
                 self.draw()
                 Draw.update_scene()
+                if not self.simulation_paused:
+                    Draw.measure_frame_duration()
                 self.log_stats()
                 self.update_fps()
         Draw.close_visualizer()
@@ -157,42 +159,40 @@ class Flock:
 
     # Calculate and log various statistics for flock.
     def log_stats(self):
-        if not self.simulation_paused:
-            Draw.measure_frame_duration()
-            if Draw.frame_counter % 100 == 0:
-                average_speed = mean([b.speed for b in self.boids])
-                # Loop over all unique pairs of distinct boids: ab==ba, not aa
-                min_sep = math.inf
-                ave_sep = 0
-                pair_count = 0
-                # Via https://stackoverflow.com/a/942551/1991373
-                for (p, q) in itertools.combinations(self.boids, 2):
-                    dist = (p.position - q.position).length()
-                    if min_sep > dist:
-                        min_sep = dist
-                    ave_sep += dist
-                    pair_count += 1
-                    if dist < 2 * p.body_radius:
-                        self.cumulative_sep_fail += 1
-                ave_sep /= pair_count
-                #
-                max_nn_dist = 0
-                for b in self.boids:
-                    n = b.cached_nearest_neighbors[0]
-                    dist = (b.position - n.position).length()
-                    if max_nn_dist < dist:
-                        max_nn_dist = dist
-                print(str(Draw.frame_counter) +
-                      ' fps=' + str(round(self.fps.value)) +
-                      ', ave_speed=' + str(average_speed)[0:5] +
-                      ', min_sep=' + str(min_sep)[0:5] +
-                      ', ave_sep=' + str(ave_sep)[0:5] +
-                      ', max_nn_dist=' + str(max_nn_dist)[0:5] +
-                      ', cumulative_sep_fail/boid=' +
-                          (str(self.cumulative_sep_fail / len(self.boids)) +
-                          '00')[0:5] +
-                      ', avoid_fail=' + str(self.total_avoid_fail) +
-                      ', stalls=' + str(self.total_stalls))
+        if (not self.simulation_paused) and (Draw.frame_counter % 100 == 0):
+            average_speed = mean([b.speed for b in self.boids])
+            # Loop over all unique pairs of distinct boids (ab==ba, not aa)
+            min_sep = math.inf
+            ave_sep = 0
+            pair_count = 0
+            # Via https://stackoverflow.com/a/942551/1991373
+            for (p, q) in itertools.combinations(self.boids, 2):
+                dist = (p.position - q.position).length()
+                if min_sep > dist:
+                    min_sep = dist
+                ave_sep += dist
+                pair_count += 1
+                if dist < 2 * p.body_radius:
+                    self.cumulative_sep_fail += 1
+            ave_sep /= pair_count
+            #
+            max_nn_dist = 0
+            for b in self.boids:
+                n = b.cached_nearest_neighbors[0]
+                dist = (b.position - n.position).length()
+                if max_nn_dist < dist:
+                    max_nn_dist = dist
+            print(str(Draw.frame_counter) +
+                  ' fps=' + str(round(self.fps.value)) +
+                  ', ave_speed=' + str(average_speed)[0:5] +
+                  ', min_sep=' + str(min_sep)[0:5] +
+                  ', ave_sep=' + str(ave_sep)[0:5] +
+                  ', max_nn_dist=' + str(max_nn_dist)[0:5] +
+                  ', cumulative_sep_fail/boid=' +
+                      (str(self.cumulative_sep_fail / len(self.boids)) +
+                      '00')[0:5] +
+                  ', avoid_fail=' + str(self.total_avoid_fail) +
+                  ', stalls=' + str(self.total_stalls))
 
     # Keep track of a smoothed (LPF) version of frames per second metric.
     def update_fps(self):
