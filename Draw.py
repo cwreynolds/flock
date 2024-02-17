@@ -111,6 +111,7 @@ class Draw:
         if shaded:
             ball.compute_vertex_normals()
         Draw.vis.add_geometry(ball)
+        return ball
 
 
     # Initialize visualizer for simulation run.
