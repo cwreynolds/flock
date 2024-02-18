@@ -101,11 +101,7 @@ class Flock:
     def make_boids(self, count, radius, center):
         for i in range(count):
             boid = Boid(self)
-            boid.sphere_radius = radius
-            boid.sphere_center = center
-            boid.ls = boid.ls.randomize_orientation()
-            boid.ls.p = (center + (radius * 0.95 *
-                                   Vec3.random_point_in_unit_radius_sphere()))
+            self.init_boid(boid, radius, center)
             self.boids.append(boid)
         # Initialize per-Boid cached_nearest_neighbors. Randomize time stamp.
         for b in self.boids:
@@ -113,6 +109,23 @@ class Flock:
             t = util.frandom01() * b.neighbor_refresh_rate
             b.time_since_last_neighbor_refresh = t
 
+    def init_boid(self, boid, radius, center):
+        boid.sphere_radius = radius
+        boid.sphere_center = center
+        
+        # uniform over whole sphere enclosure
+        #    boid.ls = boid.ls.randomize_orientation()
+        #    boid.ls.p = (center + (radius * 0.95 *
+        #                           Vec3.random_point_in_unit_radius_sphere()))
+
+        mean_forward = Vec3(1, 0, 0)
+        noise_forward = Vec3.random_point_in_unit_radius_sphere() * 0.1
+        new_forward = (mean_forward + noise_forward).normalize()
+        boid.ls.rotate_to_new_forward(new_forward)
+        center_of_clump = center + Vec3(radius * -0.66, 0, 0)
+        offset_in_clump = radius * 0.33 * Vec3.random_point_in_unit_radius_sphere()
+        boid.ls.p = center_of_clump + offset_in_clump
+    
     # Draw each boid in flock.
     def draw(self):
         if Draw.enable:

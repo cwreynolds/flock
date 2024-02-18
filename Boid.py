@@ -117,7 +117,7 @@ class Boid(Agent):
             
             weight *= self.angle_weight(neighbor, self.angle_align)
 
-            direction += heading_offset.normalize() * weight
+            direction += heading_offset.normalize_or_0() * weight
         return direction.normalize_or_0()
 
     # Steering force component to cohere with neighbors: toward neighbor center.

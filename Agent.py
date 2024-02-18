@@ -88,14 +88,11 @@ class Agent:
         # Update geometric state when moving.
         if (self.speed > 0):
             new_forward = new_velocity / new_speed;
-            # Reorthonormalize to correspond to new_forward
+            # Rotate LocalSpace to correspond to new_forward.
             ref_up = self.up_reference(acceleration * time_step)
-            new_side = ref_up.cross(new_forward).normalize()
-            new_up = new_forward.cross(new_side).normalize()
-            clipped_velocity = new_forward * self.speed
-            new_position = self.position + clipped_velocity * time_step
-            # Set new geometric state.
-            self.ls.set_state_ijkp(new_side, new_up, new_forward, new_position)
+            self.ls.rotate_to_new_forward(new_forward, ref_up)
+            # Set new position.
+            self.position += new_forward * self.speed * time_step
             assert self.ls.is_orthonormal()
 
     # Very basic roll control: use global UP as reference up

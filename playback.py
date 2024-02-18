@@ -104,7 +104,7 @@ def draw(boid_centers):
     Draw.close_visualizer()
 
 def add_boids_to_scene(boid_centers_this_step):
-    boid_meshes = list()
+    boid_meshes = []
     for xyz in boid_centers_this_step:
         center = Vec3.from_array(xyz)
         color = Vec3.from_array([util.frandom2(0.4, 0.6) for i in range(3)])

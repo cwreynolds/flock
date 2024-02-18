@@ -74,6 +74,11 @@ class LocalSpace:
                 ", k=" + str(self.k) +
                 ", p=" + str(self.p) + "]")
 
+    # TODO note that randomize_orientation() returns a modified copy, while
+    # rotate_to_new_forward() destructively modifies self. That is how
+    # randomize_orientation() worked originally, but I changed it during the
+    # translation to c++. It bothers my OCD that they are inconsistent.
+    
     # Return copy with random orientation, position is preserved.
     def randomize_orientation(self):
         ii = Vec3.random_unit_vector()
@@ -81,6 +86,19 @@ class LocalSpace:
         kk = ii.cross(jj).normalize()
         jj = kk.cross(ii).normalize()
         return LocalSpace(ii, jj, kk, self.p)
+
+    # Given a "new_forward" direction, rotate this LocalSpace about its position
+    # to align with the new forward, while keeping the new up direction as close
+    # as possible to the given "reference_up" (defaults to old up: self.j). The
+    # intent is to find the smallest rotation needed to meet these constraints.
+    def rotate_to_new_forward(self, new_forward, reference_up=None):
+        if not reference_up:
+            reference_up = self.j
+        assert new_forward.is_unit_length()
+        assert reference_up.is_unit_length()
+        new_side = reference_up.cross(new_forward).normalize()
+        new_up = new_forward.cross(new_side).normalize()
+        self.set_state_ijkp(new_side, new_up, new_forward, self.p)
 
     @staticmethod
     def unit_test():
@@ -93,6 +111,7 @@ class LocalSpace:
         ls_k = ls_i.cross(ls_j).normalize()
         ls_p = Vec3(5, 6, 7)
         ls = LocalSpace(ls_i, ls_j, ls_k, ls_p)
+        # TODO 20240217 explicit copy unneeded since r_o now returns a copy
         r = copy.copy(ls).randomize_orientation()
         a = Vec3.random_point_in_unit_radius_sphere() * 10
         b = Vec3.random_point_in_unit_radius_sphere() * 100
@@ -105,6 +124,20 @@ class LocalSpace:
         assert a.is_equal_within_epsilon(r.localize(r.globalize(a)), e)
         assert b.is_equal_within_epsilon(r.globalize(r.localize(b)), e)
         assert b.is_equal_within_epsilon(r.localize(r.globalize(b)), e)
+
+        o = LocalSpace() # original for comparison
+        diag_ypz = (o.j + o.k).normalize()
+        diag_ymz = (o.j - o.k).normalize()
+        m = LocalSpace()
+        m.rotate_to_new_forward(diag_ypz)
+        assert m.is_orthonormal()
+        assert m.i.is_equal_within_epsilon(o.i)
+        assert m.j.is_equal_within_epsilon(diag_ymz)
+        n = LocalSpace()
+        n.rotate_to_new_forward(o.i)
+        assert n.is_orthonormal()
+        assert n.i.is_equal_within_epsilon(-o.k)
+        assert n.j.is_equal_within_epsilon(o.j)
         
         # Just to verify that copy.copy() works for LocalSpace, as expected.
         a = LocalSpace()
