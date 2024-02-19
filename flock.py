@@ -85,7 +85,10 @@ class Flock:
                 self.fly_flock(1 / self.fixed_fps
                                if self.fixed_time_step or not Draw.enable
                                else Draw.frame_duration)
-                self.sphere_wrap_around()
+                ################################################################
+                # TODO 20240218 Signed distance function.
+#                self.sphere_wrap_around()
+                ################################################################
                 self.draw()
                 Draw.update_scene()
                 if not self.simulation_paused:
@@ -195,6 +198,10 @@ class Flock:
                 dist = (b.position - n.position).length()
                 if max_nn_dist < dist:
                     max_nn_dist = dist
+                ################################################################
+                # TODO 20240218 Signed distance function.
+                self.total_avoid_fail += b.avoidance_failure_counter
+                ################################################################
             print(str(Draw.frame_counter) +
                   ' fps=' + str(round(self.fps.value)) +
                   ', ave_speed=' + str(average_speed)[0:5] +
@@ -349,8 +356,26 @@ class Flock:
         cyl3q = CylinderObstacle(c3r, Vec3(c3o, -c3h, 0), Vec3(c3o, c3h, 0))
         cyl3r = CylinderObstacle(c3r, Vec3(0, c3o, -c3h), Vec3(0, c3o, c3h))
 
+        ########################################################################
+        # TODO 20240218 experiments for "sim starts in more flock-like state"
+
+#        ecs = 0.3
+#        ecr = self.sphere_radius
+#        ect = self.sphere_center + Vec3(ecr * ecs * 2, ecr, 0)
+#        ecb = self.sphere_center + Vec3(ecr * ecs * 2, -ecr, 0)
+#        experiment_cyl = CylinderObstacle(ecr * ecs * 0.6, ect, ecb)
+
+        ecr = self.sphere_radius
+        ect = self.sphere_center + Vec3(ecr * 0.6, ecr, 0)
+        ecb = self.sphere_center + Vec3(ecr * 0.6, -ecr, 0)
+        experiment_cyl = CylinderObstacle(ecr * 0.2, ect, ecb)
+
         # Preset obstacle combinations:
-        return [[main_sphere],
+#        return [[main_sphere],
+        return [[main_sphere, experiment_cyl],
+#        return [[],
+        
+        ########################################################################
                 [main_sphere, plane_obstacle],
                 [main_sphere, uncentered_cyl_obs],
                 [main_sphere, cyl3x, cyl3y, cyl3z, cyl3p, cyl3q, cyl3r],

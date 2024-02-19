@@ -88,9 +88,9 @@ class Agent:
         # Update geometric state when moving.
         if (self.speed > 0):
             new_forward = new_velocity / new_speed;
-            # Rotate LocalSpace to correspond to new_forward.
-            ref_up = self.up_reference(acceleration * time_step)
-            self.ls.rotate_to_new_forward(new_forward, ref_up)
+            # Rotate LocalSpace to align with new_forward
+            reference_up = self.up_reference(acceleration * time_step)
+            self.ls.rotate_to_new_forward(new_forward, reference_up)
             # Set new position.
             self.position += new_forward * self.speed * time_step
             assert self.ls.is_orthonormal()

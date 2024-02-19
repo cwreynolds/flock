@@ -81,6 +81,11 @@ def remap_interval(x, in0, in1, out0, out1):
 def remap_interval_clip(x, in0, in1, out0, out1):
     return clip(remap_interval(x, in0, in1, out0, out1), out0, out1)
 
+# Are a and b on opposite sides of 0? Specifically: if they are the previous and
+# current value of a "signed distance function" is/was there a zero crossing?
+def zero_crossing(a, b):
+    return ((a >= 0) and (b <= 0)) or ((a <= 0) and (b >= 0))
+
 # Takes a 32 bit value and shuffles it around to produce a new 32 bit value.
 # "Robert Jenkins' 32 bit integer hash function" from "Integer Hash Function"
 # (1997) by Thomas Wang (https://gist.github.com/badboy/6267743)

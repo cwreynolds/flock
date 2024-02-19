@@ -51,6 +51,12 @@ class Boid(Agent):
         self.annote_avoid_poi = Vec3()  # This might be too elaborate: two vals
         self.annote_avoid_weight = 0    # per boid just for avoid annotation.
 
+        ########################################################################
+        # TODO 20240218 Signed distance function.
+        self.last_sdf_per_obstacle = {}  # needs reset when obstacles change
+        self.avoidance_failure_counter = 0
+        ########################################################################
+
         # Tuning parameters
         self.weight_forward  = 4
         self.weight_separate = 23
@@ -359,4 +365,16 @@ class Boid(Agent):
                                             dist_to_collision,
                                             point_of_impact,
                                             normal_at_poi))
+
+            ####################################################################
+            # TODO 20240218 Signed distance function.
+            current_sdf = obstacle.signed_distance(self.position)
+            previous_sdf = self.last_sdf_per_obstacle.get(obstacle)
+            if previous_sdf:
+                if util.zero_crossing(current_sdf, previous_sdf):
+                    self.avoidance_failure_counter += 1
+                    print("uh oh!")
+            self.last_sdf_per_obstacle[obstacle] = current_sdf
+            ####################################################################
+
         return sorted(collisions, key=lambda x: x.time_to_collision)
