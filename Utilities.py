@@ -81,8 +81,8 @@ def remap_interval(x, in0, in1, out0, out1):
 def remap_interval_clip(x, in0, in1, out0, out1):
     return clip(remap_interval(x, in0, in1, out0, out1), out0, out1)
 
-# Are a and b on opposite sides of 0? Specifically: if they are the previous and
-# current value of a "signed distance function" is/was there a zero crossing?
+# Are a and b on opposite sides of 0? Specifically: was there a zero crossing if
+# they are the previous and current value of a "signed distance function"?
 def zero_crossing(a, b):
     return ((a >= 0) and (b <= 0)) or ((a <= 0) and (b >= 0))
 

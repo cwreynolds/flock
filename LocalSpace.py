@@ -74,11 +74,6 @@ class LocalSpace:
                 ", k=" + str(self.k) +
                 ", p=" + str(self.p) + "]")
 
-    # TODO note that randomize_orientation() returns a modified copy, while
-    # rotate_to_new_forward() destructively modifies self. That is how
-    # randomize_orientation() worked originally, but I changed it during the
-    # translation to c++. It bothers my OCD that they are inconsistent.
-    
     # Return copy with random orientation, position is preserved.
     def randomize_orientation(self):
         ii = Vec3.random_unit_vector()
@@ -91,14 +86,12 @@ class LocalSpace:
     # to align with the new forward, while keeping the new up direction as close
     # as possible to the given "reference_up" (defaults to old up: self.j). The
     # intent is to find the smallest rotation needed to meet these constraints.
-    def rotate_to_new_forward(self, new_forward, reference_up=None):
-        if not reference_up:
-            reference_up = self.j
+    def rotate_to_new_forward(self, new_forward, reference_up=Vec3(0, 1, 0)):
         assert new_forward.is_unit_length()
         assert reference_up.is_unit_length()
         new_side = reference_up.cross(new_forward).normalize()
         new_up = new_forward.cross(new_side).normalize()
-        self.set_state_ijkp(new_side, new_up, new_forward, self.p)
+        return LocalSpace(new_side, new_up, new_forward, self.p)
 
     @staticmethod
     def unit_test():
@@ -128,13 +121,11 @@ class LocalSpace:
         o = LocalSpace() # original for comparison
         diag_ypz = (o.j + o.k).normalize()
         diag_ymz = (o.j - o.k).normalize()
-        m = LocalSpace()
-        m.rotate_to_new_forward(diag_ypz)
+        m = LocalSpace().rotate_to_new_forward(diag_ypz)
         assert m.is_orthonormal()
         assert m.i.is_equal_within_epsilon(o.i)
         assert m.j.is_equal_within_epsilon(diag_ymz)
-        n = LocalSpace()
-        n.rotate_to_new_forward(o.i)
+        n = LocalSpace().rotate_to_new_forward(o.i)
         assert n.is_orthonormal()
         assert n.i.is_equal_within_epsilon(-o.k)
         assert n.j.is_equal_within_epsilon(o.j)

@@ -45,17 +45,12 @@ class Obstacle:
     def fly_away(self, agent_position, agent_forward, max_distance, body_radius):
         pass
 
-    ############################################################################
-    # TODO 20240218 Signed distance function.
-    
     # Signed distance function.
     # (From a query point to the nearest point on Obstacle's surface: negative
     # inside, positive outside, zero at surface. Very similar to nearest_point(),
     # maybe they can be combined?)
     def signed_distance(self, query_point):
         return 0
-
-    ############################################################################
 
     def draw(self):
         pass
@@ -104,16 +99,11 @@ class EvertedSphereObstacle(Obstacle):
                 avoidance = normal * weight
         return avoidance
 
-    ############################################################################
-    # TODO 20240218 Signed distance function.
-    
     # Signed distance function. (From a query point to the nearest point on
     # Obstacle's surface: negative inside, positive outside, zero at surface.)
     def signed_distance(self, query_point):
         distance_to_center = (query_point - self.center).length()
         return distance_to_center - self.radius
-
-    ############################################################################
 
     def draw(self):
         if not self.tri_mesh:
@@ -169,17 +159,12 @@ class PlaneObstacle(Obstacle):
                 avoidance = normal * weight
         return avoidance
 
-    ############################################################################
-    # TODO 20240218 Signed distance function.
-    
     # Signed distance function. (From a query point to the nearest point on
     # Obstacle's surface: negative inside, positive outside, zero at surface.)
     def signed_distance(self, query_point):
-        nearest_point_on_plane = nearest_point(query_point)
+        nearest_point_on_plane = self.nearest_point(query_point)
         from_plane_to_query_point = query_point - nearest_point_on_plane
         return from_plane_to_query_point.dot(self.normal)
-
-    ############################################################################
 
 # A bounded cylinder (between two endpoints) with given radius
 class CylinderObstacle(Obstacle):
@@ -236,17 +221,12 @@ class CylinderObstacle(Obstacle):
                 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         return avoidance
 
-    ############################################################################
-    # TODO 20240218 Signed distance function.
-    
     # Signed distance function. (From a query point to the nearest point on
     # Obstacle's surface: negative inside, positive outside, zero at surface.)
     def signed_distance(self, query_point):
         point_on_axis = self.nearest_point_on_axis(query_point)
         distance_to_axis = (query_point - point_on_axis).length()
         return distance_to_axis - self.radius
-
-    ############################################################################
 
     def draw(self):
         if not self.tri_mesh:

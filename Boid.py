@@ -51,11 +51,11 @@ class Boid(Agent):
         self.annote_avoid_poi = Vec3()  # This might be too elaborate: two vals
         self.annote_avoid_weight = 0    # per boid just for avoid annotation.
 
-        ########################################################################
-        # TODO 20240218 Signed distance function.
-        self.last_sdf_per_obstacle = {}  # needs reset when obstacles change
-        self.avoidance_failure_counter = 0
-        ########################################################################
+        # Per boid map from Obstacle to previous signed_distance_function value.
+        # TODO 20240219 needs to be reset when obstacles change.
+        self.last_sdf_per_obstacle = {}
+        # Cumulative count: how many avoidance failures (collisions) has it had?
+        self.avoidance_failure_counter = 0;
 
         # Tuning parameters
         self.weight_forward  = 4
@@ -75,6 +75,13 @@ class Boid(Agent):
         self.angle_separate = -0.707  # 135°
         self.angle_align    =  0.940  # 20°
         self.angle_cohere   = 0 # 90°
+ 
+        # Generate unique string names for Boid instances
+        self.name = 'boid_' + str(Boid.name_counter)
+        Boid.name_counter += 1
+
+    # Used to generate unique string names for Boid instances
+    name_counter = 0
 
     # Determine and store desired steering for this simulation step
     def plan_next_steer(self, time_step):
@@ -155,7 +162,7 @@ class Boid(Agent):
         if not self.flock.wrap_vs_avoid:
             predict_avoid = self.steer_for_predictive_avoidance()
             static_avoid = self.fly_away_from_obstacles()
-            avoid = Vec3.max(static_avoid, predict_avoid)
+            avoid = static_avoid + predict_avoid
         self.avoid_obstacle_annotation(3, 0, 0)
         return avoid
 
@@ -343,12 +350,14 @@ class Boid(Agent):
     # Bird-like roll control: blends vector toward path curvature center with
     # global up. Overrides method in base class Agent
     def up_reference(self, acceleration):
-        new_up = acceleration + Vec3(0, 0.01, 0)  # slight bias toward global up
-        self.up_memory.blend(new_up, 0.999)
+        global_up_scaled = Vec3(0, acceleration.length(), 0)
+        new_up = acceleration + global_up_scaled
+        self.up_memory.blend(new_up, 0.9)
         self.up_memory.value = self.up_memory.value.normalize()
         return self.up_memory.value
 
     # Returns a list of future collisions sorted by time, with soonest first.
+    # (Maintains avoidance_failure_counter and last_sdf_per_obstacle map.)
     def predict_future_collisions(self):
         collisions = []
         for obstacle in self.flock.obstacles:
@@ -366,15 +375,16 @@ class Boid(Agent):
                                             point_of_impact,
                                             normal_at_poi))
 
-            ####################################################################
-            # TODO 20240218 Signed distance function.
             current_sdf = obstacle.signed_distance(self.position)
             previous_sdf = self.last_sdf_per_obstacle.get(obstacle)
+            # If we encountered this obstacle before, check for collision.
             if previous_sdf:
                 if util.zero_crossing(current_sdf, previous_sdf):
                     self.avoidance_failure_counter += 1
-                    print("uh oh!")
+                    #    print((self.name + ':       ')[0:11] +
+                    #          str(self.avoidance_failure_counter),
+                    #          '[' + str(previous_sdf)[0:5],
+                    #          str(current_sdf)[0:5] + ']',
+                    #          str(obstacle))
             self.last_sdf_per_obstacle[obstacle] = current_sdf
-            ####################################################################
-
         return sorted(collisions, key=lambda x: x.time_to_collision)

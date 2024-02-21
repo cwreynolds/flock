@@ -49,7 +49,6 @@ class Flock:
         self.fixed_fps = fixed_fps                # frame rate for fixed fps.
         self.boids = []                # List of boids in flock.
         self.selected_boid_index = 0   # Index of boid tracked by camera.
-        self.total_avoid_fail = 0      # count pass through containment sphere.
         self.cumulative_sep_fail = 0   # separation fail: a pair of boids touch.
         self.simulation_paused = False # Simulation stopped, display continues.
         self.single_step = False       # perform one simulation step then pause.
@@ -124,7 +123,7 @@ class Flock:
         mean_forward = Vec3(1, 0, 0)
         noise_forward = Vec3.random_point_in_unit_radius_sphere() * 0.1
         new_forward = (mean_forward + noise_forward).normalize()
-        boid.ls.rotate_to_new_forward(new_forward)
+        boid.ls = LocalSpace().rotate_to_new_forward(new_forward)
         center_of_clump = center + Vec3(radius * -0.66, 0, 0)
         offset_in_clump = radius * 0.33 * Vec3.random_point_in_unit_radius_sphere()
         boid.ls.p = center_of_clump + offset_in_clump
@@ -158,21 +157,6 @@ class Flock:
             if boid.speed < (boid.min_speed - util.epsilon):
                 self.total_stalls += 1
 
-    # When a Boid gets more than "radius" from "sphere_center", teleport it to
-    # the other side of the sphere, just inside of its antipodal point.
-    def sphere_wrap_around(self):
-        radius = self.sphere_radius
-        center = self.sphere_center
-        for boid in self.boids:
-            bp = boid.position
-            distance_from_center = (bp - center).length()
-            if distance_from_center > radius:
-                new_position = (center - bp).normalize() * radius * 0.95
-                boid.ls.p = new_position
-                boid.recompute_nearest_neighbors()
-                if not self.wrap_vs_avoid:
-                    self.total_avoid_fail += 1
-
     # Calculate and log various statistics for flock.
     def log_stats(self):
         if (not self.simulation_paused) and (Draw.frame_counter % 100 == 0):
@@ -193,15 +177,13 @@ class Flock:
             ave_sep /= pair_count
             #
             max_nn_dist = 0
+            total_avoid_fail = 0
             for b in self.boids:
                 n = b.cached_nearest_neighbors[0]
                 dist = (b.position - n.position).length()
                 if max_nn_dist < dist:
                     max_nn_dist = dist
-                ################################################################
-                # TODO 20240218 Signed distance function.
-                self.total_avoid_fail += b.avoidance_failure_counter
-                ################################################################
+                total_avoid_fail += b.avoidance_failure_counter
             print(str(Draw.frame_counter) +
                   ' fps=' + str(round(self.fps.value)) +
                   ', ave_speed=' + str(average_speed)[0:5] +
@@ -211,7 +193,7 @@ class Flock:
                   ', cumulative_sep_fail/boid=' +
                       (str(self.cumulative_sep_fail / len(self.boids)) +
                       '00')[0:5] +
-                  ', avoid_fail=' + str(self.total_avoid_fail) +
+                  ', avoid_fail=' + str(total_avoid_fail) +
                   ', stalls=' + str(self.total_stalls))
 
     # Keep track of a smoothed (LPF) version of frames per second metric.
@@ -486,4 +468,16 @@ if __name__ == "__main__":
 
     ############################################################################
     
-    Flock().run()
+#    Flock().run()
+
+    ############################################################################
+    
+    # this test case has good repeatability of avoid_fail: 186 on two runs:
+    # 1000 fps=30, ave_speed=19.78, min_sep=0.504, ave_sep=41.48, max_nn_dist=11.73, cumulative_sep_fail/boid=0.145, avoid_fail=186, stalls=0
+    # 1000 fps=30, ave_speed=19.77, min_sep=0.351, ave_sep=45.13, max_nn_dist=14.58, cumulative_sep_fail/boid=0.140, avoid_fail=186, stalls=0
+
+    f = Flock(boid_count = 200,
+              max_simulation_steps = 1000,
+              fixed_time_step = True,
+              fixed_fps = 30)
+    f.run()
