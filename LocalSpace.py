@@ -86,7 +86,7 @@ class LocalSpace:
     # to align with the new forward, while keeping the new up direction as close
     # as possible to the given "reference_up" (defaults to old up: self.j). The
     # intent is to find the smallest rotation needed to meet these constraints.
-    def rotate_to_new_forward(self, new_forward, reference_up=Vec3(0, 1, 0)):
+    def rotate_to_new_forward(self, new_forward, reference_up):
         assert new_forward.is_unit_length()
         assert reference_up.is_unit_length()
         new_side = reference_up.cross(new_forward).normalize()
@@ -121,11 +121,11 @@ class LocalSpace:
         o = LocalSpace() # original for comparison
         diag_ypz = (o.j + o.k).normalize()
         diag_ymz = (o.j - o.k).normalize()
-        m = LocalSpace().rotate_to_new_forward(diag_ypz)
+        m = LocalSpace().rotate_to_new_forward(diag_ypz, Vec3(0, 1, 0))
         assert m.is_orthonormal()
         assert m.i.is_equal_within_epsilon(o.i)
         assert m.j.is_equal_within_epsilon(diag_ymz)
-        n = LocalSpace().rotate_to_new_forward(o.i)
+        n = LocalSpace().rotate_to_new_forward(o.i, Vec3(0, 1, 0))
         assert n.is_orthonormal()
         assert n.i.is_equal_within_epsilon(-o.k)
         assert n.j.is_equal_within_epsilon(o.j)

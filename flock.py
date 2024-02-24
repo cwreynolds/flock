@@ -123,7 +123,7 @@ class Flock:
         mean_forward = Vec3(1, 0, 0)
         noise_forward = Vec3.random_point_in_unit_radius_sphere() * 0.1
         new_forward = (mean_forward + noise_forward).normalize()
-        boid.ls = LocalSpace().rotate_to_new_forward(new_forward)
+        boid.ls = LocalSpace().rotate_to_new_forward(new_forward, Vec3(0, 1, 0))
         center_of_clump = center + Vec3(radius * -0.66, 0, 0)
         offset_in_clump = radius * 0.33 * Vec3.random_point_in_unit_radius_sphere()
         boid.ls.p = center_of_clump + offset_in_clump
