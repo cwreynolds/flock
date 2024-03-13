@@ -104,15 +104,15 @@ class Draw:
         Draw.add_colored_triangle(v1, v3, v4, color, tri_mesh)
 
     @staticmethod
-    def add_ball(radius=1, center=Vec3(), color=Vec3(), shaded=True, resolution=3):
+    def add_ball(radius=1, center=Vec3(), color=Vec3(), shaded=True,
+                 resolution=3, reset_bounding_box=True):
         ball = o3d.geometry.TriangleMesh.create_sphere(radius, resolution)
         ball.translate(center.asarray(), relative=False)
         ball.paint_uniform_color(color.asarray())
         if shaded:
             ball.compute_vertex_normals()
-        Draw.vis.add_geometry(ball)
+        Draw.vis.add_geometry(ball, reset_bounding_box)
         return ball
-
 
     # Initialize visualizer for simulation run.
     @staticmethod

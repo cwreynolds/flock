@@ -15,6 +15,8 @@
 from Vec3 import Vec3
 from Draw import Draw
 from flock import Flock
+from obstacle import EvertedSphereObstacle
+from obstacle import CylinderObstacle
 import Utilities as util
 import open3d as o3d
 import time
@@ -29,13 +31,16 @@ def draw(boid_centers):
     Draw.start_visualizer(50, Vec3())
     flock.register_single_key_commands() # For Open3D visualizer GUI.
     Draw.clear_scene()
+    add_obstacles_to_scene()
     boid_meshes = add_boids_to_scene(boid_centers[0])
     Draw.update_scene()
-    step_index = 0
-    while flock.still_running() and (step_index < len(boid_centers)):
-        update_boids_in_scene(boid_centers[step_index], boid_meshes)
-        step_index += 1
-        time.sleep(time_step)
+    while flock.still_running():
+        print('Begin playback')
+        step_index = 0
+        while flock.still_running() and (step_index < len(boid_centers)):
+            update_boids_in_scene(boid_centers[step_index], boid_meshes)
+            step_index += 1
+            time.sleep(time_step)
     Draw.close_visualizer()
 
 def add_boids_to_scene(boid_centers_this_step):
@@ -43,7 +48,7 @@ def add_boids_to_scene(boid_centers_this_step):
     for xyz in boid_centers_this_step:
         center = Vec3.from_array(xyz)
         color = Vec3.from_array([util.frandom2(0.4, 0.6) for i in range(3)])
-        mesh = Draw.add_ball(0.5, center, color, shaded=False)
+        mesh = Draw.add_ball(0.5, center, color, shaded=False, reset_bounding_box=False)
         boid_meshes.append(mesh)
     return boid_meshes
 
@@ -53,6 +58,18 @@ def update_boids_in_scene(boid_centers_this_step, boid_meshes):
         boid_meshes[i].translate(boid_centers_this_step[i], relative=False)
         Draw.vis.update_geometry(boid_meshes[i])
 
+def add_obstacles_to_scene():
+    # For now: draw the default "evoflock" obstacles.
+    r = 50      # sphere_radius
+    c = Vec3()  # sphere center
+    sphere = EvertedSphereObstacle(r, c)
+    sphere.draw()
+    Draw.vis.add_geometry(sphere.tri_mesh, False)
+    cylinder = CylinderObstacle(r * 0.2,
+                                c + Vec3(r * 0.6, r, 0),
+                                c + Vec3(r * 0.6, -r, 0))
+    cylinder.draw()
+    Draw.vis.add_geometry(cylinder.tri_mesh, False)
 
 ################################################################################
 #
