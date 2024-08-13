@@ -65,11 +65,49 @@ def add_obstacles_to_scene():
     sphere = EvertedSphereObstacle(r, c)
     sphere.draw()
     Draw.vis.add_geometry(sphere.tri_mesh, False)
-    cylinder = CylinderObstacle(r * 0.2,
-                                c + Vec3(r * 0.6, r, 0),
-                                c + Vec3(r * 0.6, -r, 0))
-    cylinder.draw()
-    Draw.vis.add_geometry(cylinder.tri_mesh, False)
+    
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
+    #    cylinder = CylinderObstacle(r * 0.2,
+    #                                c + Vec3(r * 0.6, r, 0),
+    #                                c + Vec3(r * 0.6, -r, 0))
+    #    cylinder.draw()
+    #    Draw.vis.add_geometry(cylinder.tri_mesh, False)
+    
+
+#    # 6 symmetric cylinders parallel to main axes.
+#    c3r =  4 / 30 * r
+#    c3o = 15 / 30 * r
+#    c3h = 20 / 30 * r
+#    def add_cyl(radius, top, bot):
+#        cylinder = CylinderObstacle(radius, top, bot)
+#        cylinder.draw()
+#        Draw.vis.add_geometry(cylinder.tri_mesh, False)
+#    add_cyl(c3r, Vec3(-c3h, 0, c3o), Vec3(c3h, 0, c3o))
+#    add_cyl(c3r, Vec3(c3o, -c3h, 0), Vec3(c3o, c3h, 0))
+#    add_cyl(c3r, Vec3(0, c3o, -c3h), Vec3(0, c3o, c3h))
+#    c3o = - c3o
+#    add_cyl(c3r, Vec3(-c3h, 0, c3o), Vec3(c3h, 0, c3o))
+#    add_cyl(c3r, Vec3(c3o, -c3h, 0), Vec3(c3o, c3h, 0))
+#    add_cyl(c3r, Vec3(0, c3o, -c3h), Vec3(0, c3o, c3h))
+
+    # 6 symmetric cylinders parallel to main axes.
+    c6r = r *  4 / 30
+    c6o = r * 15 / 30
+    c6h = r * 20 / 30
+    def add_3_cyl(c6o):
+        def add_cyl(radius, top, bot):
+            cylinder = CylinderObstacle(radius, top, bot)
+            cylinder.draw()
+            Draw.vis.add_geometry(cylinder.tri_mesh, False)
+        add_cyl(c6r, Vec3(-c6h, 0, c6o), Vec3(c6h, 0, c6o))
+        add_cyl(c6r, Vec3(c6o, -c6h, 0), Vec3(c6o, c6h, 0))
+        add_cyl(c6r, Vec3(0, c6o, -c6h), Vec3(0, c6o, c6h))
+    add_3_cyl(c6o)
+    add_3_cyl(-c6o)
+
+    ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
 
 ################################################################################
 #

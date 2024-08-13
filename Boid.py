@@ -353,7 +353,7 @@ class Boid(Agent):
         global_up_scaled = Vec3(0, acceleration.length(), 0)
         new_up = acceleration + global_up_scaled
         self.up_memory.blend(new_up, 0.95)
-        return self.up_memory.value.normalize()
+        return self.up_memory.value.normalize_or_0()
 
     # Returns a list of future collisions sorted by time, with soonest first.
     # (Maintains avoidance_failure_counter and last_sdf_per_obstacle map.)

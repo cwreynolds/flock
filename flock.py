@@ -477,7 +477,10 @@ if __name__ == "__main__":
     # 1000 fps=30, ave_speed=19.77, min_sep=0.351, ave_sep=45.13, max_nn_dist=14.58, cumulative_sep_fail/boid=0.140, avoid_fail=186, stalls=0
 
     f = Flock(boid_count = 200,
-              max_simulation_steps = 1000,
+
+#              max_simulation_steps = 1000,
+#              sphere_diameter = 60,
+
               fixed_time_step = True,
               fixed_fps = 30)
     f.run()
